@@ -39,3 +39,59 @@ document.querySelectorAll("[data-channel]").forEach(button=>button.addEventListe
     setTimeout(()=>button.classList.remove("sending"),180);
   }
 }));
+
+function skyClock(value){
+  if(!value)return "";
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return "";
+  return d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+}
+async function refreshSkyLive(){
+  const panel=document.querySelector("#skyNowLive");
+  if(!panel)return;
+  const title=panel.querySelector(".sky-programme");
+  const meta=panel.querySelector(".sky-meta");
+  const synopsis=panel.querySelector(".sky-synopsis");
+  const badge=panel.querySelector(".sky-state");
+  if(!isLive){
+    title.textContent="Local connection required";
+    meta.textContent="Open Eldoret through the Chromebook/Pi connector.";
+    badge.textContent="LOCAL";
+    return;
+  }
+  try{
+    const res=await fetch("/api/sky/now",{cache:"no-store"});
+    const data=await res.json();
+    if(!data.available){
+      title.textContent="Sky Q media unavailable";
+      meta.textContent=data.error||"Unable to read current media.";
+      synopsis.textContent="";
+      badge.textContent="UNKNOWN";
+      return;
+    }
+    if(data.live){
+      title.textContent=data.programme||data.channel||"Live TV";
+      const bits=[];
+      if(data.channelno)bits.push(data.channelno);
+      if(data.channel)bits.push(data.channel);
+      const st=skyClock(data.start), en=skyClock(data.end);
+      if(st&&en)bits.push(st+"–"+en);
+      if(!data.channel && data.sid)bits.push("Sky service "+data.sid);
+      meta.textContent=bits.join(" · ");
+      synopsis.textContent=data.synopsis||"";
+      badge.textContent="LIVE";
+    }else{
+      title.textContent=data.playback==="recording"?"Recording playback":"Sky Q active";
+      meta.textContent="Non-live playback";
+      synopsis.textContent="";
+      badge.textContent="PLAYBACK";
+    }
+  }catch(e){
+    title.textContent="Unable to read Sky Q";
+    meta.textContent="Remote control can still work even if now-playing readback fails.";
+    synopsis.textContent="";
+    badge.textContent="UNKNOWN";
+  }
+}
+refreshSkyLive();
+if(isLive)setInterval(refreshSkyLive,15000);
