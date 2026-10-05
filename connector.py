@@ -4,11 +4,17 @@ import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+try:
+    from pyskyqremote.skyq_remote import SkyQRemote
+except Exception:
+    SkyQRemote = None
+
 BRIDGES = {
     "house": {"ip": "10.0.0.2", "key": os.environ.get("HUE_KEY")},
     "utility": {"ip": "10.0.0.4", "key": os.environ.get("UTILITY_HUE_KEY")},
 }
 GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/"
+SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
 
 for name, config in BRIDGES.items():
     if not config["key"]:
@@ -31,6 +37,80 @@ def hue_put(bridge_name, path, payload):
         headers={"Content-Type": "application/json"}, method="PUT")
     with urllib.request.urlopen(req, timeout=5) as response:
         return response.read()
+
+def _value(obj, name, default=None):
+    if obj is None:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(name, default)
+    return getattr(obj, name, default)
+
+def _serialise(value):
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except Exception:
+            pass
+    return str(value)
+
+def sky_now_playing():
+    if SkyQRemote is None:
+        return {
+            "available": False,
+            "error": "pyskyqremote is not installed",
+            "setup": "Run: python3 -m pip install pyskyqremote"
+        }
+
+    client = SkyQRemote(SKY_Q_HOST)
+    power = client.power_status()
+    result = {
+        "available": True,
+        "host": SKY_Q_HOST,
+        "power": power,
+        "live": False,
+        "channel": None,
+        "channelno": None,
+        "channel_image": None,
+        "programme": None,
+        "synopsis": None,
+        "start": None,
+        "end": None,
+        "app": None,
+    }
+
+    if str(power).upper() != "ON":
+        return result
+
+    try:
+        media = client.get_current_media()
+        result["live"] = bool(_value(media, "live", False))
+        result["channel"] = _value(media, "channel")
+        result["channelno"] = _value(media, "channelno")
+        result["channel_image"] = _value(media, "image_url")
+        sid = _value(media, "sid")
+
+        if result["live"] and sid is not None:
+            programme = client.get_current_live_tv_programme(sid)
+            if programme is not None:
+                result["programme"] = _value(programme, "title")
+                result["synopsis"] = _value(programme, "synopsis")
+                result["start"] = _serialise(_value(programme, "starttime"))
+                result["end"] = _serialise(_value(programme, "endtime"))
+        elif _value(media, "pvrid"):
+            result["programme"] = "Recording playback"
+    except Exception as exc:
+        result["media_error"] = str(exc)
+
+    try:
+        app = client.get_active_application()
+        if app is not None:
+            result["app"] = _value(app, "title")
+    except Exception:
+        pass
+
+    return result
 
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
@@ -56,6 +136,14 @@ class Handler(BaseHTTPRequestHandler):
         if path in files:
             filename, ctype = files[path]
             self.send_bytes(fetch_github(filename), ctype)
+            return
+        if path == "/api/sky/now":
+            try:
+                payload = json.dumps(sky_now_playing()).encode()
+                self.send_bytes(payload)
+            except Exception as e:
+                payload = json.dumps({"available": False, "error": str(e)}).encode()
+                self.send_bytes(payload)
             return
         if path == "/api/hue/group":
             bridge_name = query.get("bridge", [None])[0]
@@ -111,5 +199,6 @@ print("Eldoret live connector running")
 print("House Hue bridge: ready")
 print("Utility Hue bridge: ready")
 print("Live state + scenes: ready")
+print(f"Sky Q now-playing target: {SKY_Q_HOST}")
 print("Open http://localhost:8765 in Chrome")
 HTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
