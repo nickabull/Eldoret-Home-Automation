@@ -21,7 +21,7 @@ const rooms=[
 const grid=document.querySelector("#rooms");
 const dlg=document.querySelector("#detail");
 const dc=document.querySelector("#detailContent");
-const isLive=location.protocol==="http:" && location.hostname!=="localhost";
+const isLive=location.protocol==="http:";
 
 function render(filter="all"){
   grid.innerHTML="";
