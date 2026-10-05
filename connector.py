@@ -4,7 +4,9 @@ import socket
 import time
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from datetime import datetime, timezone
 
 BRIDGES = {
     "house": {"ip": "10.0.0.2", "key": os.environ.get("HUE_KEY")},
@@ -75,6 +77,125 @@ def sky_send_channel(channel):
     for digit in digits:
         sky_send_key(digit)
         time.sleep(0.08)
+
+def _localname(tag):
+    return tag.split("}", 1)[-1] if "}" in tag else tag.split(":", 1)[-1]
+
+def sky_soap_control_url():
+    headers = {"User-Agent": "SKYPLUS_skyplus"}
+    for idx in range(50):
+        url = f"http://{SKY_Q_HOST}:49153/description{idx}.xml"
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=2) as response:
+                root = ET.fromstring(response.read())
+            device_type = next((el.text or "" for el in root.iter() if _localname(el.tag) == "deviceType"), "")
+            if "SkyControl" not in device_type:
+                continue
+            for service in root.iter():
+                if _localname(service.tag) != "service":
+                    continue
+                values = {_localname(child.tag): (child.text or "") for child in list(service)}
+                if values.get("serviceId") == "urn:nds-com:serviceId:SkyPlay":
+                    control = values.get("controlURL")
+                    if control:
+                        return f"http://{SKY_Q_HOST}:49153{control}"
+        except Exception:
+            continue
+    return None
+
+def sky_get_media_uri():
+    control_url = sky_soap_control_url()
+    if not control_url:
+        raise RuntimeError("Sky Q SkyPlay SOAP service not found")
+    method = "GetMediaInfo"
+    payload = f"""<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'><s:Body><u:{method} xmlns:u="urn:schemas-nds-com:service:SkyPlay:2"><InstanceID>0</InstanceID></u:{method}></s:Body></s:Envelope>""".encode()
+    req = urllib.request.Request(
+        control_url,
+        data=payload,
+        headers={
+            "Content-Type": 'text/xml; charset="utf-8"',
+            "SOAPACTION": '"urn:schemas-nds-com:service:SkyPlay:2#GetMediaInfo"',
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=3) as response:
+        root = ET.fromstring(response.read())
+    for el in root.iter():
+        if _localname(el.tag) == "CurrentURI":
+            return el.text or ""
+    return ""
+
+def sky_channel_list():
+    candidates = ["/as/services/4/1", "/as/services/1/1", "/as/services/5/1"]
+    for path in candidates:
+        try:
+            url = f"http://{SKY_Q_HOST}:{SKY_Q_JSON_PORT}{path}"
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=3) as response:
+                data = json.loads(response.read().decode("utf-8", errors="replace"))
+            if isinstance(data, dict) and isinstance(data.get("services"), list):
+                return data["services"]
+        except Exception:
+            pass
+    return []
+
+def sky_epg_now(sid):
+    now = datetime.now(timezone.utc)
+    date = now.strftime("%Y%m%d")
+    url = f"http://atlantis.epgsky.com/as/schedule/{date}/{sid}"
+    req = urllib.request.Request(url, headers={
+        "x-skyott-territory": "GB",
+        "x-skyott-provider": "SKY",
+        "x-skyott-proposition": "SKYQ",
+        "User-Agent": "Eldoret/1.0",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=8) as response:
+            data = json.loads(response.read().decode("utf-8", errors="replace"))
+        schedule = data.get("schedule", [])
+        now_ts = int(now.timestamp())
+        for block in schedule:
+            for event in block.get("events", []):
+                start = int(event.get("st", 0))
+                duration = int(event.get("d", 0))
+                if start <= now_ts < start + duration:
+                    return {
+                        "programme": event.get("t"),
+                        "synopsis": event.get("sy"),
+                        "start": datetime.fromtimestamp(start, tz=timezone.utc).isoformat(),
+                        "end": datetime.fromtimestamp(start + duration, tz=timezone.utc).isoformat(),
+                        "programmeuuid": event.get("programmeuuid"),
+                    }
+    except Exception:
+        pass
+    return {}
+
+def sky_now_playing_v2():
+    result = {"available": False, "live": False, "host": SKY_Q_HOST}
+    try:
+        uri = sky_get_media_uri()
+        result["uri"] = uri
+        if uri.startswith("xsi://"):
+            sid = int(uri[6:], 16)
+            result.update({"available": True, "live": True, "sid": sid})
+            services = sky_channel_list()
+            service = next((s for s in services if str(s.get("sid")) == str(sid)), None)
+            if service:
+                result["channel"] = service.get("t")
+                result["channelno"] = service.get("c")
+            result.update(sky_epg_now(sid))
+            return result
+        if "pvr" in uri.lower():
+            result.update({"available": True, "live": False, "playback": "recording"})
+            return result
+        if uri:
+            result.update({"available": True, "live": False, "playback": uri})
+            return result
+        result["error"] = "Sky Q returned no current media URI"
+    except Exception as exc:
+        result["error"] = str(exc)
+    return result
 
 def sky_json(path):
     url = f"http://{SKY_Q_HOST}:{SKY_Q_JSON_PORT}{path}"
@@ -238,7 +359,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/sky/now":
             try:
-                payload = json.dumps(sky_now_playing()).encode()
+                payload = json.dumps(sky_now_playing_v2()).encode()
                 self.send_bytes(payload)
             except Exception as e:
                 payload = json.dumps({"available": False, "error": str(e)}).encode()
