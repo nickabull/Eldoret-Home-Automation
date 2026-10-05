@@ -4,17 +4,13 @@ import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-try:
-    from pyskyqremote.skyq_remote import SkyQRemote
-except Exception:
-    SkyQRemote = None
-
 BRIDGES = {
     "house": {"ip": "10.0.0.2", "key": os.environ.get("HUE_KEY")},
     "utility": {"ip": "10.0.0.4", "key": os.environ.get("UTILITY_HUE_KEY")},
 }
 GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/"
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
+SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
 
 for name, config in BRIDGES.items():
     if not config["key"]:
@@ -38,37 +34,58 @@ def hue_put(bridge_name, path, payload):
     with urllib.request.urlopen(req, timeout=5) as response:
         return response.read()
 
-def _value(obj, name, default=None):
-    if obj is None:
-        return default
-    if isinstance(obj, dict):
-        return obj.get(name, default)
-    return getattr(obj, name, default)
-
-def _serialise(value):
-    if value is None:
-        return None
-    if hasattr(value, "isoformat"):
+def sky_json(path):
+    url = f"http://{SKY_Q_HOST}:{SKY_Q_JSON_PORT}{path}"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=3) as response:
+        raw = response.read().decode("utf-8", errors="replace")
         try:
-            return value.isoformat()
+            return json.loads(raw)
         except Exception:
-            pass
-    return str(value)
+            return raw
+
+def first_json(paths):
+    last_error = None
+    for path in paths:
+        try:
+            return path, sky_json(path)
+        except Exception as exc:
+            last_error = exc
+    if last_error:
+        raise last_error
+    raise RuntimeError("No Sky Q endpoint paths supplied")
+
+def dig(obj, *keys):
+    cur = obj
+    for key in keys:
+        if isinstance(cur, dict):
+            if key in cur:
+                cur = cur[key]
+                continue
+            low = {str(k).lower(): v for k, v in cur.items()}
+            if str(key).lower() in low:
+                cur = low[str(key).lower()]
+                continue
+        return None
+    return cur
+
+def pick(obj, names):
+    if not isinstance(obj, dict):
+        return None
+    low = {str(k).lower(): v for k, v in obj.items()}
+    for name in names:
+        if name in obj:
+            return obj[name]
+        if name.lower() in low:
+            return low[name.lower()]
+    return None
 
 def sky_now_playing():
-    if SkyQRemote is None:
-        return {
-            "available": False,
-            "error": "pyskyqremote is not installed",
-            "setup": "Run: python3 -m pip install pyskyqremote"
-        }
-
-    client = SkyQRemote(SKY_Q_HOST)
-    power = client.power_status()
     result = {
         "available": True,
         "host": SKY_Q_HOST,
-        "power": power,
+        "json_port": SKY_Q_JSON_PORT,
+        "power": None,
         "live": False,
         "channel": None,
         "channelno": None,
@@ -78,37 +95,75 @@ def sky_now_playing():
         "start": None,
         "end": None,
         "app": None,
+        "debug": {},
     }
 
-    if str(power).upper() != "ON":
-        return result
-
     try:
-        media = client.get_current_media()
-        result["live"] = bool(_value(media, "live", False))
-        result["channel"] = _value(media, "channel")
-        result["channelno"] = _value(media, "channelno")
-        result["channel_image"] = _value(media, "image_url")
-        sid = _value(media, "sid")
-
-        if result["live"] and sid is not None:
-            programme = client.get_current_live_tv_programme(sid)
-            if programme is not None:
-                result["programme"] = _value(programme, "title")
-                result["synopsis"] = _value(programme, "synopsis")
-                result["start"] = _serialise(_value(programme, "starttime"))
-                result["end"] = _serialise(_value(programme, "endtime"))
-        elif _value(media, "pvrid"):
-            result["programme"] = "Recording playback"
+        ppath, power = first_json([
+            "/as/system/status",
+            "/as/system/information",
+            "/as/system/device",
+        ])
+        result["debug"]["power_endpoint"] = ppath
+        p = pick(power, ["powerState", "powerstate", "state", "standby", "active"])
+        if isinstance(p, bool):
+            result["power"] = "ON" if p else "STANDBY"
+        elif p is not None:
+            result["power"] = str(p)
     except Exception as exc:
-        result["media_error"] = str(exc)
+        result["debug"]["power_error"] = str(exc)
 
     try:
-        app = client.get_active_application()
-        if app is not None:
-            result["app"] = _value(app, "title")
-    except Exception:
-        pass
+        mpath, media = first_json([
+            "/as/playback",
+            "/as/playback/current",
+            "/as/media",
+            "/as/player",
+            "/as/epg/current",
+        ])
+        result["debug"]["media_endpoint"] = mpath
+
+        root = media
+        if isinstance(media, dict):
+            for key in ("current", "playback", "media", "programme", "program"):
+                if isinstance(media.get(key), dict):
+                    root = media[key]
+                    break
+
+        result["channel"] = pick(root, ["channelName", "channel", "serviceName", "servicename"])
+        result["channelno"] = pick(root, ["channelNumber", "channelNo", "channelno", "lcn"])
+        result["programme"] = pick(root, ["title", "programmeTitle", "programTitle", "name"])
+        result["synopsis"] = pick(root, ["synopsis", "description", "shortDescription"])
+        result["start"] = pick(root, ["startTime", "starttime", "start"])
+        result["end"] = pick(root, ["endTime", "endtime", "end"])
+        result["channel_image"] = pick(root, ["imageUrl", "image_url", "logo", "channelLogo"])
+
+        live = pick(root, ["live", "isLive", "islive"])
+        if isinstance(live, bool):
+            result["live"] = live
+        elif result["channel"]:
+            result["live"] = True
+    except Exception as exc:
+        result["debug"]["media_error"] = str(exc)
+
+    try:
+        apath, app = first_json([
+            "/as/apps/active",
+            "/as/app/active",
+            "/as/apps",
+        ])
+        result["debug"]["app_endpoint"] = apath
+        if isinstance(app, dict):
+            root = app
+            if isinstance(app.get("active"), dict):
+                root = app["active"]
+            result["app"] = pick(root, ["title", "name", "appName"])
+    except Exception as exc:
+        result["debug"]["app_error"] = str(exc)
+
+    if result["power"] is None and not result["channel"] and not result["programme"] and not result["app"]:
+        result["available"] = False
+        result["error"] = "Sky Q responded on neither known status nor playback endpoints"
 
     return result
 
@@ -199,6 +254,6 @@ print("Eldoret live connector running")
 print("House Hue bridge: ready")
 print("Utility Hue bridge: ready")
 print("Live state + scenes: ready")
-print(f"Sky Q now-playing target: {SKY_Q_HOST}")
+print(f"Sky Q now-playing target: {SKY_Q_HOST}:{SKY_Q_JSON_PORT}")
 print("Open http://localhost:8765 in Chrome")
 HTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
