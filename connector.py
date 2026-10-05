@@ -1,5 +1,7 @@
 import json
 import os
+import socket
+import time
 import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -11,6 +13,38 @@ BRIDGES = {
 GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/"
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
 SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
+SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
+SKY_KEY_MAP = {
+    "power":0,"select":1,"backup":2,"channelup":6,"channeldown":7,
+    "search":10,"home":11,"up":16,"down":17,"left":18,"right":19,
+    "0":48,"1":49,"2":50,"3":51,"4":52,"5":53,"6":54,"7":55,"8":56,"9":57,
+    "play":64,"pause":65,"stop":66,"record":67,"fastforward":69,"rewind":71
+}
+
+def sky_send_key(key):
+    if key not in SKY_KEY_MAP:
+        raise ValueError("Unsupported Sky key")
+    code = SKY_KEY_MAP[key]
+    command = [4,1,0,0,0,0,224 + (code // 16),code % 16]
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.settimeout(4)
+    try:
+        client.connect((SKY_Q_HOST, SKY_Q_REMOTE_PORT))
+        length = 12
+        while True:
+            data = client.recv(1024)
+            if not data:
+                raise RuntimeError("Sky Q closed connection")
+            if len(data) < 24:
+                client.send(data[:length])
+                length = 1
+            else:
+                client.send(bytes(command))
+                command[1] = 0
+                client.send(bytes(command))
+                return
+    finally:
+        client.close()
 
 for name, config in BRIDGES.items():
     if not config["key"]:
@@ -185,6 +219,8 @@ class Handler(BaseHTTPRequestHandler):
             "/index.html": ("index.html", "text/html; charset=utf-8"),
             "/house.html": ("house.html", "text/html; charset=utf-8"),
             "/utility.html": ("utility.html", "text/html; charset=utf-8"),
+            "/sky.html": ("sky.html", "text/html; charset=utf-8"),
+            "/sky.js": ("sky.js", "application/javascript; charset=utf-8"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "application/javascript; charset=utf-8"),
         }
@@ -215,6 +251,16 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(length))
+        if self.path == "/api/sky/key":
+            key = payload.get("key")
+            if key not in SKY_KEY_MAP:
+                self.send_error(400); return
+            try:
+                sky_send_key(key)
+                self.send_bytes(json.dumps({"ok": True, "key": key}).encode())
+            except Exception as e:
+                self.send_response(500); self.end_headers(); self.wfile.write(str(e).encode())
+            return
         if self.path == "/api/hue/group":
             bridge_name, group = payload.get("bridge"), payload.get("group")
             if bridge_name not in BRIDGES or not group:
