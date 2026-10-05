@@ -1,0 +1,15 @@
+const statusEl=document.querySelector("#skyRemoteStatus");
+const keys=document.querySelectorAll("[data-sky-key]");
+const isLive=location.protocol==="http:";
+async function sendSkyKey(key,button){
+  if(!isLive){statusEl.textContent="Open through the local Chromebook connector to control Sky Q.";return;}
+  statusEl.textContent="Sending "+key+"…";
+  button.classList.add("sending");
+  try{
+    const res=await fetch("/api/sky/key",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key})});
+    if(!res.ok)throw new Error(await res.text());
+    statusEl.textContent="Sent: "+key;
+  }catch(e){statusEl.textContent="Sky Q control failed";}
+  finally{setTimeout(()=>button.classList.remove("sending"),180);}
+}
+keys.forEach(button=>button.addEventListener("click",()=>sendSkyKey(button.dataset.skyKey,button)));
