@@ -1,12 +1,40 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sky Q · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=7"></head>
+<title>Sky Q · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=8"></head>
 <body><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">Touch-first home control</p></div><div class="status"><span></span>Local connector</div></header>
 <main>
 <section class="hero"><div><h2>Sky Q</h2><p>Touch remote for the Sky Q box on your home network.</p></div><div class="stats"><b>1</b><small>Sky Q box</small><b>LAN</b><small>local control</small></div></section>
 <nav class="tabs" aria-label="Area"><a href="index.html">All</a><a href="house.html">House</a><a href="utility.html">Utility / Outside</a><a class="active" href="sky.html">Sky Q</a></nav>
 
-<section class="sky-remote-shell">
+
+<div class="sky-view-tabs" role="tablist" aria-label="Sky Q view">
+  <button type="button" class="sky-view-tab active" data-sky-view="remote">Remote</button>
+  <button type="button" class="sky-view-tab" data-sky-view="channels">Favourite channels</button>
+</div>
+
+<section class="sky-channel-panel" id="skyChannels" hidden>
+  <div class="channel-panel-head">
+    <div><p class="eyebrow">ONE-TAP CHANNELS</p><h2>Sport favourites</h2><p>Tap a tile — Eldoret sends the channel number for you.</p></div>
+    <span class="pill">Sky Q satellite</span>
+  </div>
+  <div class="channel-grid">
+    <button type="button" class="channel-tile sky-sports" data-channel="401"><span class="channel-brand">sky sports</span><strong>Main Event</strong><small>401</small></button>
+    <button type="button" class="channel-tile sky-sports" data-channel="402"><span class="channel-brand">sky sports</span><strong>Premier League</strong><small>402</small></button>
+    <button type="button" class="channel-tile sky-sports" data-channel="403"><span class="channel-brand">sky sports</span><strong>Football</strong><small>403</small></button>
+    <button type="button" class="channel-tile sky-sports" data-channel="404"><span class="channel-brand">sky sports</span><strong>Sports+</strong><small>404</small></button>
+    <button type="button" class="channel-tile sky-sports" data-channel="405"><span class="channel-brand">sky sports</span><strong>Cricket</strong><small>405</small></button>
+    <button type="button" class="channel-tile sky-sports" data-channel="407"><span class="channel-brand">sky sports</span><strong>F1</strong><small>407</small></button>
+    <button type="button" class="channel-tile sky-sports nfl" data-channel="412"><span class="channel-brand">sky sports</span><strong>NFL</strong><small>412</small></button>
+    <button type="button" class="channel-tile tnt" data-channel="410"><span class="channel-brand">TNT SPORTS</span><strong>1</strong><small>410</small></button>
+    <button type="button" class="channel-tile tnt" data-channel="411"><span class="channel-brand">TNT SPORTS</span><strong>2</strong><small>411</small></button>
+    <button type="button" class="channel-tile tnt" data-channel="413"><span class="channel-brand">TNT SPORTS</span><strong>3</strong><small>413</small></button>
+    <button type="button" class="channel-tile tnt" data-channel="414"><span class="channel-brand">TNT SPORTS</span><strong>4</strong><small>414</small></button>
+    <button type="button" class="channel-tile mutv" data-channel="418"><span class="channel-brand">MUTV</span><strong>Manchester United</strong><small>418</small></button>
+  </div>
+  <p class="channel-note">This is the first test set. We can add, remove and rearrange favourites once you've tried it.</p>
+</section>
+
+<section class="sky-remote-shell" id="skyRemote">
   <div class="sky-remote-status">
     <div><p class="eyebrow">SKY Q · 10.0.0.18</p><h2>Remote control</h2><p id="skyRemoteStatus">Ready</p></div>
     <button type="button" class="sky-key sky-power" data-sky-key="power">⏻<span>Power</span></button>
@@ -47,5 +75,5 @@
   </div>
 </section>
 </main>
-<script src="sky.js?v=7"></script>
+<script src="sky.js?v=8"></script>
 </body></html>
