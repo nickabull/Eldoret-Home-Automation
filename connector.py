@@ -68,6 +68,14 @@ def hue_put(bridge_name, path, payload):
     with urllib.request.urlopen(req, timeout=5) as response:
         return response.read()
 
+def sky_send_channel(channel):
+    digits = str(channel)
+    if not digits.isdigit() or len(digits) > 4:
+        raise ValueError("Invalid channel")
+    for digit in digits:
+        sky_send_key(digit)
+        time.sleep(0.08)
+
 def sky_json(path):
     url = f"http://{SKY_Q_HOST}:{SKY_Q_JSON_PORT}{path}"
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -251,6 +259,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(length))
+        if self.path == "/api/sky/channel":
+            channel = str(payload.get("channel", ""))
+            try:
+                sky_send_channel(channel)
+                self.send_bytes(json.dumps({"ok": True, "channel": channel}).encode())
+            except Exception as e:
+                self.send_response(500); self.end_headers(); self.wfile.write(str(e).encode())
+            return
         if self.path == "/api/sky/key":
             key = payload.get("key")
             if key not in SKY_KEY_MAP:
