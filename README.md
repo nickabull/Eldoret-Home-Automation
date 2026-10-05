@@ -16,12 +16,8 @@ This first version is a sanitised inventory/status dashboard. Direct Hue control
 
 The Chromebook connector serves the dashboard at `http://localhost:8765` and keeps all Hue credentials on the local network.
 
-Install the Python dependency once:
+No extra Python packages are required. The Sky Q integration now uses only Python's built-in networking libraries.
 
-```bash
-python3 -m pip install -r requirements.txt
-```
+Run the connector with the existing Hue environment variables. Sky Q defaults to `10.0.0.18`; override it with `SKY_Q_HOST` if the box address changes.
 
-Then run the connector with the existing Hue environment variables. Sky Q defaults to `10.0.0.18`; override it with `SKY_Q_HOST` if the box address changes.
-
-The dashboard now includes a **Now Watching · Sky Q** panel. It reads the current channel from the Sky Q box and, when live TV is playing, resolves the programme title and synopsis through `pyskyqremote`.
+The dashboard now includes a **Now Watching · Sky Q** panel. It talks directly to the Sky Q box over the local network, with no pip-installed dependency.
