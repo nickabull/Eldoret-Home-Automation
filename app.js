@@ -17,8 +17,47 @@ const rooms=[
 {n:"Hallway",b:"utility",i:"🚶",l:2,x:"Room",d:["2 Hue Ambiance spots","Motion sensor · battery critical"]},
 {n:"Toilet",b:"utility",i:"🚻",l:2,x:"Room",d:["2 Hue white spots"]}
 ];
-const grid=document.querySelector("#rooms"),dlg=document.querySelector("#detail"),dc=document.querySelector("#detailContent");
-function render(f="all"){grid.innerHTML="";rooms.filter(r=>f==="all"||r.b===f).forEach(r=>{const b=document.createElement("button");b.className="card";b.innerHTML='<div><span class="icon">'+r.i+'</span><h3>'+r.n+'</h3><p>'+(r.b==="house"?"House":"Utility")+" bridge</p></div><div class=meta><span class=pill>"+r.x+"</span><span class=pill>"+r.l+" lights</span></div>';b.addEventListener("click",()=>openRoom(r));grid.appendChild(b)})}
-function openRoom(r){dc.innerHTML="<p class=eyebrow>"+r.x.toUpperCase()+" · "+(r.b==="house"?"HOUSE":"UTILITY")+"</p><h2>"+r.i+" "+r.n+"</h2><p>"+r.l+" Hue light"+(r.l===1?"":"s")+"</p><div class=detail-list>"+r.d.map(x=>"<div>"+x+"</div>").join("")+"</div><p style='margin-top:20px;color:#9eacbe'>Scene controls will be added in the next control-enabled stage.</p>";dlg.showModal()}
-document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");render(b.dataset.filter)}));
-document.querySelector(".close").addEventListener("click",()=>dlg.close());dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});render();
+
+const grid=document.querySelector("#rooms");
+const dlg=document.querySelector("#detail");
+const dc=document.querySelector("#detailContent");
+
+function render(filter="all"){
+  grid.innerHTML="";
+  rooms
+    .filter(r=>filter==="all"||r.b===filter)
+    .forEach(r=>{
+      const button=document.createElement("button");
+      button.type="button";
+      button.className="card";
+      button.innerHTML=
+        '<div><span class="icon">'+r.i+'</span><h3>'+r.n+'</h3><p>'+
+        (r.b==="house"?"House":"Utility")+
+        ' bridge</p></div><div class="meta"><span class="pill">'+r.x+
+        '</span><span class="pill">'+r.l+' lights</span></div>';
+      button.addEventListener("click",()=>openRoom(r));
+      grid.appendChild(button);
+    });
+}
+
+function openRoom(r){
+  dc.innerHTML=
+    '<p class="eyebrow">'+r.x.toUpperCase()+' · '+(r.b==="house"?"HOUSE":"UTILITY")+
+    '</p><h2>'+r.i+' '+r.n+'</h2><p>'+r.l+' Hue light'+(r.l===1?"":"s")+
+    '</p><div class="detail-list">'+r.d.map(x=>'<div>'+x+'</div>').join("")+
+    '</div><p style="margin-top:20px;color:#9eacbe">Scene controls will be added in the next control-enabled stage.</p>';
+  if(typeof dlg.showModal==="function") dlg.showModal();
+  else dlg.setAttribute("open","");
+}
+
+document.querySelectorAll(".tabs button").forEach(button=>{
+  button.addEventListener("click",()=>{
+    document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+    button.classList.add("active");
+    render(button.dataset.filter);
+  });
+});
+
+document.querySelector(".close").addEventListener("click",()=>dlg.close());
+dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close();});
+render();
