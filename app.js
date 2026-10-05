@@ -187,10 +187,10 @@ async function refreshSkyNow(){
     const data=await res.json();
 
     if(!data.available){
-      title.textContent="Sky Q readback not ready";
+      title.textContent="Sky Q not responding";
       meta.textContent=data.error||"Unable to query the Sky Q box.";
-      synopsis.textContent=data.setup||"";
-      badge.textContent="SETUP";
+      synopsis.textContent="No extra Python packages are required.";
+      badge.textContent="OFFLINE";
       logo.hidden=true;
       return;
     }
