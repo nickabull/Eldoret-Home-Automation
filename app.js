@@ -18,6 +18,25 @@ const rooms=[
 {n:"Toilet",b:"utility",g:"2",i:"🚻",l:2,x:"Room",color:false,d:["2 Hue white spots"]}
 ];
 
+const scenes={
+  "house:1":[
+    ["Relax","mAMhLI5w246Jb3F"],["Read","4ZHRjRkG68-2Lgu"],["Concentrate","0teOVWVSxbrU1PA"],
+    ["Energize","nEbdYT6HPjZzlpy"],["Bright","4lXui9okasttMhR"],["Dimmed","hTlcfO3RlBG63TI"],
+    ["Nightlight","249kGtSrbmlG6uE"],["Hamilton 1","R9HNBqvmFqKUk-v"],["Hamilton 2","xlhSwlYHdEloKGk"],
+    ["Hamilton 3","XrGEpMxX6EP8UQe"],["NFL","OY8EaVSlokAvxPL"],["Xmas","ZKhdjq5TX6U7QnM"],
+    ["Sofa match","ovUyp2QHnvxN-4kL"]
+  ],
+  "house:3":[["Relax","uxoEgFVtSrNzfx4"],["Bright","yV-ouqODcFl6SwI"],["Dimmed","tfUe4Mo7DMSIzpk"],["Nightlight","amOkIr374v0wK2U"],["Dada","U5RiqK62ooaiDIA"],["Eben :)","23evjjtinlbxfXy"]],
+  "house:7":[["Office Bright","mauInies7FdR5AN"],["Office Dimmed","YH89dxjgGd7EMFy"],["Office Night","vV8CSKvd0vmtmON"],["Bright","ESscQoDspmSoQwl"],["Dimmed","hkWGbIYW0o2HgRB"],["Nice Colours Night","Y5fJULvQDCz-Zxu"],["Nice Colours Dimmed","LDuiuphvok3m0di"],["Nice Colours Bright","EmvbzuG3Z8YBENt"],["Just Nice Colours","fM6M7KUce8VO1yU"],["NFL 2026","nUNbRbDQDrKdYs3Z"],["Xmas","r9t0ptKIQaRCXizt"],["Neth/Eng Footy","4DFHQbPQw0iHe5Wr"],["Spain/Eng Footy","SbHM2nsz0egLWWGW"]],
+  "house:10":[["Cook","fu1UnoAfef43Y52"],["Relax","IST2oo3GXy2DhlZ"],["Night","XabJ8eHAMa-0smi"],["Osaka","3sas67ih-vFdmJq"],["Galaxy","3WJXdyzs-ZHpPc0"],["Xmas","AIqAQKPhhk0vcOO"],["Bright","wFJXxD-7wO2LqRk"],["Dimmed","XexsIDQ1BwdtNvY"],["Nightlight","X0o4VIWGL038T4P"]],
+  "utility:1":[["Bright","Uq7bUd0JObHb2Fx"],["Dimmed","aepnytsDnt271hp"],["Nightlight","fM0oLNnpav2dOhT"],["Energise","RrhWol7pVQ2LpAWy"],["Concentrate","edrTyU-A0RDnd5N8"],["Read","uD0JHTc9ChplGvhT"],["Relax","NxAkGVentaIX6XgH"]],
+  "utility:2":[["Bright","IlMmYNNvY5ItzAG"],["Dimmed","erEuWDrXFuxBcNl"],["Nightlight","Aqxe4pr8v-lLB-c"]],
+  "utility:3":[["Bright","vHo3Bu8yrquQa33"],["Dimmed","8EtcV3n8cmBEgpG"],["Nightlight","pwJfUQwbyK7CWAh"]],
+  "utility:4":[["Bright","QklFHNpwfV7AqRU"],["Dimmed","uk8ICeXud6zJE7J"],["Nightlight","fDARlnbrSRI5Y1t"]],
+  "utility:5":[["Bright","8fKZxYEXlDzy1jB"],["Dimmed","6RBogGJrfiQkM-D"],["Nightlight","j-rJ37JmxYUAUCc"]],
+  "utility:85":[["Bright","Qy26e7sR-keGpT1y"],["Dimmed","WdyKc04jAEcDkJ1k"]]
+};
+
 const grid=document.querySelector("#rooms");
 const dlg=document.querySelector("#detail");
 const dc=document.querySelector("#detailContent");
@@ -40,14 +59,16 @@ function controlMarkup(r){
   const colours=r.color?'<div class="control-block"><label>Colour</label><div class="colour-row">'+[
     ["#ffb36b","Warm"],["#ffffff","White"],["#6bb8ff","Blue"],["#d77bff","Purple"],["#ff6f91","Pink"],["#70e0a0","Green"]
   ].map(c=>'<button type="button" class="colour-btn" data-colour="'+c[0]+'" aria-label="'+c[1]+'" title="'+c[1]+'" style="--swatch:'+c[0]+'"></button>').join("")+'</div></div>':'';
+  const roomScenes=scenes[r.b+":"+r.g]||[];
+  const sceneMarkup=roomScenes.length?'<div class="control-block"><label>Scenes</label><div class="scene-grid">'+roomScenes.map(s=>'<button type="button" class="scene-btn" data-scene="'+s[1]+'">'+s[0]+'</button>').join("")+'</div></div>':'';
   return '<div class="controls">'+
-    '<div class="control-top"><button type="button" class="power-btn" data-power="toggle"><span class="power-dot"></span><span class="power-label">Power</span></button><span class="control-state">Preview</span></div>'+
-    '<div class="control-block"><div class="range-head"><label for="dimRange">Brightness</label><output id="dimValue">70%</output></div><input id="dimRange" class="dim-range" type="range" min="1" max="100" value="70"></div>'+
-    colours+
-    '<div class="control-note">'+(isLive?'Local control mode detected.':'Controls are ready, but GitHub Pages cannot securely talk directly to the Hue bridges. A small local connector will make these live.')+'</div>'+
+    '<div class="control-top"><button type="button" class="power-btn" data-power="toggle"><span class="power-dot"></span><span class="power-label">Power</span></button><span class="control-state">Connecting…</span></div>'+
+    '<div class="live-readout"><span class="live-dot"></span><span class="live-text">Reading Hue state…</span></div>'+
+    '<div class="control-block"><div class="range-head"><label for="dimRange">Brightness</label><output id="dimValue">—</output></div><input id="dimRange" class="dim-range" type="range" min="1" max="100" value="70"></div>'+
+    colours+sceneMarkup+
+    '<div class="control-note">'+(isLive?'Live through the Eldoret connector.':'Open Eldoret through the local Chromebook connector to use live controls.')+'</div>'+
   '</div>';
 }
-
 function openRoom(r){
   dc.innerHTML='<p class="eyebrow">'+r.x.toUpperCase()+' · '+(r.b==="house"?"HOUSE":"UTILITY")+'</p><h2>'+r.i+' '+r.n+'</h2><p>'+r.l+' Hue light'+(r.l===1?"":"s")+'</p>'+
     controlMarkup(r)+
@@ -60,7 +81,7 @@ function wireControls(r){
   const p=dc.querySelector(".power-btn");
   const range=dc.querySelector(".dim-range");
   const out=dc.querySelector("#dimValue");
-  if(p) p.addEventListener("click",()=>{p.classList.toggle("on");p.querySelector(".power-label").textContent=p.classList.contains("on")?"On":"Off";sendControl(r,{on:p.classList.contains("on")});});
+  if(p) p.addEventListener("click",()=>{const next=!p.classList.contains("on");setPowerUI(next);sendControl(r,{on:next});});
   if(range){
     range.addEventListener("input",()=>out.textContent=range.value+"%");
     range.addEventListener("change",()=>sendControl(r,{brightness:Number(range.value)}));
@@ -70,6 +91,39 @@ function wireControls(r){
     btn.classList.add("selected");
     sendControl(r,{colour:btn.dataset.colour});
   }));
+  dc.querySelectorAll(".scene-btn").forEach(btn=>btn.addEventListener("click",()=>activateScene(r,btn.dataset.scene,btn)));
+  refreshState(r);
+}
+
+function setPowerUI(on){
+  const p=dc.querySelector(".power-btn");
+  if(!p)return;
+  p.classList.toggle("on",!!on);
+  p.querySelector(".power-label").textContent=on?"On":"Off";
+}
+
+async function refreshState(r){
+  if(!isLive)return;
+  const state=dc.querySelector(".control-state");
+  const live=dc.querySelector(".live-text");
+  const dot=dc.querySelector(".live-dot");
+  try{
+    const res=await fetch("/api/hue/group?bridge="+encodeURIComponent(r.b)+"&group="+encodeURIComponent(r.g),{cache:"no-store"});
+    if(!res.ok)throw new Error("state");
+    const data=await res.json();
+    const on=!!(data.state&&data.state.any_on);
+    const bri=(data.action&&typeof data.action.bri==="number")?Math.max(1,Math.round(data.action.bri*100/254)):null;
+    setPowerUI(on);
+    const range=dc.querySelector(".dim-range"),out=dc.querySelector("#dimValue");
+    if(bri!==null&&range){range.value=bri;out.textContent=bri+"%";}
+    state.textContent="Live";
+    if(live)live.textContent=(on?"On":"Off")+(bri!==null?" · "+bri+"%":"");
+    if(dot)dot.classList.add("ok");
+  }catch(e){
+    state.textContent="Connector offline";
+    if(live)live.textContent="Unable to read Hue state";
+    if(dot)dot.classList.remove("ok");
+  }
 }
 
 async function sendControl(r,command){
@@ -80,6 +134,21 @@ async function sendControl(r,command){
     const res=await fetch("/api/hue/group",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridge:r.b,group:r.g,...command})});
     if(!res.ok) throw new Error("Control failed");
     state.textContent="Live";
+    setTimeout(()=>refreshState(r),180);
+  }catch(e){state.textContent="Connector offline";}
+}
+
+async function activateScene(r,scene,button){
+  if(!isLive)return;
+  const state=dc.querySelector(".control-state");
+  state.textContent="Scene…";
+  dc.querySelectorAll(".scene-btn").forEach(x=>x.classList.remove("selected"));
+  try{
+    const res=await fetch("/api/hue/scene",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridge:r.b,group:r.g,scene})});
+    if(!res.ok)throw new Error("Scene failed");
+    button.classList.add("selected");
+    state.textContent="Live";
+    setTimeout(()=>refreshState(r),250);
   }catch(e){state.textContent="Connector offline";}
 }
 
