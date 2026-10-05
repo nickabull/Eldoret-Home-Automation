@@ -155,3 +155,84 @@ async function activateScene(r,scene,button){
 document.querySelector(".close").addEventListener("click",()=>dlg.close());
 dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close();});
 render(window.ELDORET_FILTER||"all");
+
+
+function skyTime(value){
+  if(!value)return "";
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return "";
+  return d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+}
+
+async function refreshSkyNow(){
+  const panel=document.querySelector("#skyNow");
+  if(!panel)return;
+  const title=panel.querySelector(".sky-programme");
+  const meta=panel.querySelector(".sky-meta");
+  const synopsis=panel.querySelector(".sky-synopsis");
+  const logo=panel.querySelector(".sky-logo");
+  const badge=panel.querySelector(".sky-state");
+
+  if(!isLive){
+    title.textContent="Open through the Chromebook connector";
+    meta.textContent="Sky Q live readback is only available on your home network.";
+    synopsis.textContent="";
+    badge.textContent="LOCAL ONLY";
+    return;
+  }
+
+  try{
+    const res=await fetch("/api/sky/now",{cache:"no-store"});
+    if(!res.ok)throw new Error("Sky readback failed");
+    const data=await res.json();
+
+    if(!data.available){
+      title.textContent="Sky Q readback not ready";
+      meta.textContent=data.error||"Unable to query the Sky Q box.";
+      synopsis.textContent=data.setup||"";
+      badge.textContent="SETUP";
+      logo.hidden=true;
+      return;
+    }
+
+    if(String(data.power||"").toUpperCase()!=="ON"){
+      title.textContent="Sky Q is in standby";
+      meta.textContent=data.power||"Standby";
+      synopsis.textContent="";
+      badge.textContent="STANDBY";
+      logo.hidden=true;
+      return;
+    }
+
+    if(data.live){
+      title.textContent=data.programme||"Live TV";
+      const bits=[];
+      if(data.channelno)bits.push(data.channelno);
+      if(data.channel)bits.push(data.channel);
+      const start=skyTime(data.start), end=skyTime(data.end);
+      if(start&&end)bits.push(start+"–"+end);
+      meta.textContent=bits.join(" · ");
+      synopsis.textContent=data.synopsis||"";
+      badge.textContent="LIVE";
+      if(data.channel_image){
+        logo.src=data.channel_image;
+        logo.hidden=false;
+      }else logo.hidden=true;
+    }else{
+      title.textContent=data.app||data.programme||"Sky Q active";
+      meta.textContent=data.app?"App currently open":"Recording or non-live playback";
+      synopsis.textContent="";
+      badge.textContent=data.app?"APP":"PLAYBACK";
+      logo.hidden=true;
+    }
+  }catch(e){
+    title.textContent="Unable to read Sky Q";
+    meta.textContent="Check the Chromebook connector and Sky Q box.";
+    synopsis.textContent="";
+    badge.textContent="OFFLINE";
+    logo.hidden=true;
+  }
+}
+
+refreshSkyNow();
+if(isLive)setInterval(refreshSkyNow,20000);
