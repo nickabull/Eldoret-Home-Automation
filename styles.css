@@ -41,3 +41,24 @@
 .sport-channel.skybrand .sport-channel-logo{height:112px;max-width:100%;transform:scale(1.16);transform-origin:left center}
 .sport-channel.tntbrand .sport-channel-logo{height:88px;max-width:90%}
 @media(max-width:620px){.sport-channel.skybrand .sport-channel-logo{height:88px;transform:scale(1.14)}.sport-channel.tntbrand .sport-channel-logo{height:72px}}
+
+/* Sport logo balance v15 - Sky artwork contains more internal whitespace than TNT */
+.sport-channel.skybrand .sport-channel-logo{
+  width:125%;
+  max-width:none;
+  height:118px;
+  margin-left:-7%;
+  object-fit:contain;
+  object-position:left center;
+  transform:none;
+}
+.sport-channel.tntbrand .sport-channel-logo{
+  width:90%;
+  max-width:90%;
+  height:82px;
+  transform:none;
+}
+@media(max-width:620px){
+  .sport-channel.skybrand .sport-channel-logo{width:125%;height:94px;margin-left:-7%;transform:none}
+  .sport-channel.tntbrand .sport-channel-logo{width:90%;height:68px}
+}
