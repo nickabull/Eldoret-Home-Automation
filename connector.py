@@ -407,6 +407,57 @@ def sky_range_guide(start, end, page=0, size=14):
     pages = max(1, (total + size - 1) // size)
     return {"channels": channels, "page": page, "pages": pages, "total": total, "start": start, "end": end}
 
+def sky_top_picks(page=0, size=14):
+    services = sky_channel_list()
+    priority = [
+        "101","102","103","104","105","106","107","108","109","110",
+        "301","302","303","304","305","306","307","308",
+        "401","402","403","404","405","406","407","408","409",
+        "501","502","503","504","505"
+    ]
+    by_number = {str(s.get("c")): s for s in services}
+    ordered = []
+    seen = set()
+    for number in priority:
+        service = by_number.get(number)
+        if service:
+            ordered.append(service); seen.add(number)
+    for service in services:
+        number = str(service.get("c",""))
+        if number in seen or not number.isdigit():
+            continue
+        if 101 <= int(number) <= 599:
+            ordered.append(service); seen.add(number)
+
+    picks = []
+    for service in ordered:
+        if len(picks) >= 42:
+            break
+        item = {
+            "channelno": str(service.get("c","")),
+            "channel": service.get("t"),
+            "sid": service.get("sid"),
+            "logo": sky_channel_logo_url(service),
+            "programme": None,
+            "synopsis": None,
+            "start": None,
+            "end": None,
+        }
+        if service.get("sid"):
+            try:
+                item.update(sky_epg_now_next(service.get("sid")))
+            except Exception:
+                pass
+        if item.get("programme"):
+            picks.append(item)
+
+    page = max(0, int(page))
+    size = max(1, min(30, int(size)))
+    total = len(picks)
+    pages = max(1, (total + size - 1) // size)
+    page = min(page, pages - 1)
+    return {"channels": picks[page*size:(page+1)*size], "page": page, "pages": pages, "total": total}
+
 def sky_named_guide(group):
     services = sky_channel_list()
     numbered = GUIDE_CHANNEL_NUMBERS.get(group)
@@ -742,6 +793,7 @@ class Handler(BaseHTTPRequestHandler):
             "/hd.html": ("hd.html", "text/html; charset=utf-8"),
             "/plus1.html": ("plus1.html", "text/html; charset=utf-8"),
             "/music.html": ("music.html", "text/html; charset=utf-8"),
+            "/top-picks.html": ("top-picks.html", "text/html; charset=utf-8"),
             "/guide-sport.js": ("guide-sport.js", "application/javascript; charset=utf-8"),
             "/sky-search.js": ("sky-search.js", "application/javascript; charset=utf-8"),
             "/guide.js": ("guide.js", "application/javascript; charset=utf-8"),
@@ -788,6 +840,14 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(sky_named_guide(group)).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"channels": [], "error": str(e)}).encode())
+            return
+        if path == "/api/sky/top-picks":
+            try:
+                page = int(query.get("page", ["0"])[0])
+                size = int(query.get("size", ["14"])[0])
+                self.send_bytes(json.dumps(sky_top_picks(page, size)).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"channels": [], "page": 0, "pages": 1, "error": str(e)}).encode())
             return
         if path == "/api/sky/guide-range":
             try:
