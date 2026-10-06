@@ -747,3 +747,43 @@
 .printer-badge{align-self:start;background:#1a2432;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--muted)}
 .printer-badge.online{background:#173128;border-color:#376955;color:var(--accent)}
 @media(max-width:620px){.printer-panel{grid-template-columns:52px 1fr}.printer-icon{width:52px;height:52px}.printer-badge{grid-column:1/-1;justify-self:start}}
+
+
+/* Lights: Sport-inspired Hue dashboard */
+.lights-page{background:radial-gradient(circle at 15% 0,#18233a 0,#0a0f17 34%,#070b11 100%)}
+.lights-hero{max-width:1100px;margin:18px auto 8px;padding:24px 26px;border:1px solid #ffffff18;border-radius:26px;background:linear-gradient(120deg,#121b2d,#201831);display:flex;align-items:center;gap:20px;box-shadow:0 18px 50px #0005}
+.lights-hero h2{font-size:38px;margin:2px 0 4px}
+.lights-hero p{margin:0;color:#cdd7e6}
+.lights-hero-mark{width:76px;height:76px;border-radius:22px;display:grid;place-items:center;background:linear-gradient(135deg,#ffd66b,#a55bff);box-shadow:0 12px 32px #0005;flex:0 0 auto}
+.lights-hero-mark svg{width:44px;height:44px;fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.lights-section{max-width:1100px}
+.lights-room-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.light-room-card{position:relative;overflow:hidden;min-height:250px;border:1px solid #ffffff1a;border-radius:24px;padding:0;background:#111826;color:#fff;text-align:left;cursor:pointer;box-shadow:0 14px 34px #0005;transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease}
+.light-room-card::before{content:"";position:absolute;inset:0;background-image:var(--room-image);background-size:cover;background-position:center;transform:scale(1.02);transition:transform .35s ease}
+.light-room-card:hover::before{transform:scale(1.06)}
+.light-room-card:active{transform:scale(.985)}
+.light-room-card.selected{border-color:#8ce7c9;box-shadow:0 0 0 3px #73d5b128,0 18px 42px #0006}
+.light-room-shade{position:absolute;inset:0;background:linear-gradient(180deg,#07101a2b 0,#08111ccc 65%,#071019f7 100%)}
+.light-room-content{position:relative;z-index:1;min-height:250px;padding:16px;display:flex;flex-direction:column;justify-content:space-between}
+.light-room-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.light-room-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:#06111cc4;border:1px solid #ffffff28;backdrop-filter:blur(8px)}
+.light-room-icon svg{width:23px;height:23px;fill:none;stroke:#fff;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.light-room-state{font-size:11px;font-weight:900;letter-spacing:.08em;border:1px solid #ffffff2a;background:#07111cc9;border-radius:999px;padding:7px 9px}
+.light-room-state.on{background:#183e34d9;border-color:#6fe5bd;color:#baffea}
+.light-room-content p{font-size:10px;letter-spacing:.14em;font-weight:900;color:#a7f0d8;margin:0 0 5px}
+.light-room-content h3{font-size:25px;line-height:1.02;margin:0 0 5px;text-shadow:0 3px 15px #000}
+.light-room-content small{color:#d7dfeb;font-size:13px;font-weight:750}
+.lights-scenes-section{margin-bottom:44px}
+.lights-scene-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.light-scene-card{position:relative;overflow:hidden;min-height:150px;border:1px solid #ffffff1b;border-radius:22px;padding:18px;color:#fff;text-align:left;cursor:pointer;background:var(--scene-look);box-shadow:0 12px 30px #0004;transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+.light-scene-card::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#ffffff12,#00000055)}
+.light-scene-card>div{position:relative;z-index:2}
+.light-scene-card p{font-size:10px;letter-spacing:.15em;font-weight:900;margin:0 0 8px;color:#fffbd7}
+.light-scene-card h3{font-size:23px;line-height:1.02;margin:0 0 7px;text-shadow:0 3px 14px #0007}
+.light-scene-card small{font-size:12px;font-weight:800;color:#f6f8fb}
+.light-scene-card:active,.light-scene-card.sending{transform:scale(.98)}
+.light-scene-card.active{border-color:#fff;box-shadow:0 0 0 3px #ffffff33,0 14px 34px #0005}
+.light-scene-card.failed{border-color:#ff7f7f}
+.lights-empty{grid-column:1/-1;border:1px dashed #ffffff24;border-radius:22px;padding:30px;text-align:center;color:#aeb8c8;background:#ffffff08}
+@media(max-width:900px){.lights-room-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lights-scene-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.lights-hero{align-items:flex-start}.lights-hero h2{font-size:31px}.lights-room-grid,.lights-scene-grid{grid-template-columns:1fr}.light-room-card,.light-room-content{min-height:210px}}
