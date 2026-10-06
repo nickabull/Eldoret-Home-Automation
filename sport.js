@@ -47,10 +47,13 @@ async function refreshSportGuide(){
         return;
       }
       if(logo && item.logo){logo.src=item.logo;logo.hidden=false;}
-      if(button.dataset.channel==="401" && item.programmeuuid){
+      if(item.programmeuuid){
         const artwork=programmeArtworkUrl(item.programmeuuid);
         button.style.setProperty("--programme-artwork", 'url("' + artwork + '")');
         button.classList.add("has-programme-artwork");
+      } else {
+        button.classList.remove("has-programme-artwork");
+        button.style.removeProperty("--programme-artwork");
       }
       if(onair){
         const nowTime=[skyClock(item.start),skyClock(item.end)].filter(Boolean).join("–");
