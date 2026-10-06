@@ -178,6 +178,21 @@ def sky_channel_logo_url(service):
     chid = "".join(ch for ch in name.lower() if ch.isalnum())
     return f"https://imageservice.sky.com/logo/skychb_{sid}{chid}/600/600?territory=GB&provider=SKY&proposition=SKYQ"
 
+def radio_stations():
+    url = "https://de1.api.radio-browser.info/json/stations/search?countrycode=GB&hidebroken=true&order=votes&reverse=true&limit=84"
+    req = urllib.request.Request(url, headers={"User-Agent":"EldoretHomeAutomation/1.0"})
+    with urllib.request.urlopen(req, timeout=15) as response:
+        raw = json.loads(response.read().decode("utf-8", errors="replace"))
+    seen, stations = set(), []
+    for s in raw:
+        name = str(s.get("name") or "").strip()
+        stream = s.get("url_resolved") or s.get("url")
+        key=(name.lower(),stream)
+        if not name or not stream or key in seen: continue
+        seen.add(key)
+        stations.append({"stationuuid":s.get("stationuuid"),"name":name,"url":s.get("url"),"url_resolved":stream,"homepage":s.get("homepage"),"favicon":s.get("favicon"),"tags":s.get("tags"),"country":s.get("country"),"codec":s.get("codec"),"bitrate":s.get("bitrate")})
+    return {"stations":stations}
+
 def sky_search_channels(query):
     q = (query or "").strip().lower()
     if not q:
@@ -522,6 +537,8 @@ class Handler(BaseHTTPRequestHandler):
             "/av.html": ("av.html", "text/html; charset=utf-8"),
             "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
             "/office.html": ("office.html", "text/html; charset=utf-8"),
+            "/radio.html": ("radio.html", "text/html; charset=utf-8"),
+            "/radio.js": ("radio.js", "application/javascript; charset=utf-8"),
             "/movies.html": ("movies.html", "text/html; charset=utf-8"),
             "/news.html": ("news.html", "text/html; charset=utf-8"),
             "/documentaries.html": ("documentaries.html", "text/html; charset=utf-8"),
@@ -538,6 +555,10 @@ class Handler(BaseHTTPRequestHandler):
         if path in files:
             filename, ctype = files[path]
             self.send_bytes(fetch_github(filename), ctype)
+            return
+        if path == "/api/radio/stations":
+            try: self.send_bytes(json.dumps(radio_stations()).encode())
+            except Exception as e: self.send_bytes(json.dumps({"stations":[],"error":str(e)}).encode())
             return
         if path == "/api/network/status":
             try:
