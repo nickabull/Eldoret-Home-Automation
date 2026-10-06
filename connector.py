@@ -170,6 +170,29 @@ def sky_channel_logo_url(service):
     chid = "".join(ch for ch in name.lower() if ch.isalnum())
     return f"https://imageservice.sky.com/logo/skychb_{sid}{chid}/600/600?territory=GB&provider=SKY&proposition=SKYQ"
 
+def sky_search_channels(query):
+    q = (query or "").strip().lower()
+    if not q:
+        return {"results": []}
+    services = sky_channel_list()
+    results = []
+    for service in services:
+        name = str(service.get("t", ""))
+        number = str(service.get("c", ""))
+        if q in name.lower() or q == number:
+            item = {
+                "channel": name,
+                "channelno": number,
+                "sid": service.get("sid"),
+                "logo": sky_channel_logo_url(service),
+                "programme": None,
+            }
+            if service.get("sid"):
+                item.update(sky_epg_now(service.get("sid")))
+            results.append(item)
+    results.sort(key=lambda x: (0 if x["channel"].lower().startswith(q) else 1, x.get("channelno") or "9999", x["channel"].lower()))
+    return {"results": results[:20]}
+
 def sky_named_guide(group):
     wanted = GUIDE_GROUPS.get(group, [])
     services = sky_channel_list()
@@ -496,6 +519,13 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(network_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/sky/search":
+            try:
+                term = query.get("q", [""])[0]
+                self.send_bytes(json.dumps(sky_search_channels(term)).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"results": [], "error": str(e)}).encode())
             return
         if path == "/api/sky/guide":
             try:
