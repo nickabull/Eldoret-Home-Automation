@@ -148,6 +148,42 @@ def printer_status():
         result["detail"]="No printer web service answered."
     return result
 
+def infrastructure_status():
+    targets = [
+        {"ip":"10.0.0.1","name":"Main Router","ports":[22,53,80,443,8080,8443]},
+        {"ip":"10.0.0.6","name":"UniFi Office/Kitchen","ports":[22,80,443,8080,8443]},
+        {"ip":"10.0.0.7","name":"UniFi Utility","ports":[22,80,443,8080,8443]},
+        {"ip":"10.0.0.8","name":"UniFi Garden","ports":[22,80,443,8080,8443]},
+        {"ip":"10.0.0.9","name":"UniFi Landing","ports":[22,80,443,8080,8443]},
+    ]
+    out = []
+    ctx = ssl._create_unverified_context()
+    import re
+    for target in targets:
+        open_ports = [p for p in target["ports"] if _tcp_open(target["ip"], p, timeout=0.35)]
+        item = {"ip":target["ip"],"name":target["name"],"online":bool(open_ports),
+                "ports":open_ports,"web":[]}
+        for scheme, port in (("http",80),("https",443),("http",8080),("https",8443)):
+            if port not in open_ports:
+                continue
+            try:
+                url = scheme + "://" + target["ip"] + ((":" + str(port)) if port not in (80,443) else "") + "/"
+                req = urllib.request.Request(url, headers={"User-Agent":"Eldoret/1.0"})
+                with urllib.request.urlopen(req, timeout=2, context=ctx if scheme=="https" else None) as response:
+                    body = response.read(65536).decode("utf-8", errors="replace")
+                    headers = dict(response.headers.items())
+                    status = getattr(response, "status", 200)
+                m = re.search(r"<title[^>]*>(.*?)</title>", body, re.I|re.S)
+                title = " ".join(re.sub(r"<[^>]+>"," ",m.group(1)).split())[:160] if m else None
+                item["web"].append({"url":url,"status":status,"title":title,
+                                    "server":headers.get("Server"),
+                                    "location":headers.get("Location")})
+            except Exception as exc:
+                item["web"].append({"port":port,"scheme":scheme,"error":str(exc)[:160]})
+        out.append(item)
+    return {"targets":out,"checked_at":datetime.now(timezone.utc).isoformat(),
+            "mode":"read-only fingerprint"}
+
 def network_status():
     devices = []
     for d in NETWORK_PROBES:
@@ -859,6 +895,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(network_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/network/infrastructure":
+            try:
+                self.send_bytes(json.dumps(infrastructure_status()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"targets": [], "error": str(e)}).encode())
             return
         if path == "/api/playstation/status":
             try:
