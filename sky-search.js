@@ -9,7 +9,7 @@ const overlay=document.querySelector("#skySearchOverlay"),input=document.querySe
 function openSearch(){overlay.hidden=false;requestAnimationFrame(()=>overlay.classList.add("open"));input.value="";renderResults([],"");}
 function closeSearch(){overlay.classList.remove("open");setTimeout(()=>overlay.hidden=true,120);}
 document.querySelector("#skySearchOpen").addEventListener("click",openSearch);document.querySelector("#skySearchClose").addEventListener("click",closeSearch);overlay.addEventListener("click",e=>{if(e.target===overlay)closeSearch();});
-["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"].forEach(row=>{const r=document.createElement("div");r.className="sky-keyboard-row";[...row].forEach(ch=>{const b=document.createElement("button");b.type="button";b.textContent=ch;b.onclick=()=>type(ch);r.appendChild(b)});keyboard.appendChild(r)});
+["1234567890","QWERTYUIOP","ASDFGHJKL","ZXCVBNM"].forEach(row=>{const r=document.createElement("div");r.className="sky-keyboard-row";[...row].forEach(ch=>{const b=document.createElement("button");b.type="button";b.textContent=ch;b.onclick=()=>type(ch);r.appendChild(b)});keyboard.appendChild(r)});
 const bottom=document.createElement("div");bottom.className="sky-keyboard-row sky-keyboard-bottom";[["SPACE"," "],["⌫","BACK"],["CLEAR","CLEAR"]].forEach(([label,val])=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.className=label==="SPACE"?"space":"";b.onclick=()=>type(val);bottom.appendChild(b)});keyboard.appendChild(bottom);
 let timer,searchSeq=0,searchController=null;
 function type(v){if(v==="BACK")input.value=input.value.slice(0,-1);else if(v==="CLEAR")input.value="";else input.value+=v;searchSoon()}
