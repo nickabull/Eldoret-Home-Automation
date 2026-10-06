@@ -37,7 +37,7 @@ GUIDE_GROUPS = {"news":["Sky News","BBC News","CNN","GB News","Bloomberg","BBC P
 SPORT_CHANNEL_NUMBERS = ["401","402","403","404","405","406","407","408","409","410","411","412","413","414","419"]
 SKY_KEY_MAP = {
     "power":0,"select":1,"backup":2,"channelup":6,"channeldown":7,
-    "search":10,"home":11,"up":16,"down":17,"left":18,"right":19,"red":32,
+    "help":9,"search":10,"home":11,"up":16,"down":17,"left":18,"right":19,"red":32,
     "0":48,"1":49,"2":50,"3":51,"4":52,"5":53,"6":54,"7":55,"8":56,"9":57,
     "play":64,"pause":65,"stop":66,"record":67,"fastforward":69,"rewind":71
 }
