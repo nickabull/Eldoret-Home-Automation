@@ -62,57 +62,46 @@ def _tcp_open(ip, port, timeout=0.25):
 
 def printer_status():
     host = "10.0.0.3"
-    result = {
-        "ip": host,
-        "online": False,
-        "ports": [],
-        "model": None,
-        "title": None,
-        "http": False,
-        "https": False,
-        "ipp": False,
-        "raw_print": False,
-        "detail": None,
-    }
-    ports = []
-    for port in (80, 443, 631, 9100):
-        if _tcp_open(host, port, timeout=0.4):
-            ports.append(port)
-    result["ports"] = ports
-    result["online"] = bool(ports)
-    result["http"] = 80 in ports
-    result["https"] = 443 in ports
-    result["ipp"] = 631 in ports
-    result["raw_print"] = 9100 in ports
-    if 80 in ports:
-        try:
-            req = urllib.request.Request("http://" + host + "/", headers={"User-Agent":"Eldoret/1.0"})
-            with urllib.request.urlopen(req, timeout=3, context=ssl._create_unverified_context()) as response:
-                body = response.read(120000).decode("utf-8", errors="replace")
-            low = body.lower()
-            a = low.find("<title")
-            if a >= 0:
-                a = low.find(">", a)
-                b = low.find("</title>", a + 1)
-                if a >= 0 and b > a:
-                    title = " ".join(body[a+1:b].split())
-                    result["title"] = title[:160]
-                    if "epson" in title.lower():
-                        result["model"] = title
-            for key in ("model name", "product name", "epson"):
-                idx = low.find(key)
-                if idx >= 0:
-                    snippet = " ".join(body[max(0,idx-80):idx+180].replace("<"," ").replace(">"," ").split())
-                    result["detail"] = snippet[:240]
-                    break
-        except Exception as exc:
-            result["detail"] = "Web interface reachable but status page could not be read: " + str(exc)
+    result = {"ip": host, "online": False, "ports": [], "model": None, "title": None,
+              "http": False, "https": False, "ipp": False, "raw_print": False,
+              "detail": None, "ink": [], "probe": []}
+    ports = [p for p in (80,443,631,9100) if _tcp_open(host,p,timeout=0.4)]
+    result.update({"ports":ports,"online":bool(ports),"http":80 in ports,"https":443 in ports,
+                   "ipp":631 in ports,"raw_print":9100 in ports})
+    if 80 in ports or 443 in ports:
+        # Epson models expose consumables differently. Probe common read-only WebConfig/status URLs.
+        paths = ["/", "/PRESENTATION/HTML/TOP/INDEX.HTML", "/PRESENTATION/HTML/TOP/PRTINFO.HTML",
+                 "/PRESENTATION/HTML/TOP/PRTINFO.JS", "/PRESENTATION/HTML/TOP/INK.HTML",
+                 "/PRESENTATION/HTML/TOP/STATUS.HTML", "/cgi-bin/PrinterStatus.cgi",
+                 "/cgi-bin/Status.cgi", "/cgi-bin/InkLevel.cgi"]
+        ctx = ssl._create_unverified_context()
+        for path in paths:
+            try:
+                req=urllib.request.Request("https://"+host+path,headers={"User-Agent":"Eldoret/1.0"})
+                with urllib.request.urlopen(req,timeout=2,context=ctx) as response:
+                    body=response.read(180000).decode("utf-8",errors="replace")
+                low=body.lower()
+                hits=[k for k in ("ink","black","cyan","magenta","yellow","cartridge","consumable","model") if k in low]
+                result["probe"].append({"path":path,"ok":True,"hits":hits,"length":len(body)})
+                if path == "/":
+                    import re
+                    m=re.search(r"<title[^>]*>(.*?)</title>",body,re.I|re.S)
+                    if m:
+                        title=" ".join(re.sub(r"<[^>]+>"," ",m.group(1)).split())
+                        result["title"]=title[:160]
+                        if "epson" in title.lower(): result["model"]=title
+                # Capture small text fragments around consumable terms for the next parser step.
+                for key in ("black","cyan","magenta","yellow","ink level","inklevel"):
+                    pos=low.find(key)
+                    if pos >= 0:
+                        frag=" ".join(re.sub(r"<[^>]+>"," ",body[max(0,pos-120):pos+260]).split())
+                        if frag and not any(x.get("text")==frag[:300] for x in result["ink"]):
+                            result["ink"].append({"source":path,"key":key,"text":frag[:300]})
+            except Exception as exc:
+                result["probe"].append({"path":path,"ok":False,"error":str(exc)[:120]})
+        result["detail"] = "Epson online; consumables probe complete."
     if not result["detail"]:
-        labels = []
-        if result["http"]: labels.append("web")
-        if result["ipp"]: labels.append("IPP")
-        if result["raw_print"]: labels.append("JetDirect")
-        result["detail"] = "Services: " + ", ".join(labels) if labels else "No printer services answered"
+        result["detail"]="No printer web service answered."
     return result
 
 def network_status():
