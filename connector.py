@@ -193,6 +193,33 @@ def radio_stations():
         stations.append({"stationuuid":s.get("stationuuid"),"name":name,"url":s.get("url"),"url_resolved":stream,"homepage":s.get("homepage"),"favicon":s.get("favicon"),"tags":s.get("tags"),"country":s.get("country"),"codec":s.get("codec"),"bitrate":s.get("bitrate")})
     return {"stations":stations}
 
+def sky_recordings_top14():
+    data = sky_json("/as/pvr/?limit=14&offset=0")
+    items = data.get("pvrItems", []) if isinstance(data, dict) else []
+    recordings = []
+    for r in items[:14]:
+        start_ts = r.get("ast") or r.get("st") or 0
+        end_ts = start_ts + (r.get("finald") or r.get("schd") or 0) if start_ts else 0
+        recordings.append({
+            "pvrid": r.get("pvrid"),
+            "title": r.get("t"),
+            "channel": r.get("cn"),
+            "synopsis": r.get("sy"),
+            "summary": r.get("sy"),
+            "status": r.get("status"),
+            "season": r.get("seasonnumber"),
+            "episode": r.get("episodenumber"),
+            "programmeuuid": r.get("programmeuuid"),
+            "start": datetime.fromtimestamp(start_ts, tz=timezone.utc).isoformat() if start_ts else None,
+            "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts else None,
+        })
+    return {"recordings": recordings}
+
+def sky_play_recording(pvrid):
+    if not pvrid: raise ValueError("Missing pvrid")
+    sky_json("/as/pvr/play/" + urllib.parse.quote(str(pvrid), safe=""))
+    return True
+
 def sky_search_channels(query):
     q = (query or "").strip().lower()
     if not q:
@@ -539,6 +566,8 @@ class Handler(BaseHTTPRequestHandler):
             "/office.html": ("office.html", "text/html; charset=utf-8"),
             "/radio.html": ("radio.html", "text/html; charset=utf-8"),
             "/radio.js": ("radio.js", "application/javascript; charset=utf-8"),
+            "/recordings.html": ("recordings.html", "text/html; charset=utf-8"),
+            "/recordings.js": ("recordings.js", "application/javascript; charset=utf-8"),
             "/movies.html": ("movies.html", "text/html; charset=utf-8"),
             "/news.html": ("news.html", "text/html; charset=utf-8"),
             "/documentaries.html": ("documentaries.html", "text/html; charset=utf-8"),
@@ -565,6 +594,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(network_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/sky/recordings":
+            try: self.send_bytes(json.dumps(sky_recordings_top14()).encode())
+            except Exception as e: self.send_bytes(json.dumps({"recordings":[],"error":str(e)}).encode())
             return
         if path == "/api/sky/search":
             try:
@@ -610,6 +643,13 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(length))
+        if self.path == "/api/sky/recording/play":
+            try:
+                sky_play_recording(payload.get("pvrid"))
+                self.send_bytes(json.dumps({"ok":True}).encode())
+            except Exception as e:
+                self.send_response(500); self.end_headers(); self.wfile.write(str(e).encode())
+            return
         if self.path == "/api/sky/channel":
             channel = str(payload.get("channel", ""))
             try:
