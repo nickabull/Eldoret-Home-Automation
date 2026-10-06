@@ -19,6 +19,7 @@ GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automati
 STATIC_CACHE = {}
 STATIC_CACHE_TTL = 300
 AGENT_TASK_URL = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/agent-task.json"
+AGENT_RELAY_URL = "https://ntfy.sh/eldoret-relay-7e6b9d2c4f8a31b5a0c9e247d6f31c8e"
 AGENT_RESULTS_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-results.json")
 AGENT_STATE_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-state.json")
 AGENT_RESULT = {"status":"waiting","task":None,"task_id":None,"result":None,"error":None,"finished_at":None}
@@ -1071,6 +1072,23 @@ def _agent_write_json(path, value):
     except Exception:
         pass
 
+def agent_relay(value):
+    # One-way diagnostic relay. Only allow-listed task results are sent.
+    # Environment variables, credentials and local config files are never included.
+    try:
+        payload=json.dumps(value, ensure_ascii=False).encode("utf-8")
+        req=urllib.request.Request(
+            AGENT_RELAY_URL,
+            data=payload,
+            headers={"User-Agent":"Eldoret-Agent/1.0","Content-Type":"text/plain"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as response:
+            response.read()
+        return True
+    except Exception:
+        return False
+
 def run_agent_task(task):
     # Deliberately allow-listed. No arbitrary commands or shell execution.
     allowed = {
@@ -1112,6 +1130,7 @@ def agent_loop():
                     AGENT_RESULT={"status":"error","task":task,"task_id":task_id,"result":None,"error":str(exc)[:500],
                                   "finished_at":datetime.now(timezone.utc).isoformat()}
                 _agent_write_json(AGENT_RESULTS_FILE, AGENT_RESULT)
+                agent_relay(AGENT_RESULT)
                 last_id=task_id
                 _agent_write_json(AGENT_STATE_FILE, {"last_task_id":last_id})
         except Exception:
