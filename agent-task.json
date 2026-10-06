@@ -1,5 +1,5 @@
 {
-  "id": "2026-10-06T22:49:00Z-printer-roundtrip-test",
-  "task": "printer_status",
-  "note": "Round-trip test: Epson ET-3850 live status and ink levels"
+  "id": "2026-10-06T22:55:30Z-discovery-1",
+  "task": "discover_devices",
+  "note": "Refresh dynamic Eldoret device registry"
 }
