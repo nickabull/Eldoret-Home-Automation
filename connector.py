@@ -61,6 +61,27 @@ def _tcp_open(ip, port, timeout=0.25):
     except Exception:
         return False
 
+def lg_pair_page():
+    return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pair LG TV</title>
+<style>body{font-family:system-ui;background:#09111d;color:#eef5ff;padding:32px}button{font-size:20px;padding:16px 24px;border:0;border-radius:14px}pre{white-space:pre-wrap;background:#111d2c;padding:18px;border-radius:14px}</style></head>
+<body><h1>Pair Eldoret with LG TV</h1><p>TV: 10.0.0.33. Press Pair, then accept the prompt on the television.</p><button id="go">Pair TV</button><pre id="out">Ready.</pre>
+<script>
+const out=document.querySelector("#out");
+document.querySelector("#go").onclick=()=>{
+ const ws=new WebSocket("ws://10.0.0.33:3000/");
+ ws.onopen=()=>{out.textContent="Connected. Sending pairing request…";
+  ws.send(JSON.stringify({type:"register",id:"eldoret-register",payload:{forcePairing:false,pairingType:"PROMPT",manifest:{manifestVersion:1,permissions:["CONTROL_AUDIO","CONTROL_INPUT_TV","CONTROL_POWER","READ_APP_STATUS","READ_CURRENT_CHANNEL","READ_INPUT_DEVICE_LIST","READ_RUNNING_APPS","READ_POWER_STATE","READ_INSTALLED_APPS"]}}}));
+ };
+ ws.onmessage=(e)=>{let m;try{m=JSON.parse(e.data)}catch(_){m={raw:e.data}}
+  if(m.type==="registered"&&m.payload&&m.payload["client-key"]){
+   out.textContent="PAIRED OK.\n\nClient key (keep private):\n"+m.payload["client-key"]+"\n\nNext: save this key locally on the Chromebook; do not send it in chat.";
+   ws.close();
+  }else out.textContent="TV reply:\n"+JSON.stringify(m,null,2);
+ };
+ ws.onerror=()=>out.textContent="WebSocket connection failed. Leave the TV on and try again.";
+};
+</script></body></html>"""
+
 def lg_tv_status(ip="10.0.0.33"):
     ports=[p for p in (80,3000,3001) if _tcp_open(ip,p,timeout=0.5)]
     return {
@@ -898,6 +919,9 @@ class Handler(BaseHTTPRequestHandler):
         if path in files:
             filename, ctype = files[path]
             self.send_bytes(fetch_github(filename), ctype)
+            return
+        if path == "/lg-pair":
+            self.send_bytes(lg_pair_page().encode(), "text/html; charset=utf-8")
             return
         if path == "/api/radio/stations":
             try: self.send_bytes(json.dumps(radio_stations()).encode())
