@@ -33,7 +33,14 @@ NETWORK_PROBES = [
  {"ip":"10.0.0.43","name":"LG device","ports":[3000,3001,80]},
  {"ip":"10.0.0.47","name":"LG device","ports":[3000,3001,80]}
 ]
-GUIDE_GROUPS = {"news":["Sky News","BBC News","CNN","GB News","Bloomberg","BBC Parliament","CNBC"],"entertainment":["BBC One","BBC Two","ITV1","Channel 4","Channel 5","Sky Atlantic","Sky Max","Sky Witness","Gold","Dave","Comedy Central","Discovery"]}
+GUIDE_GROUPS = {
+    "movies": ["Sky Cinema Premiere","Sky Cinema Select","Sky Cinema Hits","Sky Cinema Greats","Sky Cinema Animation","Sky Cinema Family","Sky Cinema Action","Sky Cinema Comedy","Sky Cinema Thriller","Sky Cinema Drama","Sky Cinema Sci-Fi Horror","Film4","Talking Pictures"],
+    "news": ["Sky News","BBC News","CNN","GB News","Bloomberg","BBC Parliament","CNBC"],
+    "documentaries": ["Sky Documentaries","Sky Nature","Sky History","National Geographic","Discovery","Animal Planet","Crime + Investigation","PBS America","Yesterday"],
+    "hd": ["BBC One HD","BBC Two HD","ITV1 HD","Channel 4 HD","Channel 5 HD","Sky Atlantic HD","Sky Max HD","Sky Witness HD","Sky Arts HD","Gold HD","Discovery HD","National Geographic HD","Sky News HD","TNT Sports 1 HD"],
+    "plus1": ["Channel 4 +1","Channel 5 +1","ITV1 +1","Sky Witness +1","Comedy Central +1","Gold +1","Dave ja vu"],
+    "music": ["MTV Music","MTV Hits","MTV 80s","MTV 90s","Clubland TV","NOW 80s","NOW 90s","Trace Hits","4Music"]
+}
 SPORT_CHANNEL_NUMBERS = ["401","402","403","404","405","406","407","408","409","410","411","412","413","414","419"]
 SKY_KEY_MAP = {
     "power":0,"select":1,"backup":2,"channelup":6,"channeldown":7,
