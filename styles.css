@@ -96,3 +96,21 @@
  .sport-page .sky-subnav a{min-height:40px!important}
  .sport-page .now-watching{margin-top:6px!important;margin-bottom:8px!important;padding:10px 16px!important}
 }
+
+/* Sport full-grid v20 - fit all channels into one widescreen viewport */
+@media (min-width:1000px) and (min-height:650px){
+ .sport-page .hero{padding:8px 18px!important;margin:4px 0 6px!important}
+ .sport-page .hero p{display:none!important}
+ .sport-page .now-watching{padding:7px 14px!important;margin:4px auto 6px!important}
+ .sport-page .now-watching .synopsis{display:none!important}
+ .sport-page .sport-section{margin-top:4px!important}
+ .sport-page .sport-section h2{font-size:20px!important;margin:2px 0 6px!important}
+ .sport-page .sport-grid{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:8px!important}
+ .sport-page .sport-channel{padding:7px 8px!important;border-radius:14px!important}
+ .sport-page .sport-channel-logo{height:40px!important;max-height:40px!important}
+ .sport-page .sport-channel.skybrand .sport-channel-logo{height:50px!important}
+ .sport-page .sport-channel h3{font-size:16px!important;margin:4px 0!important}
+ .sport-page .sport-channel .synopsis{display:none!important}
+ .sport-page .sport-channel .programme{font-size:12px!important;line-height:1.15!important}
+ .sport-page .sport-channel .next{font-size:11px!important;line-height:1.15!important}
+}
