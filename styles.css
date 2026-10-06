@@ -598,3 +598,27 @@
 .channel-pad-dpad .dpad-down,
 .channel-pad-dpad .dpad-left,
 .channel-pad-dpad .dpad-right{border:0!important}
+
+/* Sport v41: guaranteed local-style F1 visual fallback */
+.sport-channel[data-channel="407"].f1-fallback,
+.sport-channel[data-channel="407"].artwork-missing{
+  position:relative;
+  background:
+    linear-gradient(180deg,rgba(6,10,18,.08) 0%,rgba(6,10,18,.30) 40%,rgba(6,10,18,.94) 100%),
+    linear-gradient(120deg,#07111f 0%,#183b66 48%,#07111f 100%)!important;
+}
+.sport-channel[data-channel="407"].f1-fallback::after,
+.sport-channel[data-channel="407"].artwork-missing::after{
+  content:"F1";
+  position:absolute;
+  right:12px;
+  top:42px;
+  z-index:0;
+  font:900 italic 74px/1 Arial,sans-serif;
+  letter-spacing:-8px;
+  color:rgba(255,255,255,.12);
+  transform:skew(-9deg);
+  pointer-events:none;
+}
+.sport-channel[data-channel="407"].f1-fallback>*,
+.sport-channel[data-channel="407"].artwork-missing>*{position:relative;z-index:1}
