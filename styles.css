@@ -361,3 +361,9 @@
   font-weight:850!important;
   line-height:1!important;
 }
+
+/* Sport synopsis readability v30 */
+.sport-page .sport-channel .sport-synopsis{
+  color:rgba(255,255,255,.92)!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.72);
+}
