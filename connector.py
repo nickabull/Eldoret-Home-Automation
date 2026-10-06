@@ -59,6 +59,61 @@ def _tcp_open(ip, port, timeout=0.25):
     except Exception:
         return False
 
+def printer_status():
+    host = "10.0.0.3"
+    result = {
+        "ip": host,
+        "online": False,
+        "ports": [],
+        "model": None,
+        "title": None,
+        "http": False,
+        "https": False,
+        "ipp": False,
+        "raw_print": False,
+        "detail": None,
+    }
+    ports = []
+    for port in (80, 443, 631, 9100):
+        if _tcp_open(host, port, timeout=0.4):
+            ports.append(port)
+    result["ports"] = ports
+    result["online"] = bool(ports)
+    result["http"] = 80 in ports
+    result["https"] = 443 in ports
+    result["ipp"] = 631 in ports
+    result["raw_print"] = 9100 in ports
+    if 80 in ports:
+        try:
+            req = urllib.request.Request("http://" + host + "/", headers={"User-Agent":"Eldoret/1.0"})
+            with urllib.request.urlopen(req, timeout=3) as response:
+                body = response.read(120000).decode("utf-8", errors="replace")
+            low = body.lower()
+            a = low.find("<title")
+            if a >= 0:
+                a = low.find(">", a)
+                b = low.find("</title>", a + 1)
+                if a >= 0 and b > a:
+                    title = " ".join(body[a+1:b].split())
+                    result["title"] = title[:160]
+                    if "epson" in title.lower():
+                        result["model"] = title
+            for key in ("model name", "product name", "epson"):
+                idx = low.find(key)
+                if idx >= 0:
+                    snippet = " ".join(body[max(0,idx-80):idx+180].replace("<"," ").replace(">"," ").split())
+                    result["detail"] = snippet[:240]
+                    break
+        except Exception as exc:
+            result["detail"] = "Web interface reachable but status page could not be read: " + str(exc)
+    if not result["detail"]:
+        labels = []
+        if result["http"]: labels.append("web")
+        if result["ipp"]: labels.append("IPP")
+        if result["raw_print"]: labels.append("JetDirect")
+        result["detail"] = "Services: " + ", ".join(labels) if labels else "No printer services answered"
+    return result
+
 def network_status():
     devices = []
     for d in NETWORK_PROBES:
