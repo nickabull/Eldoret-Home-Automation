@@ -13,6 +13,8 @@ BRIDGES = {
     "utility": {"ip": "10.0.0.4", "key": os.environ.get("UTILITY_HUE_KEY")},
 }
 GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/"
+STATIC_CACHE = {}
+STATIC_CACHE_TTL = 30
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
 SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
 SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
@@ -95,8 +97,23 @@ for name, config in BRIDGES.items():
         raise SystemExit(f"{name} Hue key is not set")
 
 def fetch_github(path):
-    with urllib.request.urlopen(GITHUB_BASE + path, timeout=10) as response:
-        return response.read()
+    now = time.time()
+    cached = STATIC_CACHE.get(path)
+    if cached and (now - cached["time"] < STATIC_CACHE_TTL):
+        return cached["data"]
+    try:
+        req = urllib.request.Request(
+            GITHUB_BASE + path,
+            headers={"User-Agent": "Eldoret-Connector/1.0", "Cache-Control": "no-cache"},
+        )
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = response.read()
+        STATIC_CACHE[path] = {"time": now, "data": data}
+        return data
+    except Exception:
+        if cached:
+            return cached["data"]
+        raise
 
 def hue_get(bridge_name, path):
     bridge = BRIDGES[bridge_name]
