@@ -1,6 +1,6 @@
 const statusEl=document.querySelector("#skyRemoteStatus");
 const keys=document.querySelectorAll("[data-sky-key]");
-const isLive=location.protocol==="http:";
+const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");
 async function sendSkyKey(key,button){
   if(!isLive){statusEl.textContent="Open through the local Chromebook connector to control Sky Q.";return;}
   statusEl.textContent="Sending "+key+"…";
