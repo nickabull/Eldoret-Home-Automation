@@ -22,8 +22,12 @@ AGENT_TASK_URL = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Autom
 AGENT_RELAY_URL = "https://ntfy.sh/eldoret-relay-7e6b9d2c4f8a31b5a0c9e247d6f31c8e"
 AGENT_RESULTS_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-results.json")
 AGENT_STATE_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-state.json")
+DEVICE_REGISTRY_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "device-registry.json")
 AGENT_RESULT = {"status":"waiting","task":None,"task_id":None,"result":None,"error":None,"finished_at":None}
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
+
+def sky_q_host():
+    return _registry_ip("sky_q", SKY_Q_HOST)
 SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
 SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
 NETWORK_PROBES = [
@@ -61,6 +65,116 @@ SKY_KEY_MAP = {
     "play":64,"pause":65,"stop":66,"record":67,"fastforward":69,"rewind":71
 }
 
+def _registry_load():
+    try:
+        with open(DEVICE_REGISTRY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _registry_save(registry):
+    try:
+        os.makedirs(os.path.dirname(DEVICE_REGISTRY_FILE), exist_ok=True)
+        tmp=DEVICE_REGISTRY_FILE+".new"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(registry, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, DEVICE_REGISTRY_FILE)
+    except Exception:
+        pass
+
+def _registry_set(device_id, ip, evidence):
+    registry=_registry_load()
+    registry[device_id]={"ip":ip,"evidence":evidence,"updated_at":datetime.now(timezone.utc).isoformat()}
+    _registry_save(registry)
+    return ip
+
+def _registry_ip(device_id, fallback):
+    entry=_registry_load().get(device_id) or {}
+    return entry.get("ip") or fallback
+
+def _scan_port(port, timeout=0.07):
+    found=[]
+    def one(last):
+        ip="10.0.0."+str(last)
+        return ip if _tcp_open(ip, port, timeout=timeout) else None
+    with ThreadPoolExecutor(max_workers=48) as pool:
+        for ip in pool.map(one, range(1,255)):
+            if ip:
+                found.append(ip)
+    return found
+
+def discover_known_devices():
+    found={}
+    # Sky Q has distinctive local service ports.
+    sky_candidates=_scan_port(SKY_Q_REMOTE_PORT,0.06)
+    if not sky_candidates:
+        sky_candidates=_scan_port(49153,0.06)
+    if sky_candidates:
+        found["sky_q"]=_registry_set("sky_q",sky_candidates[0],"Sky Q local control service")
+
+    # Epson ET-3850: printing services plus Epson web identity when available.
+    printer_candidates=list(dict.fromkeys(_scan_port(631,0.06)+_scan_port(9100,0.06)))
+    ctx=ssl._create_unverified_context()
+    for ip in printer_candidates:
+        is_epson=False
+        for scheme in ("http","https"):
+            try:
+                req=urllib.request.Request(scheme+"://"+ip+"/",headers={"User-Agent":"Eldoret/1.0"})
+                with urllib.request.urlopen(req,timeout=0.8,context=ctx if scheme=="https" else None) as r:
+                    body=r.read(25000).decode("utf-8",errors="replace").lower()
+                if "epson" in body or "et-3850" in body:
+                    is_epson=True; break
+            except Exception:
+                pass
+        if is_epson or len(printer_candidates)==1:
+            found["epson_et3850"]=_registry_set("epson_et3850",ip,"IPP/raw-print + Epson identity")
+            break
+
+    # LG webOS televisions.
+    lg_candidates=list(dict.fromkeys(_scan_port(3000,0.05)+_scan_port(3001,0.05)))
+    for idx,ip in enumerate(sorted(lg_candidates)):
+        _registry_set("lg_tv_"+str(idx+1),ip,"LG webOS service")
+    found["lg_tvs"]=sorted(lg_candidates)
+
+    # VELUX ACTIVE / App Control gateway.
+    velux_candidates=_scan_port(25050,0.06)
+    if velux_candidates:
+        found["velux_gateway"]=_registry_set("velux_gateway",velux_candidates[0],"VELUX local pairing/service port 25050")
+
+    # PlayStation discovery protocol: broadcast and collect replies.
+    ps_ip=None
+    sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST,1)
+        sock.settimeout(0.35)
+        payload=b"SRCH * HTTP/1.1\nD-Protocol-Version:00030010\n"
+        sock.sendto(payload,("10.0.0.255",9302))
+        end=time.time()+1.2
+        while time.time()<end:
+            try:
+                data,addr=sock.recvfrom(4096)
+                text=data.decode("utf-8",errors="ignore").lower()
+                if "host-type" in text or "ps5" in text or "ps4" in text:
+                    ps_ip=addr[0]; break
+            except socket.timeout:
+                continue
+    except Exception:
+        pass
+    finally:
+        sock.close()
+    if ps_ip:
+        found["playstation"]=_registry_set("playstation",ps_ip,"PlayStation UDP discovery")
+
+    return {"found":found,"registry":_registry_load(),"checked_at":datetime.now(timezone.utc).isoformat()}
+
+def device_registry_loop():
+    while True:
+        try:
+            discover_known_devices()
+        except Exception:
+            pass
+        time.sleep(600)
+
 def _tcp_open(ip, port, timeout=0.25):
     try:
         with socket.create_connection((ip, port), timeout=timeout):
@@ -89,7 +203,8 @@ document.querySelector("#go").onclick=()=>{
 };
 </script></body></html>"""
 
-def velux_status(ip="10.0.0.22"):
+def velux_status(ip=None):
+    ip=ip or _registry_ip("velux_gateway","10.0.0.22")
     # Read-only reachability check for the VELUX gateway. KLF 200 local API uses TLS 51200.
     ports=[p for p in (80,443,51200) if _tcp_open(ip,p,timeout=0.6)]
     return {
@@ -103,7 +218,8 @@ def velux_status(ip="10.0.0.22"):
                   else ("VELUX gateway reachable; KLF 200 API port did not answer." if ports else "VELUX gateway did not answer."))
     }
 
-def lg_tv_status(ip="10.0.0.33"):
+def lg_tv_status(ip=None):
+    ip=ip or _registry_ip("lg_tv_1","10.0.0.33")
     ports=[p for p in (80,3000,3001) if _tcp_open(ip,p,timeout=0.5)]
     return {
         "ip":ip,
@@ -116,7 +232,8 @@ def lg_tv_status(ip="10.0.0.33"):
                   else ("LG device reachable on HTTP." if 80 in ports else "No configured LG service answered."))
     }
 
-def playstation_status(ip="10.0.0.48"):
+def playstation_status(ip=None):
+    ip=ip or _registry_ip("playstation","10.0.0.48")
     result = {"online": False, "ip": ip, "host_type": None, "host_name": None,
               "system_version": None, "running_app_name": None, "running_app_titleid": None,
               "status_code": None, "detail": "No PlayStation discovery reply."}
@@ -160,7 +277,7 @@ def playstation_status(ip="10.0.0.48"):
     return result
 
 def printer_status():
-    host="10.0.0.3"
+    host=_registry_ip("epson_et3850","10.0.0.3")
     result={"ip":host,"online":False,"model":"Epson ET-3850","state":None,
             "ink":[],"alerts":[],"ports":[],"sources":[],"detail":None}
     ports=[p for p in (80,443,631,9100) if _tcp_open(host,p,timeout=0.22)]
@@ -432,7 +549,7 @@ def sky_send_key(key):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.settimeout(4)
     try:
-        client.connect((SKY_Q_HOST, SKY_Q_REMOTE_PORT))
+        client.connect((sky_q_host(), SKY_Q_REMOTE_PORT))
         length = 12
         while True:
             data = client.recv(1024)
@@ -500,7 +617,7 @@ def _localname(tag):
 def sky_soap_control_url():
     headers = {"User-Agent": "SKYPLUS_skyplus"}
     for idx in range(50):
-        url = f"http://{SKY_Q_HOST}:49153/description{idx}.xml"
+        url = f"http://{sky_q_host()}:49153/description{idx}.xml"
         try:
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=2) as response:
@@ -515,7 +632,7 @@ def sky_soap_control_url():
                 if values.get("serviceId") == "urn:nds-com:serviceId:SkyPlay":
                     control = values.get("controlURL")
                     if control:
-                        return f"http://{SKY_Q_HOST}:49153{control}"
+                        return f"http://{sky_q_host()}:49153{control}"
         except Exception:
             continue
     return None
@@ -600,7 +717,7 @@ def sky_radio_guide():
     seen = set()
     for path in candidates:
         try:
-            url = f"http://{SKY_Q_HOST}:{SKY_Q_JSON_PORT}{path}"
+            url = f"http://{sky_q_host()}:{SKY_Q_JSON_PORT}{path}"
             req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=4) as response:
                 data = json.loads(response.read().decode("utf-8", errors="replace"))
@@ -895,7 +1012,7 @@ def sky_epg_now_next(sid):
     return result
 
 def sky_now_playing_v2():
-    result = {"available": False, "live": False, "host": SKY_Q_HOST}
+    result = {"available": False, "live": False, "host": sky_q_host()}
     try:
         uri = sky_get_media_uri()
         result["uri"] = uri
@@ -971,7 +1088,7 @@ def pick(obj, names):
 def sky_now_playing():
     result = {
         "available": True,
-        "host": SKY_Q_HOST,
+        "host": sky_q_host(),
         "json_port": SKY_Q_JSON_PORT,
         "power": None,
         "live": False,
@@ -1133,6 +1250,7 @@ def run_agent_task(task):
         "playstation_status": playstation_status,
         "printer_status": printer_status,
         "infrastructure_status": infrastructure_status,
+        "discover_devices": discover_known_devices,
     }
     fn=allowed.get(task)
     if not fn:
@@ -1236,6 +1354,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(saved).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"status":"error","error":str(e)}).encode())
+            return
+        if path == "/api/devices/registry":
+            try:
+                self.send_bytes(json.dumps({"registry":_registry_load()}).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"registry":{},"error":str(e)}).encode())
             return
         if path == "/api/network/status":
             try:
@@ -1445,10 +1569,11 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 threading.Thread(target=agent_loop, daemon=True).start()
+threading.Thread(target=device_registry_loop, daemon=True).start()
 print("Eldoret live connector running")
 print("House Hue bridge: ready")
 print("Utility Hue bridge: ready")
 print("Live state + scenes: ready")
-print(f"Sky Q now-playing target: {SKY_Q_HOST}:{SKY_Q_JSON_PORT}")
+print(f"Sky Q now-playing target: {sky_q_host()}:{SKY_Q_JSON_PORT}")
 print("Open http://localhost:8765 in Chrome")
 ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
