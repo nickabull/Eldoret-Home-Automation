@@ -95,3 +95,38 @@ async function refreshSkyLive(){
 }
 refreshSkyLive();
 if(isLive)setInterval(refreshSkyLive,15000);
+
+const searchInput=document.querySelector("#skyChannelSearch");
+const searchResults=document.querySelector("#skySearchResults");
+let searchTimer=null;
+async function searchSkyChannels(q){
+  if(!searchResults)return;
+  const query=(q||"").trim();
+  if(query.length<2){searchResults.innerHTML="";return;}
+  searchResults.innerHTML='<div class="search-note">Searching…</div>';
+  try{
+    const r=await fetch("/api/sky/search?q="+encodeURIComponent(query),{cache:"no-store"});
+    const data=await r.json();
+    const items=(data.results||[]).slice(0,12);
+    if(!items.length){searchResults.innerHTML='<div class="search-note">No matching channels</div>';return;}
+    searchResults.innerHTML=items.map(item=>
+      '<button type="button" class="sky-search-result" data-channel="'+item.channelno+'">'+
+      (item.logo?'<img src="'+item.logo+'" alt="">':'')+
+      '<span><strong>'+item.channel+'</strong><small>'+item.channelno+(item.programme?' · '+item.programme:'')+'</small></span></button>'
+    ).join("");
+    searchResults.querySelectorAll("[data-channel]").forEach(button=>button.addEventListener("click",async()=>{
+      button.classList.add("sending");
+      try{
+        const r=await fetch("/api/sky/channel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({channel:button.dataset.channel})});
+        if(!r.ok)throw new Error(await r.text());
+        statusEl.textContent="Tuned to "+button.dataset.channel;
+        setTimeout(refreshSkyLive,1600);
+      }catch(e){statusEl.textContent="Channel change failed";}
+      finally{setTimeout(()=>button.classList.remove("sending"),180);}
+    }));
+  }catch(e){searchResults.innerHTML='<div class="search-note">Search unavailable</div>';}
+}
+if(searchInput)searchInput.addEventListener("input",()=>{
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>searchSkyChannels(searchInput.value),220);
+});
