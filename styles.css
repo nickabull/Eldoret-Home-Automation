@@ -211,3 +211,40 @@
   }
   .sport-page .channel-note{display:none!important}
 }
+
+/* Sport subscribed-channel layout v25 */
+@media (min-width:1000px) and (min-height:650px){
+ .sport-page .sport-all-grid{
+   grid-template-columns:repeat(7,minmax(0,1fr))!important;
+   grid-template-rows:repeat(2,minmax(0,1fr))!important;
+   gap:10px!important;
+ }
+ .sport-page .sport-all-grid .sport-channel{
+   height:245px!important;
+   padding:10px!important;
+ }
+ .sport-page .sport-all-grid .sport-channel-logo{
+   height:44px!important;
+   max-height:44px!important;
+ }
+ .sport-page .sport-all-grid .sport-channel>strong{
+   font-size:17px!important;
+   line-height:1.08!important;
+ }
+ .sport-page .sport-all-grid .sport-onair>b{
+   font-size:12px!important;
+   line-height:1.18!important;
+ }
+ .sport-page .sport-all-grid .sport-synopsis{
+   display:-webkit-box!important;
+   -webkit-box-orient:vertical!important;
+   -webkit-line-clamp:2!important;
+   overflow:hidden!important;
+   font-size:10px!important;
+   line-height:1.18!important;
+   margin-top:4px!important;
+ }
+ .sport-page .sport-all-grid .sport-next b{
+   font-size:11px!important;
+ }
+}
