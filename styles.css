@@ -387,3 +387,72 @@
 .channel-pad-grid button{min-height:78px!important;border-radius:18px!important;font-size:30px!important}
 .channel-pad-grid .channel-pad-go{font-size:20px!important}
 .channel-pad-grid .channel-pad-secondary{font-size:17px!important}
+
+/* Sky-style quick remote controls v33 */
+@media (min-width:1000px) and (min-height:650px){
+  .sport-page .sport-now-controls{
+    grid-template-columns:repeat(5,72px)!important;
+    grid-template-rows:repeat(2,1fr)!important;
+    gap:8px!important;
+  }
+}
+.sport-now-controls button{
+  min-height:64px;
+  padding:7px 5px!important;
+  font-size:16px!important;
+}
+.sport-now-controls button>span:last-child{
+  font-size:9px!important;
+  letter-spacing:.02em;
+}
+.remote-glyph{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  position:relative;
+  color:#f7f9fc;
+  font-weight:900;
+  line-height:1;
+}
+.remote-glyph.digits{
+  width:34px;
+  height:26px;
+  border:2px solid rgba(255,255,255,.82);
+  border-radius:7px;
+  font-size:11px;
+  letter-spacing:.06em;
+}
+.pause-bars::before,.pause-bars::after{
+  content:"";
+  position:absolute;
+  top:5px;
+  bottom:5px;
+  width:5px;
+  border-radius:2px;
+  background:#f7f9fc;
+}
+.pause-bars::before{left:8px}.pause-bars::after{right:8px}
+.play-triangle::before{
+  content:"";
+  width:0;height:0;
+  border-top:9px solid transparent;
+  border-bottom:9px solid transparent;
+  border-left:15px solid #f7f9fc;
+  margin-left:3px;
+}
+.rewind-glyph,.forward-glyph{font-size:18px;letter-spacing:-4px}
+.home-glyph{font-size:29px;font-weight:500}
+.back-glyph{font-size:28px;font-weight:500}
+.select-glyph{
+  border:2px solid rgba(255,255,255,.9);
+  border-radius:50%;
+  font-size:9px;
+  font-weight:900;
+}
+.record-dot,.red-dot{
+  width:19px;height:19px;border-radius:50%;
+  background:#e33a45;
+  box-shadow:0 0 0 2px rgba(255,255,255,.12);
+}
+.red-key .red-dot{width:22px;height:22px}
