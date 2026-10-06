@@ -114,3 +114,27 @@
  .sport-page .sport-channel .programme{font-size:12px!important;line-height:1.15!important}
  .sport-page .sport-channel .next{font-size:11px!important;line-height:1.15!important}
 }
+
+/* Sport control panel v21 - true single-screen 16:9 layout */
+@media (min-width:1000px) and (min-height:650px){
+ .sport-page{height:100vh!important;overflow:hidden!important;padding-bottom:0!important}
+ .sport-page header{padding:10px 2.25%!important}
+ .sport-page header h1{font-size:26px!important;line-height:1!important}
+ .sport-page header p{display:none!important}
+ .sport-page nav{margin:4px 2.25%!important}
+ .sport-page .sky-subnav{margin:4px 2.25% 6px!important}
+ .sport-page main,.sport-page .main,.sport-page .content{height:auto!important;min-height:0!important;overflow:hidden!important}
+ .sport-page .now-watching{width:min(1040px,60vw)!important;max-width:none!important;padding:7px 12px!important;margin:4px auto 6px!important}
+ .sport-page .now-watching .synopsis{display:none!important}
+ .sport-page .sport-section{width:min(1180px,72vw)!important;max-width:none!important;margin:0 auto!important}
+ .sport-page .sport-section>p,.sport-page .sport-section .section-kicker{margin:0!important}
+ .sport-page .sport-section h2{font-size:19px!important;line-height:1!important;margin:2px 0 6px!important}
+ .sport-page .sport-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:7px!important;width:100%!important;overflow:hidden!important}
+ .sport-page .sport-channel{width:auto!important;min-width:0!important;min-height:0!important;height:238px!important;padding:7px 8px!important;overflow:hidden!important}
+ .sport-page .sport-channel-logo{height:38px!important;max-height:38px!important}
+ .sport-page .sport-channel.skybrand .sport-channel-logo{height:46px!important}
+ .sport-page .sport-channel h3{font-size:15px!important;line-height:1.05!important;margin:3px 0!important}
+ .sport-page .sport-channel .synopsis{display:none!important}
+ .sport-page .sport-channel .programme{font-size:11px!important;line-height:1.15!important}
+ .sport-page .sport-channel .next{font-size:10px!important;line-height:1.12!important}
+}
