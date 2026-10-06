@@ -622,3 +622,32 @@
 }
 .sport-channel[data-channel="407"].f1-fallback>*,
 .sport-channel[data-channel="407"].artwork-missing>*{position:relative;z-index:1}
+
+/* Sport v42: unconditional F1 card artwork layer */
+.sport-channel[data-channel="407"]{
+  position:relative!important;
+  overflow:hidden!important;
+  background:
+    linear-gradient(180deg,rgba(6,10,18,.12),rgba(6,10,18,.42) 48%,rgba(6,10,18,.96)),
+    radial-gradient(circle at 72% 20%,rgba(42,139,255,.48),transparent 32%),
+    linear-gradient(135deg,#07111f,#17365d 55%,#080d16)!important;
+}
+.sport-channel[data-channel="407"]::after{
+  content:"F1";
+  position:absolute!important;
+  right:14px!important;
+  top:55px!important;
+  z-index:0!important;
+  font:900 italic 86px/1 Arial,sans-serif!important;
+  letter-spacing:-9px!important;
+  color:rgba(255,255,255,.16)!important;
+  transform:skew(-10deg)!important;
+  pointer-events:none!important;
+}
+.sport-channel[data-channel="407"]>*{position:relative!important;z-index:2!important}
+.sport-channel[data-channel="407"].has-programme-artwork{
+  background:
+    linear-gradient(180deg,rgba(8,14,24,.28) 0%,rgba(8,14,24,.72) 46%,rgba(8,14,24,.96) 100%),
+    var(--programme-artwork) center/cover no-repeat!important;
+}
+.sport-channel[data-channel="407"].has-programme-artwork::after{display:none!important}
