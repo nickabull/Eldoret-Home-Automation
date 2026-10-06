@@ -232,6 +232,26 @@ def infrastructure_status():
     return {"targets":out,"checked_at":datetime.now(timezone.utc).isoformat(),
             "mode":"read-only fingerprint"}
 
+def lan_inventory():
+    # Read-only discovery across the home /24 using only services Eldoret already knows about.
+    # No authentication, login attempts or configuration changes.
+    found=[]
+    ports=(80,443,3000,3001,51200,8765,9100,631,49153,49160)
+    for last in range(1,255):
+        ip="10.0.0."+str(last)
+        open_ports=[p for p in ports if _tcp_open(ip,p,timeout=0.035)]
+        if not open_ports:
+            continue
+        kind=[]
+        if 3000 in open_ports or 3001 in open_ports: kind.append("LG webOS candidate")
+        if 51200 in open_ports: kind.append("VELUX KLF candidate")
+        if 8765 in open_ports: kind.append("Eldoret")
+        if 9100 in open_ports or 631 in open_ports: kind.append("Printer")
+        if 49153 in open_ports or 49160 in open_ports: kind.append("Sky Q")
+        found.append({"ip":ip,"ports":open_ports,"candidates":kind or ["Network device"]})
+    return {"devices":found,"checked_at":datetime.now(timezone.utc).isoformat(),
+            "mode":"read-only known-service discovery"}
+
 def network_status():
     devices = []
     for d in NETWORK_PROBES:
@@ -944,6 +964,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/network/status":
             try:
                 self.send_bytes(json.dumps(network_status()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/network/inventory":
+            try:
+                self.send_bytes(json.dumps(lan_inventory()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
             return
