@@ -11,10 +11,36 @@ function closeSearch(){overlay.classList.remove("open");setTimeout(()=>overlay.h
 document.querySelector("#skySearchOpen").addEventListener("click",openSearch);document.querySelector("#skySearchClose").addEventListener("click",closeSearch);overlay.addEventListener("click",e=>{if(e.target===overlay)closeSearch();});
 ["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"].forEach(row=>{const r=document.createElement("div");r.className="sky-keyboard-row";[...row].forEach(ch=>{const b=document.createElement("button");b.type="button";b.textContent=ch;b.onclick=()=>type(ch);r.appendChild(b)});keyboard.appendChild(r)});
 const bottom=document.createElement("div");bottom.className="sky-keyboard-row sky-keyboard-bottom";[["SPACE"," "],["⌫","BACK"],["CLEAR","CLEAR"]].forEach(([label,val])=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.className=label==="SPACE"?"space":"";b.onclick=()=>type(val);bottom.appendChild(b)});keyboard.appendChild(bottom);
-let timer;function type(v){if(v==="BACK")input.value=input.value.slice(0,-1);else if(v==="CLEAR")input.value="";else input.value+=v;searchSoon()}function searchSoon(){clearTimeout(timer);timer=setTimeout(searchSky,180)}
-async function searchSky(){const q=input.value.trim();if(!q){renderResults([],"");return}results.innerHTML='<div class="sky-search-hint">Searching…</div>';try{const r=await fetch("/api/sky/search?q="+encodeURIComponent(q),{cache:"no-store"}),d=await r.json();renderResults(d.results||[],q)}catch(e){results.innerHTML='<div class="sky-search-hint">Search unavailable</div>';}}
+let timer,searchSeq=0,searchController=null;
+function type(v){if(v==="BACK")input.value=input.value.slice(0,-1);else if(v==="CLEAR")input.value="";else input.value+=v;searchSoon()}
+function searchSoon(){clearTimeout(timer);timer=setTimeout(searchSky,320)}
+async function searchSky(){
+  const q=input.value.trim(),seq=++searchSeq;
+  if(searchController)searchController.abort();
+  if(!q){renderResults([],"");return}
+  searchController=new AbortController();
+  results.innerHTML='<div class="sky-search-hint">Searching for “'+esc(q)+'”…</div>';
+  try{
+    const r=await fetch("/api/sky/search?q="+encodeURIComponent(q),{cache:"no-store",signal:searchController.signal}),d=await r.json();
+    if(seq!==searchSeq||q!==input.value.trim())return;
+    renderResults(d.results||[],q);
+  }catch(e){
+    if(e.name!=="AbortError"&&seq===searchSeq)results.innerHTML='<div class="sky-search-hint">Search unavailable</div>';
+  }
+}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function renderResults(items,q){if(!q){results.innerHTML='<div class="sky-search-hint">Start typing to search channels and programmes.</div>';return}if(!items.length){results.innerHTML='<div class="sky-search-hint">No matches for “'+esc(q)+'”</div>';return}results.innerHTML=items.slice(0,8).map(x=>'<button class="sky-search-result" data-channel="'+esc(x.channelno)+'">'+(x.logo?'<img src="'+esc(x.logo)+'" alt="">':'')+'<span><strong>'+esc(x.matchprogramme||x.programme||x.channel)+'</strong><small>'+esc(x.channelno)+' · '+esc(x.channel)+(x.matchtype==="next"?" · NEXT "+esc(skyClock(x.matchstart)):"")+'</small></span><em>Watch</em></button>').join("");results.querySelectorAll("[data-channel]").forEach(b=>b.onclick=()=>tune(b.dataset.channel))}
+function renderResults(items,q){
+ if(!q){results.innerHTML='<div class="sky-search-hint">Start typing to search channels and programmes.</div>';return}
+ if(!items.length){results.innerHTML='<div class="sky-search-hint">No matches for “'+esc(q)+'”</div>';return}
+ results.innerHTML=items.slice(0,8).map(x=>{
+   const programme=x.matchprogramme||x.programme||"";
+   const isChannel=x.matchtype==="channel";
+   const title=isChannel?x.channel:programme;
+   const detail=isChannel?(x.channelno+(programme?" · "+programme:"")):(x.channelno+" · "+x.channel+(x.matchtype==="next"?" · NEXT "+skyClock(x.matchstart):""));
+   return '<button class="sky-search-result" data-channel="'+esc(x.channelno)+'">'+(x.logo?'<img src="'+esc(x.logo)+'" alt="">':'')+'<span><strong>'+esc(title)+'</strong><small>'+esc(detail)+'</small></span><em>Watch</em></button>';
+ }).join("");
+ results.querySelectorAll("[data-channel]").forEach(b=>b.onclick=()=>tune(b.dataset.channel));
+}
 input.addEventListener("input",searchSoon);refreshNow();if(isLive)setInterval(refreshNow,15000);
 const pad=document.querySelector("#channelPadOverlay"),padOpen=document.querySelector("#channelPadOpen"),padClose=document.querySelector("#channelPadClose"),padDisplay=document.querySelector("#channelPadDisplay"),padGo=document.querySelector("#channelPadGo"),padClear=document.querySelector("#channelPadClear");let padValue="";
 function renderPad(){if(padDisplay)padDisplay.textContent=padValue||"—"}function openPad(){padValue="";renderPad();pad.hidden=false;requestAnimationFrame(()=>pad.classList.add("open"))}function closePad(){pad.classList.remove("open");setTimeout(()=>pad.hidden=true,120)}
