@@ -421,6 +421,7 @@ def sky_now_playing_v2():
             if service:
                 result["channel"] = service.get("t")
                 result["channelno"] = service.get("c")
+                result["logo"] = sky_channel_logo_url(service)
             result.update(sky_epg_now(sid))
             return result
         if "pvr" in uri.lower():
