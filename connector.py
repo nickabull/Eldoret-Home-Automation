@@ -61,6 +61,19 @@ def _tcp_open(ip, port, timeout=0.25):
     except Exception:
         return False
 
+def lg_tv_status(ip="10.0.0.33"):
+    ports=[p for p in (80,3000,3001) if _tcp_open(ip,p,timeout=0.5)]
+    return {
+        "ip":ip,
+        "online":bool(ports),
+        "ports":ports,
+        "webos_plain":3000 in ports,
+        "webos_tls":3001 in ports,
+        "paired":False,
+        "detail":("LG webOS service detected; ready for one-time TV pairing." if (3000 in ports or 3001 in ports)
+                  else ("LG device reachable on HTTP." if 80 in ports else "No configured LG service answered."))
+    }
+
 def playstation_status(ip="10.0.0.48"):
     result = {"online": False, "ip": ip, "host_type": None, "host_name": None,
               "system_version": None, "running_app_name": None, "running_app_titleid": None,
@@ -905,6 +918,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/playstation/status":
             try:
                 self.send_bytes(json.dumps(playstation_status()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"online": False, "error": str(e)}).encode())
+            return
+        if path == "/api/lg/status":
+            try:
+                self.send_bytes(json.dumps(lg_tv_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"online": False, "error": str(e)}).encode())
             return
