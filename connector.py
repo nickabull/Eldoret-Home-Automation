@@ -220,6 +220,35 @@ def sky_play_recording(pvrid):
     sky_json("/as/pvr/play/" + urllib.parse.quote(str(pvrid), safe=""))
     return True
 
+def sky_radio_guide():
+    candidates = ["/as/services/5/1", "/as/services/4/1", "/as/services/1/1"]
+    merged = []
+    seen = set()
+    for path in candidates:
+        try:
+            url = f"http://{SKY_Q_HOST}:{SKY_Q_JSON_PORT}{path}"
+            req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=4) as response:
+                data = json.loads(response.read().decode("utf-8", errors="replace"))
+            for s in data.get("services", []):
+                key = (str(s.get("c","")), str(s.get("sid","")))
+                if key not in seen:
+                    seen.add(key); merged.append(s)
+        except Exception:
+            pass
+    radios = [s for s in merged if str(s.get("sf","")).lower() == "au"]
+    if not radios:
+        radios = [s for s in merged if str(s.get("c","")).isdigit() and 101 <= int(str(s.get("c"))) <= 999]
+    radios.sort(key=lambda s:int(str(s.get("c","0"))) if str(s.get("c","")).isdigit() else 99999)
+    channels=[]
+    for s in radios:
+        raw=str(s.get("c",""))
+        display=raw.zfill(4) if raw.isdigit() and len(raw)<4 else raw
+        item={"channelno":display,"tune":display,"channel":s.get("t"),"sid":s.get("sid"),"logo":sky_channel_logo_url(s),"programme":None,"synopsis":None,"start":None,"end":None}
+        if s.get("sid"): item.update(sky_epg_now_next(s.get("sid")))
+        channels.append(item)
+    return {"channels":channels}
+
 def sky_search_channels(query):
     q = (query or "").strip().lower()
     if not q:
@@ -565,6 +594,8 @@ class Handler(BaseHTTPRequestHandler):
             "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
             "/office.html": ("office.html", "text/html; charset=utf-8"),
             "/radio.html": ("radio.html", "text/html; charset=utf-8"),
+            "/sky-radio.html": ("sky-radio.html", "text/html; charset=utf-8"),
+            "/sky-radio.js": ("sky-radio.js", "application/javascript; charset=utf-8"),
             "/radio.js": ("radio.js", "application/javascript; charset=utf-8"),
             "/recordings.html": ("recordings.html", "text/html; charset=utf-8"),
             "/recordings.js": ("recordings.js", "application/javascript; charset=utf-8"),
@@ -594,6 +625,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(network_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/sky/radio":
+            try: self.send_bytes(json.dumps(sky_radio_guide()).encode())
+            except Exception as e: self.send_bytes(json.dumps({"channels":[],"error":str(e)}).encode())
             return
         if path == "/api/sky/recordings":
             try: self.send_bytes(json.dumps(sky_recordings_top14()).encode())
