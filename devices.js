@@ -40,3 +40,30 @@ async function refreshPrinterStatus(){
 }
 refreshPrinterStatus();
 if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshPrinterStatus,30000);
+
+async function refreshPlaystationStatus(){
+ const panel=document.querySelector("#playstationPanel"); if(!panel)return;
+ const badge=document.querySelector("#playstationBadge"),title=document.querySelector("#playstationTitle");
+ const meta=document.querySelector("#playstationMeta"),detail=document.querySelector("#playstationDetail");
+ try{
+  const r=await fetch("/api/playstation/status",{cache:"no-store"}),p=await r.json();
+  badge.textContent=p.online?"AWAKE":"NO REPLY"; badge.classList.toggle("online",!!p.online);
+  const type=p.host_type||"PlayStation";
+  title.textContent=p.running_app_name||p.host_name||type;
+  const bits=[type,p.ip||"10.0.0.48"];
+  if(p.system_version)bits.push("System "+p.system_version);
+  meta.textContent=bits.join(" · ");
+  if(p.running_app_name){
+   detail.textContent="Now running: "+p.running_app_name+(p.running_app_titleid?" · "+p.running_app_titleid:"");
+  }else{
+   detail.textContent=p.detail||"Console detected; no running app name was supplied.";
+  }
+ }catch(e){
+  badge.textContent="UNAVAILABLE";
+  title.textContent="PlayStation status unavailable";
+  meta.textContent="10.0.0.48";
+  detail.textContent="The local PlayStation probe could not be read.";
+ }
+}
+refreshPlaystationStatus();
+if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshPlaystationStatus,15000);
