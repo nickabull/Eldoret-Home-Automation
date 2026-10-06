@@ -323,3 +323,19 @@
     font-size:11px!important;
   }
 }
+
+/* Main Event artwork trial v27 */
+.sport-channel.has-programme-artwork{
+  position:relative;
+  background:
+    linear-gradient(180deg,rgba(8,14,24,.28) 0%,rgba(8,14,24,.72) 46%,rgba(8,14,24,.96) 100%),
+    var(--programme-artwork) center/cover no-repeat!important;
+}
+.sport-channel.has-programme-artwork::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,rgba(5,9,16,.55),rgba(5,9,16,.08) 55%,rgba(5,9,16,.3));
+  pointer-events:none;
+}
+.sport-channel.has-programme-artwork>*{position:relative;z-index:1}
