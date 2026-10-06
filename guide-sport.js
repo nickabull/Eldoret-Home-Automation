@@ -52,11 +52,25 @@ function renderGuideCard(item){
   onair.innerHTML='<span>On now'+(nowTime?' · '+nowTime:'')+'</span><b>'+esc(item.programme||"Programme unavailable")+'</b>'+(item.synopsis?'<p class="sport-synopsis">'+esc(item.synopsis)+'</p>':'')+(item.next&&item.next.programme?'<div class="sport-next"><span>Next'+(nextTime?' · '+nextTime:'')+'</span><b>'+esc(item.next.programme)+'</b></div>':'');
   b.addEventListener("click",()=>tune(b)); return b;
 }
+let guidePage=0;
 async function refreshGuide(){
  const group=document.body.dataset.guideGroup,grid=document.querySelector("#guideChannelGrid"); if(!group||!grid)return;
- try{const r=await fetch("/api/sky/guide?group="+encodeURIComponent(group),{cache:"no-store"}),data=await r.json();grid.replaceChildren(...(data.channels||[]).filter(x=>x.channelno).map(renderGuideCard));}
- catch(e){grid.innerHTML='<div class="guide-empty">Guide unavailable</div>';}
+ const start=document.body.dataset.guideStart,end=document.body.dataset.guideEnd||"399";
+ try{
+   const url=start
+     ? "/api/sky/guide-range?start="+encodeURIComponent(start)+"&end="+encodeURIComponent(end)+"&page="+guidePage+"&size=14"
+     : "/api/sky/guide?group="+encodeURIComponent(group);
+   const r=await fetch(url,{cache:"no-store"}),data=await r.json();
+   grid.replaceChildren(...(data.channels||[]).filter(x=>x.channelno).map(renderGuideCard));
+   const label=document.querySelector("#guidePageLabel"),prev=document.querySelector("#guidePrev"),next=document.querySelector("#guideNext");
+   if(label)label.textContent=((data.page??0)+1)+" / "+(data.pages||1);
+   if(prev)prev.disabled=(data.page??0)<=0;
+   if(next)next.disabled=(data.page??0)>=(data.pages||1)-1;
+ } catch(e){grid.innerHTML='<div class="guide-empty">Guide unavailable</div>';}
 }
+const gp=document.querySelector("#guidePrev"),gn=document.querySelector("#guideNext");
+if(gp)gp.addEventListener("click",()=>{if(guidePage>0){guidePage--;refreshGuide()}});
+if(gn)gn.addEventListener("click",()=>{guidePage++;refreshGuide()});
 refreshGuide(); if(isLive)setInterval(refreshGuide,60000);
 
 async function sendSportSkyKey(key,button){
