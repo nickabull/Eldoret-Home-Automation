@@ -289,6 +289,17 @@ def homekit_discovery(timeout=3.0):
         sock.close()
     return result
 
+def velux_active_discovery():
+    # VELUX ACTIVE / App Control with Netatmo uses a local pairing service on TCP 25050.
+    # This is a read-only reachability search; it does not authenticate or pair.
+    found=[]
+    for last in range(1,255):
+        ip="10.0.0."+str(last)
+        if _tcp_open(ip,25050,timeout=0.045):
+            found.append({"ip":ip,"port":25050,"candidate":"VELUX ACTIVE / App Control gateway"})
+    return {"devices":found,"checked_at":datetime.now(timezone.utc).isoformat(),
+            "mode":"read-only VELUX ACTIVE discovery"}
+
 def lan_inventory():
     # Read-only discovery across the home /24 using only services Eldoret already knows about.
     # No authentication, login attempts or configuration changes.
@@ -1030,6 +1041,12 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
             return
+        if path == "/api/velux/discovery":
+            try:
+                self.send_bytes(json.dumps(velux_active_discovery()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
         if path == "/api/homekit/discovery":
             try:
                 self.send_bytes(json.dumps(homekit_discovery()).encode())
@@ -1037,6 +1054,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps({"services": [], "error": str(e)}).encode())
             return
         if path == "/api/network/neighbors":
+            try:
+                self.send_bytes(json.dumps(local_neighbor_table()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"matches": [], "neighbors": [], "error": str(e)}).encode())
+            return
+        if path == "/api/network/neighbours":
             try:
                 self.send_bytes(json.dumps(local_neighbor_table()).encode())
             except Exception as e:
