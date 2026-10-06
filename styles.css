@@ -377,3 +377,13 @@
 .channel-pad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.channel-pad-grid button{min-height:64px;border-radius:16px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:24px;font-weight:900;cursor:pointer;touch-action:manipulation}
 .channel-pad-grid button:active,.channel-pad-grid button.sending{transform:scale(.97)}.channel-pad-grid .channel-pad-go{background:var(--accent);color:#07120e;border-color:var(--accent);font-size:18px}.channel-pad-grid .channel-pad-secondary{font-size:15px;color:var(--muted)}
 .sport-now-controls .channel-pad-open{background:#162233}
+
+/* Larger touchscreen channel keypad v32 */
+.channel-pad-dialog{width:min(540px,94vw)!important;padding:26px!important;border-radius:28px!important}
+.channel-pad-head h2{font-size:30px!important}
+.channel-pad-close{width:52px!important;height:52px!important;font-size:30px!important}
+.channel-pad-display{height:88px!important;margin:20px 0!important;font-size:42px!important;border-radius:20px!important}
+.channel-pad-grid{gap:13px!important}
+.channel-pad-grid button{min-height:78px!important;border-radius:18px!important;font-size:30px!important}
+.channel-pad-grid .channel-pad-go{font-size:20px!important}
+.channel-pad-grid .channel-pad-secondary{font-size:17px!important}
