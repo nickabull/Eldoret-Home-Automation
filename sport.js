@@ -11,6 +11,10 @@ async function refreshNow(){
       const b=[]; if(d.channelno)b.push(d.channelno); if(d.channel)b.push(d.channel);
       const s=skyClock(d.start),e=skyClock(d.end); if(s&&e)b.push(s+"–"+e);
       meta.textContent=b.join(" · "); syn.textContent=d.synopsis||""; badge.textContent="LIVE";
+      if(d.programmeuuid){
+        p.style.setProperty("--now-artwork",'url("'+programmeArtworkUrl(d.programmeuuid)+'")');
+        p.classList.add("has-now-artwork");
+      }else{p.classList.remove("has-now-artwork");p.style.removeProperty("--now-artwork");}
     }else{title.textContent="Sky Q playback";meta.textContent="Non-live playback";syn.textContent="";badge.textContent="PLAYBACK";}
   }catch(e){title.textContent="Sky Q unavailable";meta.textContent="Control may still work.";syn.textContent="";badge.textContent="UNKNOWN";}
 }
@@ -117,6 +121,7 @@ if(channelPadClose)channelPadClose.addEventListener("click",closeChannelPad);
 if(channelPadClear)channelPadClear.addEventListener("click",()=>{channelPadValue="";renderChannelPad();});
 if(channelPadGo)channelPadGo.addEventListener("click",goChannelPad);
 document.querySelectorAll("[data-pad-digit]").forEach(b=>b.addEventListener("click",()=>addChannelDigit(b.dataset.padDigit)));
+document.querySelectorAll("[data-pad-key]").forEach(b=>b.addEventListener("click",()=>sendSportSkyKey(b.dataset.padKey,b)));
 if(channelPadOverlay)channelPadOverlay.addEventListener("click",e=>{if(e.target===channelPadOverlay)closeChannelPad();});
 document.addEventListener("keydown",e=>{
   if(!channelPadOverlay||channelPadOverlay.hidden)return;
