@@ -68,3 +68,17 @@
 
 /* Sky Q second-level navigation */
 .sky-subnav{display:flex;gap:10px;align-items:center;margin:10px 0 16px;padding:0 4px}.sky-subnav a{display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border:1px solid rgba(255,255,255,.16);border-radius:12px;text-decoration:none;color:inherit;font-weight:700}.sky-subnav a.active{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.32)}
+
+/* Eldoret 1080p kiosk rule - Sport reference screen v18 */
+@media (min-width: 1000px) and (min-height: 700px) {
+  html,body{height:100%;margin:0;overflow:hidden}
+  body{box-sizing:border-box}
+  .sport-page{height:100vh;max-height:100vh;overflow:hidden;display:flex;flex-direction:column}
+  .sport-page main,.sport-page .main,.sport-page .content{min-height:0;overflow:hidden}
+  .sport-grid{min-height:0;overflow:hidden;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:10px}
+  .sport-channel{min-height:0;padding:10px 12px;overflow:hidden}
+  .sport-channel-logo{max-height:58px}
+  .sport-channel.skybrand .sport-channel-logo{height:72px}
+  .sport-channel.tntbrand .sport-channel-logo{height:58px}
+  .sport-channel .synopsis{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+}
