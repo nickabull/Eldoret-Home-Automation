@@ -1,13 +1,10 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sky Q · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=17"></head>
-<body><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">Touch-first home control</p></div><div class="status"><span></span>Local connector</div></header>
-<main>
-<section class="hero"><div><h2>Sky Q</h2><p>Touch remote for the Sky Q box on your home network.</p></div><div class="stats"><b>1</b><small>Sky Q box</small><b>LAN</b><small>local control</small></div></section>
-<nav class="tabs" aria-label="Area"><a href="index.html">All</a><a href="house.html">House</a><a href="utility.html">Utility / Outside</a><a class="active" href="sky.html">Sky Q</a><a href="network.html">Network</a><a href="av.html">AV</a><a href="appliances.html">Appliances</a><a href="office.html">Office</a></nav>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Search · Sky Q · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=43"></head>
+<body class="sport-page sky-search-page"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">Search Sky Q</p></div><div class="status"><span></span>Sky Q connected</div></header>
+<main><nav class="tabs" aria-label="Area"><a href="index.html">All</a><a href="house.html">House</a><a href="utility.html">Utility / Outside</a><a class="active" href="sky.html">Sky Q</a><a href="network.html">Network</a><a href="av.html">AV</a><a href="appliances.html">Appliances</a><a href="office.html">Office</a></nav>
 <div class="sky-subnav" aria-label="Sky Q sections">
-  <a href="sky.html" class="active">Remote</a>
-  <a href="sport.html">Sport</a>
+  <a href="sky.html" class="active">Search</a>
+  <a href="sport.html" class="active">Sport</a>
   <a href="movies.html">Movies</a>
   <a href="news.html">News</a>
   <a href="documentaries.html">Documentaries</a>
@@ -16,97 +13,70 @@
   <a href="music.html">Music</a>
 </div>
 
-
-<section class="now-watching sky-live-card" id="skyNowLive" aria-live="polite">
-  <div class="sky-logo-wrap sky-live-icon">📺</div>
+<div class="sport-now-row">
+<section class="now-watching sport-now" id="skyNowLive" aria-live="polite">
+  <div class="sky-logo-wrap sky-live-icon skyq-official" aria-label="Sky Q"><img src="https://static.skyassets.com/contentstack/assets/blt4b099fa9cc3801a6/blt9bc5a338f50a49a6/695bd6e5c510a02d6e1ac7da/Sky-q-sky-black-tile.jpg?downsize=320,640:*&output-format=jpg" alt="Sky Q"></div>
   <div class="sky-copy">
-    <p class="sky-kicker">NOW WATCHING · SKY Q</p>
+    <p class="sky-kicker">NOW WATCHING</p>
     <h2 class="sky-programme">Checking Sky Q…</h2>
-    <p class="sky-meta">Reading the current channel from the box.</p>
+    <p class="sky-meta">Reading current programme.</p>
     <p class="sky-synopsis"></p>
   </div>
   <span class="sky-state">CHECKING</span>
 </section>
-
-<section class="sky-channel-search">
-  <div>
-    <p class="eyebrow">FIND A CHANNEL</p>
-    <h2>Search Sky</h2>
-    <p>Type a channel name, then tap a result to tune instantly.</p>
-  </div>
-  <div class="sky-search-box">
-    <input id="skyChannelSearch" type="search" placeholder="Try Sky Atlantic, BBC News, TNT..." autocomplete="off">
-    <div id="skySearchResults" class="sky-search-results" aria-live="polite"></div>
-  </div>
-</section>
-
-<div class="sky-view-tabs" role="tablist" aria-label="Sky Q view">
-  <button type="button" class="sky-view-tab active" data-sky-view="remote">Remote</button>
-  <button type="button" class="sky-view-tab" data-sky-view="channels">Favourite channels</button>
+<div class="sport-now-controls" aria-label="Sky Q quick controls">
+  <button type="button" id="channelPadOpen" class="channel-pad-open" title="Enter channel number"><span class="remote-glyph digits">123</span><span>Channel</span></button>
+  <button type="button" data-sky-key="channelup" title="Channel up"><span class="remote-glyph channel-arrow up"></span><span>CH +</span></button>
+  <button type="button" data-sky-key="pause" title="Pause"><span class="remote-glyph pause-bars" aria-hidden="true"></span><span>Pause</span></button>
+  <button type="button" data-sky-key="play" title="Play"><span class="remote-glyph play-triangle" aria-hidden="true"></span><span>Play</span></button>
+  <button type="button" data-sky-key="rewind" title="Rewind"><span class="remote-glyph rewind-glyph" aria-hidden="true"><i></i><i></i></span><span>Rewind</span></button>
+  <button type="button" data-sky-key="fastforward" title="Fast forward"><span class="remote-glyph forward-glyph" aria-hidden="true"><i></i><i></i></span><span>Forward</span></button>
+  <button type="button" data-sky-key="record" class="record" title="Record"><span class="remote-glyph record-dot" aria-hidden="true"></span><span>Record</span></button>
+  <button type="button" data-sky-key="channeldown" title="Channel down"><span class="remote-glyph channel-arrow down"></span><span>CH -</span></button>
+  <button type="button" data-sky-key="home" title="Home"><span class="remote-glyph home-glyph" aria-hidden="true"><i></i></span><span>Home</span></button>
+  <button type="button" data-sky-key="backup" title="Back up"><span class="remote-glyph back-glyph" aria-hidden="true"><i></i></span><span>Backup</span></button>
+  <button type="button" data-sky-key="select" title="Select"><span class="remote-glyph select-glyph" aria-hidden="true"></span><span>Select</span></button>
+  <button type="button" data-sky-key="red" class="red-key" title="Red button"><span class="remote-glyph red-dot" aria-hidden="true"></span><span>Red</span></button>
+</div>
 </div>
 
-<section class="sky-channel-panel" id="skyChannels" hidden>
-  <div class="channel-panel-head">
-    <div><p class="eyebrow">ONE-TAP CHANNELS</p><h2>Sport favourites</h2><p>Tap a tile — Eldoret sends the channel number for you.</p></div>
-    <span class="pill">Sky Q satellite</span>
-  </div>
-  <div class="channel-grid">
-    <button type="button" class="channel-tile sky-sports" data-channel="401"><span class="channel-brand">sky sports</span><strong>Main Event</strong><small>401</small></button>
-    <button type="button" class="channel-tile sky-sports" data-channel="402"><span class="channel-brand">sky sports</span><strong>Premier League</strong><small>402</small></button>
-    <button type="button" class="channel-tile sky-sports" data-channel="403"><span class="channel-brand">sky sports</span><strong>Football</strong><small>403</small></button>
-    <button type="button" class="channel-tile sky-sports" data-channel="404"><span class="channel-brand">sky sports</span><strong>Sports+</strong><small>404</small></button>
-    <button type="button" class="channel-tile sky-sports" data-channel="405"><span class="channel-brand">sky sports</span><strong>Cricket</strong><small>405</small></button>
-    <button type="button" class="channel-tile sky-sports" data-channel="407"><span class="channel-brand">sky sports</span><strong>F1</strong><small>407</small></button>
-    <button type="button" class="channel-tile sky-sports nfl" data-channel="412"><span class="channel-brand">sky sports</span><strong>NFL</strong><small>412</small></button>
-    <button type="button" class="channel-tile tnt" data-channel="410"><span class="channel-brand">TNT SPORTS</span><strong>1</strong><small>410</small></button>
-    <button type="button" class="channel-tile tnt" data-channel="411"><span class="channel-brand">TNT SPORTS</span><strong>2</strong><small>411</small></button>
-    <button type="button" class="channel-tile tnt" data-channel="413"><span class="channel-brand">TNT SPORTS</span><strong>3</strong><small>413</small></button>
-    <button type="button" class="channel-tile tnt" data-channel="414"><span class="channel-brand">TNT SPORTS</span><strong>4</strong><small>414</small></button>
-    <button type="button" class="channel-tile mutv" data-channel="418"><span class="channel-brand">MUTV</span><strong>Manchester United</strong><small>418</small></button>
-  </div>
-  <p class="channel-note">This is the first test set. We can add, remove and rearrange favourites once you've tried it.</p>
+
+<section class="eldoret-search-panel">
+ <div class="eldoret-search-copy"><p class="eyebrow">SKY SEARCH</p><h2>What do you want to watch?</h2><p>Search channels and what's on now or next.</p></div>
+ <button type="button" id="skySearchOpen" class="eldoret-search-open"><span class="eldoret-search-icon">⌕</span><span id="skySearchPrompt">Tap to search Sky</span></button>
+ <div id="skySearchPreview" class="eldoret-search-preview"><span>Try “Manchester United”, “F1”, “BBC News” or a channel number</span></div>
 </section>
-
-<section class="sky-remote-shell" id="skyRemote">
-  <div class="sky-remote-status">
-    <div><p class="eyebrow">SKY Q · 10.0.0.18</p><h2>Remote control</h2><p id="skyRemoteStatus">Ready</p></div>
-    <button type="button" class="sky-key sky-power" data-sky-key="power">⏻<span>Power</span></button>
+<div id="channelPadOverlay" class="channel-pad-overlay" hidden>
+  <div class="channel-pad-dialog" role="dialog" aria-modal="true" aria-labelledby="channelPadTitle">
+    <div class="channel-pad-head">
+      <div><p class="eyebrow">SKY Q</p><h2 id="channelPadTitle">Go to channel</h2></div>
+      <button type="button" id="channelPadClose" class="channel-pad-close" aria-label="Close">×</button>
+    </div>
+    <div id="channelPadDisplay" class="channel-pad-display" aria-live="polite">—</div>
+    <div class="channel-pad-dpad" aria-label="Sky navigation">
+  <button type="button" class="dpad-up" data-pad-key="up" aria-label="Up"><i></i></button>
+  <button type="button" class="dpad-left" data-pad-key="left" aria-label="Left"><i></i></button>
+  <button type="button" class="dpad-select" data-pad-key="select" aria-label="Select"></button>
+  <button type="button" class="dpad-right" data-pad-key="right" aria-label="Right"><i></i></button>
+  <button type="button" class="dpad-down" data-pad-key="down" aria-label="Down"><i></i></button>
+</div>
+<button type="button" class="channel-pad-subtitles" data-pad-key="help"><span class="subtitle-icon">CC</span><span>Subtitles</span></button>
+<div class="channel-pad-grid">
+      <button type="button" data-pad-digit="1">1</button><button type="button" data-pad-digit="2">2</button><button type="button" data-pad-digit="3">3</button>
+      <button type="button" data-pad-digit="4">4</button><button type="button" data-pad-digit="5">5</button><button type="button" data-pad-digit="6">6</button>
+      <button type="button" data-pad-digit="7">7</button><button type="button" data-pad-digit="8">8</button><button type="button" data-pad-digit="9">9</button>
+      <button type="button" id="channelPadClear" class="channel-pad-secondary">Clear</button><button type="button" data-pad-digit="0">0</button><button type="button" id="channelPadGo" class="channel-pad-go">Go</button>
+    </div>
   </div>
-
-  <div class="sky-quick">
-    <button type="button" class="sky-key wide" data-sky-key="home">⌂<span>Home</span></button>
-    <button type="button" class="sky-key wide" data-sky-key="search">⌕<span>Search</span></button>
-    <button type="button" class="sky-key wide" data-sky-key="backup">↩<span>Back</span></button>
-  </div>
-
-  <div class="sky-navpad" aria-label="Sky navigation">
-    <button type="button" class="sky-key nav-up" data-sky-key="up">▲</button>
-    <button type="button" class="sky-key nav-left" data-sky-key="left">◀</button>
-    <button type="button" class="sky-key nav-select" data-sky-key="select">OK</button>
-    <button type="button" class="sky-key nav-right" data-sky-key="right">▶</button>
-    <button type="button" class="sky-key nav-down" data-sky-key="down">▼</button>
-  </div>
-
-  <div class="sky-playback">
-    <button type="button" class="sky-key" data-sky-key="rewind">⏪<span>Rewind</span></button>
-    <button type="button" class="sky-key" data-sky-key="play">▶<span>Play</span></button>
-    <button type="button" class="sky-key" data-sky-key="pause">Ⅱ<span>Pause</span></button>
-    <button type="button" class="sky-key" data-sky-key="fastforward">⏩<span>Forward</span></button>
-    <button type="button" class="sky-key record" data-sky-key="record">●<span>Record</span></button>
-  </div>
-
-  <div class="sky-channel-row">
-    <button type="button" class="sky-key wide" data-sky-key="channeldown">CH −</button>
-    <button type="button" class="sky-key wide" data-sky-key="channelup">CH +</button>
-  </div>
-
-  <div class="sky-numpad" aria-label="Number pad">
-    <button type="button" class="sky-key" data-sky-key="1">1</button><button type="button" class="sky-key" data-sky-key="2">2</button><button type="button" class="sky-key" data-sky-key="3">3</button>
-    <button type="button" class="sky-key" data-sky-key="4">4</button><button type="button" class="sky-key" data-sky-key="5">5</button><button type="button" class="sky-key" data-sky-key="6">6</button>
-    <button type="button" class="sky-key" data-sky-key="7">7</button><button type="button" class="sky-key" data-sky-key="8">8</button><button type="button" class="sky-key" data-sky-key="9">9</button>
-    <button type="button" class="sky-key zero" data-sky-key="0">0</button>
-  </div>
-</section>
+</div>
 </main>
-<script src="sky.js?v=17"></script>
-<script src="kiosk.js?v=1"></script></body></html>
+
+<div id="skySearchOverlay" class="sky-search-overlay" hidden>
+ <div class="sky-search-dialog" role="dialog" aria-modal="true" aria-labelledby="skySearchTitle">
+  <div class="channel-pad-head"><div><p class="eyebrow">SKY Q</p><h2 id="skySearchTitle">Search Sky</h2></div><button type="button" id="skySearchClose" class="channel-pad-close" aria-label="Close">×</button></div>
+  <div class="sky-search-input-row"><span>⌕</span><input id="skySearchInput" type="text" inputmode="none" autocomplete="off" placeholder="Search channels or programmes…" aria-label="Search Sky"></div>
+  <div id="skySearchResults" class="sky-search-live-results"><div class="sky-search-hint">Start typing to search channels and programmes.</div></div>
+  <div id="skyKeyboard" class="sky-touch-keyboard"></div>
+ </div>
+</div>
+</main><script src="sky-search.js?v=1"></script><script src="kiosk.js?v=1"></script></body></html>
