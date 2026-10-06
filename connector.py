@@ -82,6 +82,20 @@ document.querySelector("#go").onclick=()=>{
 };
 </script></body></html>"""
 
+def velux_status(ip="10.0.0.22"):
+    # Read-only reachability check for the VELUX gateway. KLF 200 local API uses TLS 51200.
+    ports=[p for p in (80,443,51200) if _tcp_open(ip,p,timeout=0.6)]
+    return {
+        "ip":ip,
+        "online":bool(ports),
+        "ports":ports,
+        "klf200_api":51200 in ports,
+        "http":80 in ports,
+        "https":443 in ports,
+        "detail":("VELUX KLF 200 local API detected on TLS port 51200." if 51200 in ports
+                  else ("VELUX gateway reachable; KLF 200 API port did not answer." if ports else "VELUX gateway did not answer."))
+    }
+
 def lg_tv_status(ip="10.0.0.33"):
     ports=[p for p in (80,3000,3001) if _tcp_open(ip,p,timeout=0.5)]
     return {
@@ -948,6 +962,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/lg/status":
             try:
                 self.send_bytes(json.dumps(lg_tv_status()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"online": False, "error": str(e)}).encode())
+            return
+        if path == "/api/velux/status":
+            try:
+                self.send_bytes(json.dumps(velux_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"online": False, "error": str(e)}).encode())
             return
