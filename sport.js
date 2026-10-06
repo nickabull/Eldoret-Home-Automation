@@ -62,3 +62,17 @@ async function refreshSportGuide(){
 }
 refreshSportGuide();
 if(isLive)setInterval(refreshSportGuide,60000);
+
+async function sendSportSkyKey(key,button){
+  if(!isLive)return;
+  button.classList.add("sending");
+  try{
+    const r=await fetch("/api/sky/key",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key})});
+    if(!r.ok)throw new Error(await r.text());
+    setTimeout(refreshNow,1200);
+  }catch(e){button.classList.add("failed");setTimeout(()=>button.classList.remove("failed"),1000);}
+  finally{setTimeout(()=>button.classList.remove("sending"),180);}
+}
+document.querySelectorAll(".sport-now-controls [data-sky-key]").forEach(button=>{
+  button.addEventListener("click",()=>sendSportSkyKey(button.dataset.skyKey,button));
+});
