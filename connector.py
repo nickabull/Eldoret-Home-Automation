@@ -815,6 +815,12 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
             return
+        if path == "/api/printer/status":
+            try:
+                self.send_bytes(json.dumps(printer_status()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"online": False, "error": str(e)}).encode())
+            return
         if path == "/api/sky/apps":
             try: self.send_bytes(json.dumps(sky_apps()).encode())
             except Exception as e: self.send_bytes(json.dumps({"apps":[],"error":str(e)}).encode())
