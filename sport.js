@@ -38,14 +38,26 @@ async function refreshSportGuide(){
     document.querySelectorAll(".sport-channel[data-channel]").forEach(button=>{
       const item=byNo.get(button.dataset.channel);
       const logo=button.querySelector(".sport-channel-logo");
-      const onair=button.querySelector(".sport-onair b");
-      if(!item){ if(onair) onair.textContent="Programme unavailable"; return; }
+      const onair=button.querySelector(".sport-onair");
+      if(!item){
+        if(onair) onair.innerHTML='<span>On now</span><b>Programme unavailable</b>';
+        return;
+      }
       if(logo && item.logo){logo.src=item.logo;logo.hidden=false;}
-      if(onair) onair.textContent=item.programme||"Programme unavailable";
+      if(onair){
+        const nowTime=[skyClock(item.start),skyClock(item.end)].filter(Boolean).join("–");
+        const nextTime=item.next&&item.next.start?skyClock(item.next.start):"";
+        onair.innerHTML=
+          '<span>On now'+(nowTime?' · '+nowTime:'')+'</span>'+
+          '<b>'+(item.programme||"Programme unavailable")+'</b>'+
+          (item.synopsis?'<p class="sport-synopsis">'+item.synopsis+'</p>':'')+
+          (item.next&&item.next.programme?
+            '<div class="sport-next"><span>Next'+(nextTime?' · '+nextTime:'')+'</span><b>'+item.next.programme+'</b></div>':'');
+      }
       button.title=[item.channel,item.programme].filter(Boolean).join(" · ");
     });
   }catch(e){
-    document.querySelectorAll(".sport-onair b").forEach(x=>x.textContent="Guide unavailable");
+    document.querySelectorAll(".sport-onair").forEach(x=>x.innerHTML='<span>Guide</span><b>Unavailable</b>');
   }
 }
 refreshSportGuide();
