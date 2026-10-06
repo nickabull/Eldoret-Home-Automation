@@ -185,21 +185,23 @@ def sky_search_channels(query):
     services = sky_channel_list()
     results = []
     for service in services:
-        name = str(service.get("t", ""))
-        number = str(service.get("c", ""))
-        if q in name.lower() or q == number:
-            item = {
-                "channel": name,
-                "channelno": number,
-                "sid": service.get("sid"),
-                "logo": sky_channel_logo_url(service),
-                "programme": None,
-            }
-            if service.get("sid"):
-                item.update(sky_epg_now(service.get("sid")))
-            results.append(item)
-    results.sort(key=lambda x: (0 if x["channel"].lower().startswith(q) else 1, x.get("channelno") or "9999", x["channel"].lower()))
-    return {"results": results[:20]}
+        name, number = str(service.get("t", "")), str(service.get("c", ""))
+        epg = {}
+        if service.get("sid"):
+            try: epg = sky_epg_now_next(service.get("sid")) or {}
+            except Exception: epg = {}
+        current, nxt = str(epg.get("programme") or ""), epg.get("next") or {}
+        next_title = str(nxt.get("programme") or "")
+        matchtype = matchprogramme = matchstart = None
+        if q in name.lower() or q == number: matchtype = "channel"
+        elif q in current.lower(): matchtype, matchprogramme, matchstart = "now", current, epg.get("start")
+        elif q in next_title.lower(): matchtype, matchprogramme, matchstart = "next", next_title, nxt.get("start")
+        if matchtype:
+            item = {"channel":name,"channelno":number,"sid":service.get("sid"),"logo":sky_channel_logo_url(service),"matchtype":matchtype,"matchprogramme":matchprogramme,"matchstart":matchstart}
+            item.update(epg); results.append(item)
+    rank = {"now":0,"next":1,"channel":2}
+    results.sort(key=lambda x:(rank.get(x.get("matchtype"),9),0 if str(x.get("channel","")).lower().startswith(q) else 1,str(x.get("channelno") or "9999")))
+    return {"results":results[:20]}
 
 def sky_named_guide(group):
     services = sky_channel_list()
@@ -527,6 +529,7 @@ class Handler(BaseHTTPRequestHandler):
             "/plus1.html": ("plus1.html", "text/html; charset=utf-8"),
             "/music.html": ("music.html", "text/html; charset=utf-8"),
             "/guide-sport.js": ("guide-sport.js", "application/javascript; charset=utf-8"),
+            "/sky-search.js": ("sky-search.js", "application/javascript; charset=utf-8"),
             "/guide.js": ("guide.js", "application/javascript; charset=utf-8"),
             "/sky.js": ("sky.js", "application/javascript; charset=utf-8"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
