@@ -34,7 +34,7 @@ NETWORK_PROBES = [
  {"ip":"10.0.0.47","name":"LG device","ports":[3000,3001,80]}
 ]
 GUIDE_GROUPS = {"news":["Sky News","BBC News","CNN","GB News","Bloomberg","BBC Parliament","CNBC"],"entertainment":["BBC One","BBC Two","ITV1","Channel 4","Channel 5","Sky Atlantic","Sky Max","Sky Witness","Gold","Dave","Comedy Central","Discovery"]}
-SPORT_CHANNEL_NUMBERS = ["401","402","403","404","405","406","407","408","409","410","411","412","413","414","418","419"]
+SPORT_CHANNEL_NUMBERS = ["401","402","403","404","405","406","407","408","409","410","411","412","413","414","419"]
 SKY_KEY_MAP = {
     "power":0,"select":1,"backup":2,"channelup":6,"channeldown":7,
     "search":10,"home":11,"up":16,"down":17,"left":18,"right":19,
