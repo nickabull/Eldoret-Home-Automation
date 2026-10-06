@@ -40,7 +40,7 @@ const scenes={
 const grid=document.querySelector("#rooms");
 const dlg=document.querySelector("#detail");
 const dc=document.querySelector("#detailContent");
-const isLive=location.protocol==="http:";
+const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");
 
 function render(filter="all"){
   grid.innerHTML="";
