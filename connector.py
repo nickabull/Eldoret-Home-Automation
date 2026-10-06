@@ -318,6 +318,40 @@ def sky_search_channels(query):
     results.sort(key=lambda x:(rank.get(x.get("matchtype"),9),0 if str(x.get("channel","")).lower().startswith(q) else 1,str(x.get("channelno") or "9999")))
     return {"results":results[:20]}
 
+def sky_range_guide(start, end, page=0, size=14):
+    services = sky_channel_list()
+    selected = []
+    for s in services:
+        raw = str(s.get("c", ""))
+        if not raw.isdigit():
+            continue
+        number = int(raw)
+        if start <= number <= end:
+            selected.append(s)
+    selected.sort(key=lambda s: int(str(s.get("c", "99999"))))
+    total = len(selected)
+    page = max(0, int(page))
+    size = max(1, min(30, int(size)))
+    chunk = selected[page * size:(page + 1) * size]
+    channels = []
+    for service in chunk:
+        number = str(service.get("c", ""))
+        item = {
+            "channelno": number,
+            "channel": service.get("t"),
+            "sid": service.get("sid"),
+            "logo": sky_channel_logo_url(service),
+            "programme": None,
+            "synopsis": None,
+            "start": None,
+            "end": None,
+        }
+        if service.get("sid"):
+            item.update(sky_epg_now_next(service.get("sid")))
+        channels.append(item)
+    pages = max(1, (total + size - 1) // size)
+    return {"channels": channels, "page": page, "pages": pages, "total": total, "start": start, "end": end}
+
 def sky_named_guide(group):
     services = sky_channel_list()
     numbered = GUIDE_CHANNEL_NUMBERS.get(group)
@@ -699,6 +733,16 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(sky_named_guide(group)).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"channels": [], "error": str(e)}).encode())
+            return
+        if path == "/api/sky/guide-range":
+            try:
+                start = int(query.get("start", ["301"])[0])
+                end = int(query.get("end", ["399"])[0])
+                page = int(query.get("page", ["0"])[0])
+                size = int(query.get("size", ["14"])[0])
+                self.send_bytes(json.dumps(sky_range_guide(start, end, page, size)).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"channels": [], "page": 0, "pages": 1, "error": str(e)}).encode())
             return
         if path == "/api/sky/sport-guide":
             try:
