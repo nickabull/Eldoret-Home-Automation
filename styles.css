@@ -592,3 +592,9 @@
     url("https://imageservice.sky.com/contentid/A5EK5anvvYyiWfVvKgEMf/LAND_16_9?language=eng&territory=GB&proposition=SKYQ") center/cover no-repeat,
     linear-gradient(145deg,#172d4d,#0b1420)!important;
 }
+
+/* Sport v40: remove D-pad segment divider lines */
+.channel-pad-dpad .dpad-up,
+.channel-pad-dpad .dpad-down,
+.channel-pad-dpad .dpad-left,
+.channel-pad-dpad .dpad-right{border:0!important}
