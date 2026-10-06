@@ -21,3 +21,22 @@ async function refreshDeviceStatus(){
  }catch(e){document.querySelectorAll(".device-state").forEach(function(x){x.textContent="Local only";});}
 }
 if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshDeviceStatus,30000);
+async function refreshPrinterStatus(){
+ const panel=document.querySelector("#printerPanel"); if(!panel)return;
+ const badge=document.querySelector("#printerBadge"),name=document.querySelector("#printerName"),detail=document.querySelector("#printerDetail");
+ const live=document.querySelector("#printerLive"),protocols=document.querySelector("#printerProtocols"),identity=document.querySelector("#printerIdentity");
+ try{
+  const r=await fetch("/api/printer/status",{cache:"no-store"}),p=await r.json();
+  badge.textContent=p.online?"ONLINE":"NO RESPONSE"; badge.classList.toggle("online",!!p.online);
+  name.textContent=p.model||p.title||"Epson printer";
+  identity.textContent=(p.model||p.title||"Epson network printer")+" · "+(p.ip||"10.0.0.3");
+  live.textContent=p.online?"Printer is reachable from Eldoret.":"Printer did not answer the current probes.";
+  const bits=[]; if(p.http)bits.push("Web"); if(p.https)bits.push("HTTPS"); if(p.ipp)bits.push("IPP"); if(p.raw_print)bits.push("Raw print");
+  protocols.textContent=bits.length?bits.join(" · "):"No known printer services detected.";
+  detail.textContent=p.detail||"Read-only probe complete.";
+ }catch(e){
+  badge.textContent="UNAVAILABLE"; detail.textContent="Printer status probe unavailable.";
+ }
+}
+refreshPrinterStatus();
+if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshPrinterStatus,30000);
