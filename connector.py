@@ -261,7 +261,7 @@ def sky_radio_guide():
     for s in radios:
         raw=str(s.get("c",""))
         display=raw.zfill(4) if raw.isdigit() and len(raw)<4 else raw
-        item={"channelno":display,"tune":display,"channel":s.get("t"),"sid":s.get("sid"),"logo":sky_channel_logo_url(s),"programme":None,"synopsis":None,"start":None,"end":None}
+        item={"channelno":display,"tune":display,"channel":s.get("t"),"sid":s.get("sid"),"logo":sky_channel_logo_url(s),"is_radio":True,"programme":None,"synopsis":None,"start":None,"end":None}
         if s.get("sid"): item.update(sky_epg_now_next(s.get("sid")))
         channels.append(item)
     return {"channels":channels}
@@ -466,6 +466,7 @@ def sky_now_playing_v2():
                 result["channel"] = service.get("t")
                 result["channelno"] = service.get("c")
                 result["logo"] = sky_channel_logo_url(service)
+                result["is_radio"] = str(service.get("sf", "")).lower() == "au"
             result.update(sky_epg_now(sid))
             return result
         if "pvr" in uri.lower():
