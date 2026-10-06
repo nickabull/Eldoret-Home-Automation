@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Sport · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=42"></head>
-<body class="sport-page"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">One-tap sport channels</p></div><div class="status"><span></span>Sky Q connected</div></header>
+<body class="sport-page guide-page" data-guide-group="sport" data-guide-start="401" data-guide-end="499"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">One-tap sport channels</p></div><div class="status"><span></span>Sky Q connected</div></header>
 <main>
 
 <nav class="tabs" aria-label="Area"><a href="index.html">All</a><a href="house.html">House</a><a href="utility.html">Utility / Outside</a><a href="sky.html">Sky Q</a><a href="network.html">Network</a><a href="av.html">AV</a><a href="radio.html">Radio</a><a href="appliances.html">Appliances</a><a href="office.html">Office</a></nav>
@@ -14,7 +14,7 @@
   <a href="hd.html">HD</a>
   <a href="plus1.html">+1</a>
   <a href="music.html">Music</a>
-  <a href="sky-radio.html">Radio</a><a href="recordings.html">Recordings</a><a href="apps.html">Apps</a>
+  <a href="sky-radio.html">Radio</a><a href="recordings.html">Recordings</a><a href="apps.html">Apps</a><a href="top-picks.html">Today’s Top Picks</a>
 </div>
 
 <div class="sport-now-row">
@@ -45,25 +45,9 @@
 </div>
 
 <section class="sport-section sport-all">
-  <div class="sport-section-head"><div><p class="eyebrow">SPORT CHANNELS</p><h2>Sport</h2></div></div>
-  <div class="sport-channel-grid sport-all-grid">
-    <button class="sport-channel skybrand" data-channel="401"><img class="sport-channel-logo" alt="Sky Sports Main Event"><strong>Main Event</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>401</small></button>
-    <button class="sport-channel skybrand" data-channel="402"><img class="sport-channel-logo" alt="Sky Sports Premier League"><strong>Premier League</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>402</small></button>
-    <button class="sport-channel skybrand" data-channel="403"><img class="sport-channel-logo" alt="Sky Sports Football"><strong>Football</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>403</small></button>
-    <button class="sport-channel skybrand" data-channel="404"><img class="sport-channel-logo" alt="Sky Sports Plus"><strong>Sports+</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>404</small></button>
-    <button class="sport-channel skybrand" data-channel="405"><img class="sport-channel-logo" alt="Sky Sports Cricket"><strong>Cricket</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>405</small></button>
-    <button class="sport-channel skybrand" data-channel="406"><img class="sport-channel-logo" alt="Sky Sports Golf"><strong>Golf</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>406</small></button>
-    <button class="sport-channel skybrand" data-channel="407"><img class="sport-channel-logo" alt="Sky Sports F1"><strong>F1</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>407</small></button>
-    <button class="sport-channel skybrand" data-channel="408"><img class="sport-channel-logo" alt="Sky Sports Tennis"><strong>Tennis</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>408</small></button>
-    <button class="sport-channel skybrand" data-channel="409"><img class="sport-channel-logo" alt="Sky Sports News"><strong>News</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>409</small></button>
-    <button class="sport-channel skybrand" data-channel="412"><img class="sport-channel-logo" alt="Sky Sports NFL"><strong>NFL</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>412</small></button>
-    <button class="sport-channel tntbrand" data-channel="410"><img class="sport-channel-logo" alt="TNT Sports 1"><strong>TNT Sports 1</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>410</small></button>
-    <button class="sport-channel tntbrand" data-channel="411"><img class="sport-channel-logo" alt="TNT Sports 2"><strong>TNT Sports 2</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>411</small></button>
-    <button class="sport-channel tntbrand" data-channel="413"><img class="sport-channel-logo" alt="TNT Sports 3"><strong>TNT Sports 3</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>413</small></button>
-    <button class="sport-channel tntbrand" data-channel="414"><img class="sport-channel-logo" alt="TNT Sports 4"><strong>TNT Sports 4</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>414</small></button>
-  </div>
+  <div class="sport-section-head"><div><p class="eyebrow">SPORT CHANNELS</p><h2>Sport</h2></div><div class="radio-page-controls"><button id="guidePrev" aria-label="Previous sport channels">‹</button><span id="guidePageLabel">1 / 1</span><button id="guideNext" aria-label="More sport channels">›</button></div></div>
+  <div id="guideChannelGrid" class="sport-channel-grid sport-all-grid"></div>
 </section>
-<p class="channel-note">First-pass Sport tab. We can add real artwork/logos and reorder favourites next.</p>
 <div id="channelPadOverlay" class="channel-pad-overlay" hidden>
   <div class="channel-pad-dialog" role="dialog" aria-modal="true" aria-labelledby="channelPadTitle">
     <div class="channel-pad-head">
@@ -88,5 +72,5 @@
   </div>
 </div>
 </main>
-<script src="sport.js?v=41"></script>
+<script src="guide-sport.js?v=2"></script>
 <script src="kiosk.js?v=1"></script></body></html>
