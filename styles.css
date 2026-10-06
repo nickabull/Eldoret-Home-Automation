@@ -711,3 +711,31 @@
     background:#21324c!important;
   }
 }
+
+/* Sky radio artwork polish v47 */
+.sky-radio-page .sky-radio-station{position:relative;overflow:hidden;background:linear-gradient(145deg,#17253a,#151d29)!important}
+.sky-radio-page .sky-radio-station.has-radio-artwork{
+  background:
+    linear-gradient(180deg,rgba(8,14,24,.20) 0%,rgba(8,14,24,.68) 44%,rgba(8,14,24,.96) 100%),
+    var(--radio-artwork) center/cover no-repeat!important;
+}
+.sky-radio-page .sky-radio-station.has-radio-artwork::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(5,9,16,.48),rgba(5,9,16,.08) 58%,rgba(5,9,16,.30));
+}
+.sky-radio-page .sky-radio-station>*{position:relative;z-index:1}
+.sky-radio-page .sky-radio-station .sport-channel-logo{
+  height:52px!important;max-height:52px!important;max-width:90%!important;
+  object-fit:contain!important;object-position:left center!important;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));
+}
+.sky-radio-page .sky-radio-station>strong{font-size:18px!important;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.sky-radio-page .sky-radio-station .sport-synopsis{color:rgba(255,255,255,.92)!important;text-shadow:0 1px 2px rgba(0,0,0,.78)}
+.sky-radio-page .sport-now.has-now-radio-artwork{
+  position:relative;overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(8,14,24,.92) 0%,rgba(8,14,24,.70) 52%,rgba(8,14,24,.88) 100%),
+    var(--now-radio-artwork) center/cover no-repeat!important;
+}
+.sky-radio-page .sport-now.has-now-radio-artwork>*{position:relative;z-index:1}
+.sky-radio-page .sport-now .sky-synopsis{color:rgba(255,255,255,.88)!important}
