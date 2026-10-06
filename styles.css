@@ -739,3 +739,11 @@
 }
 .sky-radio-page .sport-now.has-now-radio-artwork>*{position:relative;z-index:1}
 .sky-radio-page .sport-now .sky-synopsis{color:rgba(255,255,255,.88)!important}
+
+/* Printer live panel v48 */
+.printer-panel{margin:18px 0 26px;background:linear-gradient(120deg,#172334,#111b29);border:1px solid var(--line);border-radius:22px;padding:20px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px}
+.printer-icon{width:64px;height:64px;border-radius:16px;background:var(--card2);display:grid;place-items:center;font-size:30px}
+.printer-panel h2{margin:3px 0 4px}.printer-panel p:last-child{margin:0;color:var(--muted)}
+.printer-badge{align-self:start;background:#1a2432;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--muted)}
+.printer-badge.online{background:#173128;border-color:#376955;color:var(--accent)}
+@media(max-width:620px){.printer-panel{grid-template-columns:52px 1fr}.printer-icon{width:52px;height:52px}.printer-badge{grid-column:1/-1;justify-self:start}}
