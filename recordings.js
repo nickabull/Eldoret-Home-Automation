@@ -1,4 +1,4 @@
-const isLive=location.protocol==="http:";
+const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");
 function skyClock(value){if(!value)return "";const d=new Date(value);return Number.isNaN(d.getTime())?"":d.toLocaleString([],{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});}
 function artwork(uuid){return uuid?"https://images.metadata.sky.com/pd-image/"+encodeURIComponent(uuid)+"/16-9":"";}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
