@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sport · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=36"></head>
+<title>Sport · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=37"></head>
 <body class="sport-page"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">One-tap sport channels</p></div><div class="status"><span></span>Sky Q connected</div></header>
 <main>
 
@@ -25,18 +25,17 @@
 </section>
 <div class="sport-now-controls" aria-label="Sky Q quick controls">
   <button type="button" id="channelPadOpen" class="channel-pad-open" title="Enter channel number"><span class="remote-glyph digits">123</span><span>Channel</span></button>
+  <button type="button" data-sky-key="channelup" title="Channel up"><span class="remote-glyph channel-arrow up"></span><span>CH +</span></button>
   <button type="button" data-sky-key="pause" title="Pause"><span class="remote-glyph pause-bars" aria-hidden="true"></span><span>Pause</span></button>
   <button type="button" data-sky-key="play" title="Play"><span class="remote-glyph play-triangle" aria-hidden="true"></span><span>Play</span></button>
   <button type="button" data-sky-key="rewind" title="Rewind"><span class="remote-glyph rewind-glyph" aria-hidden="true"><i></i><i></i></span><span>Rewind</span></button>
   <button type="button" data-sky-key="fastforward" title="Fast forward"><span class="remote-glyph forward-glyph" aria-hidden="true"><i></i><i></i></span><span>Forward</span></button>
   <button type="button" data-sky-key="record" class="record" title="Record"><span class="remote-glyph record-dot" aria-hidden="true"></span><span>Record</span></button>
+  <button type="button" data-sky-key="channeldown" title="Channel down"><span class="remote-glyph channel-arrow down"></span><span>CH -</span></button>
   <button type="button" data-sky-key="home" title="Home"><span class="remote-glyph home-glyph" aria-hidden="true"><i></i></span><span>Home</span></button>
   <button type="button" data-sky-key="backup" title="Back up"><span class="remote-glyph back-glyph" aria-hidden="true"><i></i></span><span>Backup</span></button>
   <button type="button" data-sky-key="select" title="Select"><span class="remote-glyph select-glyph" aria-hidden="true"></span><span>Select</span></button>
   <button type="button" data-sky-key="red" class="red-key" title="Red button"><span class="remote-glyph red-dot" aria-hidden="true"></span><span>Red</span></button>
-  <button type="button" data-sky-key="channelup" title="Channel up"><span class="remote-glyph channel-arrow up"></span><span>CH +</span></button>
-  <button type="button" data-sky-key="channeldown" title="Channel down"><span class="remote-glyph channel-arrow down"></span><span>CH -</span></button>
-  <button type="button" data-sky-key="help" title="Subtitles"><span class="remote-glyph subtitle-icon">CC</span><span>Subtitles</span></button>
 </div>
 </div>
 
@@ -74,6 +73,7 @@
   <button type="button" class="dpad-right" data-pad-key="right" aria-label="Right"><i></i></button>
   <button type="button" class="dpad-down" data-pad-key="down" aria-label="Down"><i></i></button>
 </div>
+<button type="button" class="channel-pad-subtitles" data-pad-key="help"><span class="subtitle-icon">CC</span><span>Subtitles</span></button>
 <div class="channel-pad-grid">
       <button type="button" data-pad-digit="1">1</button><button type="button" data-pad-digit="2">2</button><button type="button" data-pad-digit="3">3</button>
       <button type="button" data-pad-digit="4">4</button><button type="button" data-pad-digit="5">5</button><button type="button" data-pad-digit="6">6</button>
@@ -83,5 +83,5 @@
   </div>
 </div>
 </main>
-<script src="sport.js?v=35"></script>
+<script src="sport.js?v=37"></script>
 <script src="kiosk.js?v=1"></script></body></html>
