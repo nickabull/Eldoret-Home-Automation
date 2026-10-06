@@ -232,6 +232,38 @@ def infrastructure_status():
     return {"targets":out,"checked_at":datetime.now(timezone.utc).isoformat(),
             "mode":"read-only fingerprint"}
 
+def homekit_discovery(timeout=3.0):
+    # Read-only mDNS browse for HomeKit accessories (_hap._tcp.local).
+    result={"services":[],"checked_at":datetime.now(timezone.utc).isoformat(),"mode":"read-only HomeKit mDNS discovery"}
+    sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        sock.settimeout(0.35)
+        # DNS query: PTR _hap._tcp.local
+        labels=["_hap","_tcp","local"]
+        q=b"".join(bytes([len(x)])+x.encode() for x in labels)+b"\x00"
+        packet=b"\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00"+q+b"\x00\x0c\x00\x01"
+        sock.sendto(packet,("224.0.0.251",5353))
+        end=time.time()+timeout
+        seen=set()
+        while time.time()<end:
+            try:
+                data,addr=sock.recvfrom(8192)
+                if not data: continue
+                key=(addr[0],data)
+                if key in seen: continue
+                seen.add(key)
+                # Keep only safe printable clues from the mDNS reply.
+                text="".join(chr(b) if 32<=b<127 else " " for b in data)
+                clean=" ".join(text.split())
+                if "_hap" in clean.lower() or "velux" in clean.lower():
+                    result["services"].append({"ip":addr[0],"clue":clean[:700]})
+            except socket.timeout:
+                continue
+    finally:
+        sock.close()
+    return result
+
 def lan_inventory():
     # Read-only discovery across the home /24 using only services Eldoret already knows about.
     # No authentication, login attempts or configuration changes.
@@ -972,6 +1004,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(lan_inventory()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/homekit/discovery":
+            try:
+                self.send_bytes(json.dumps(homekit_discovery()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"services": [], "error": str(e)}).encode())
             return
         if path == "/api/network/infrastructure":
             try:
