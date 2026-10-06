@@ -860,6 +860,12 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
             return
+        if path == "/api/playstation/status":
+            try:
+                self.send_bytes(json.dumps(playstation_status()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"online": False, "error": str(e)}).encode())
+            return
         if path == "/api/printer/status":
             try:
                 self.send_bytes(json.dumps(printer_status()).encode())
