@@ -61,6 +61,49 @@ def _tcp_open(ip, port, timeout=0.25):
     except Exception:
         return False
 
+def playstation_status(ip="10.0.0.48"):
+    result = {"online": False, "ip": ip, "host_type": None, "host_name": None,
+              "system_version": None, "running_app_name": None, "running_app_titleid": None,
+              "status_code": None, "detail": "No PlayStation discovery reply."}
+    probes = [
+        (9302, b"SRCH * HTTP/1.1\nD-Protocol-Version:00030010\n"),
+        (987,  b"SRCH * HTTP/1.1\nD-Protocol-Version:00020020\n"),
+    ]
+    for port, payload in probes:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(0.8)
+        try:
+            sock.sendto(payload, (ip, port))
+            data, addr = sock.recvfrom(4096)
+            if addr[0] != ip:
+                continue
+            text = data.decode("utf-8", errors="replace").replace("\r", "")
+            lines = [x.strip() for x in text.split("\n") if x.strip()]
+            fields = {}
+            if lines:
+                parts = lines[0].split()
+                if len(parts) >= 2 and parts[1].isdigit():
+                    result["status_code"] = int(parts[1])
+            for line in lines[1:]:
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    fields[k.strip().lower()] = v.strip()
+            result.update({
+                "online": True,
+                "host_type": fields.get("host-type"),
+                "host_name": fields.get("host-name"),
+                "system_version": fields.get("system-version"),
+                "running_app_name": fields.get("running-app-name"),
+                "running_app_titleid": fields.get("running-app-titleid"),
+                "detail": "PlayStation discovery reply received on UDP " + str(port)
+            })
+            return result
+        except Exception:
+            pass
+        finally:
+            sock.close()
+    return result
+
 def printer_status():
     host = "10.0.0.3"
     result = {"ip": host, "online": False, "ports": [], "model": None, "title": None,
@@ -109,8 +152,19 @@ def network_status():
     devices = []
     for d in NETWORK_PROBES:
         open_ports = [p for p in d["ports"] if _tcp_open(d["ip"], p)]
-        devices.append({"ip": d["ip"], "name": d["name"], "online": bool(open_ports), "ports": open_ports,
-                        "detail": ("Open ports: " + ", ".join(map(str, open_ports))) if open_ports else "No configured service answered"})
+        ps = playstation_status(d["ip"]) if d["ip"] == "10.0.0.48" else None
+        online = bool(open_ports) or bool(ps and ps.get("online"))
+        detail = ("Open ports: " + ", ".join(map(str, open_ports))) if open_ports else "No configured service answered"
+        if ps and ps.get("online"):
+            detail = ps.get("detail") or "PlayStation detected"
+            extras = [ps.get("host_type"), ps.get("host_name"), ps.get("running_app_name")]
+            extras = [str(x) for x in extras if x]
+            if extras:
+                detail += " · " + " · ".join(extras)
+        item = {"ip": d["ip"], "name": d["name"], "online": online, "ports": open_ports, "detail": detail}
+        if ps:
+            item["playstation"] = ps
+        devices.append(item)
     return {"devices": devices, "checked_at": datetime.now(timezone.utc).isoformat()}
 
 def sky_send_key(key):
