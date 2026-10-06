@@ -1,5 +1,5 @@
 {
-  "id": "2026-10-06T22:55:30Z-discovery-1",
-  "task": "discover_devices",
-  "note": "Refresh dynamic Eldoret device registry"
+  "id": "2026-10-06T23:09:35Z-printer-win",
+  "task": "printer_status",
+  "note": "Get real Epson ET-3850 status and ink data"
 }
