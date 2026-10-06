@@ -7,8 +7,9 @@ import threading
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 BRIDGES = {
     "house": {"ip": "10.0.0.2", "key": os.environ.get("HUE_KEY")},
@@ -16,7 +17,7 @@ BRIDGES = {
 }
 GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/"
 STATIC_CACHE = {}
-STATIC_CACHE_TTL = 30
+STATIC_CACHE_TTL = 300
 AGENT_TASK_URL = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/agent-task.json"
 AGENT_RESULTS_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-results.json")
 AGENT_STATE_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-state.json")
@@ -325,24 +326,49 @@ def lan_inventory():
     return {"devices":found,"checked_at":datetime.now(timezone.utc).isoformat(),
             "mode":"read-only known-service discovery"}
 
+NETWORK_STATUS_CACHE = {"time":0,"data":None}
+
+def _probe_network_device(d):
+    def check(port):
+        return port if _tcp_open(d["ip"], port, timeout=0.18) else None
+    open_ports=[]
+    with ThreadPoolExecutor(max_workers=max(1,len(d["ports"]))) as pool:
+        for value in pool.map(check, d["ports"]):
+            if value is not None:
+                open_ports.append(value)
+    ps = playstation_status(d["ip"]) if d["ip"] == "10.0.0.48" else None
+    online = bool(open_ports) or bool(ps and ps.get("online"))
+    detail = ("Open ports: " + ", ".join(map(str, open_ports))) if open_ports else "No configured service answered"
+    if ps and ps.get("online"):
+        detail = ps.get("detail") or "PlayStation detected"
+        extras = [ps.get("host_type"), ps.get("host_name"), ps.get("running_app_name")]
+        extras = [str(x) for x in extras if x]
+        if extras:
+            detail += " · " + " · ".join(extras)
+    item = {"ip": d["ip"], "name": d["name"], "online": online, "ports": sorted(open_ports), "detail": detail}
+    if ps:
+        item["playstation"] = ps
+    return item
+
 def network_status():
-    devices = []
-    for d in NETWORK_PROBES:
-        open_ports = [p for p in d["ports"] if _tcp_open(d["ip"], p)]
-        ps = playstation_status(d["ip"]) if d["ip"] == "10.0.0.48" else None
-        online = bool(open_ports) or bool(ps and ps.get("online"))
-        detail = ("Open ports: " + ", ".join(map(str, open_ports))) if open_ports else "No configured service answered"
-        if ps and ps.get("online"):
-            detail = ps.get("detail") or "PlayStation detected"
-            extras = [ps.get("host_type"), ps.get("host_name"), ps.get("running_app_name")]
-            extras = [str(x) for x in extras if x]
-            if extras:
-                detail += " · " + " · ".join(extras)
-        item = {"ip": d["ip"], "name": d["name"], "online": online, "ports": open_ports, "detail": detail}
-        if ps:
-            item["playstation"] = ps
-        devices.append(item)
-    return {"devices": devices, "checked_at": datetime.now(timezone.utc).isoformat()}
+    now=time.time()
+    cached=NETWORK_STATUS_CACHE.get("data")
+    if cached and now-NETWORK_STATUS_CACHE.get("time",0) < 8:
+        return cached
+    devices=[]
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        futures=[pool.submit(_probe_network_device,d) for d in NETWORK_PROBES]
+        for future in as_completed(futures):
+            try:
+                devices.append(future.result())
+            except Exception:
+                pass
+    order={d["ip"]:i for i,d in enumerate(NETWORK_PROBES)}
+    devices.sort(key=lambda x:order.get(x["ip"],999))
+    data={"devices":devices,"checked_at":datetime.now(timezone.utc).isoformat()}
+    NETWORK_STATUS_CACHE["time"]=time.time()
+    NETWORK_STATUS_CACHE["data"]=data
+    return data
 
 def sky_send_key(key):
     if key not in SKY_KEY_MAP:
@@ -1321,4 +1347,4 @@ print("Utility Hue bridge: ready")
 print("Live state + scenes: ready")
 print(f"Sky Q now-playing target: {SKY_Q_HOST}:{SKY_Q_JSON_PORT}")
 print("Open http://localhost:8765 in Chrome")
-HTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
+ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
