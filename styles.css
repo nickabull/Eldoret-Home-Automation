@@ -556,3 +556,9 @@
   border-radius:5px!important;
   font-size:9px!important;
 }
+
+/* Sport v38: official Sky Q asset + graceful missing-artwork cards */
+.skyq-official{overflow:hidden!important;padding:0!important;background:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.skyq-official img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
+.sport-channel.artwork-missing{background:radial-gradient(circle at 50% 12%,rgba(36,71,118,.32),transparent 48%),linear-gradient(180deg,#111d2d,#0b1420)!important}
+.sport-channel[data-channel="407"].artwork-missing{background:radial-gradient(circle at 50% 5%,rgba(0,145,215,.34),transparent 48%),linear-gradient(145deg,#13243c,#0b1420 70%)!important}
