@@ -1,4 +1,4 @@
-const isLive=location.protocol==="http:";const PAGE_SIZE=14;let stations=[],page=0;
+const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");const PAGE_SIZE=14;let stations=[],page=0;
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function clock(v){if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
 async function tune(channel){if(!isLive)return;await fetch("/api/sky/channel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({channel:String(channel)})});setTimeout(refreshNow,1500)}
