@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sport · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=30"></head>
+<title>Sport · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=31"></head>
 <body class="sport-page"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">One-tap sport channels</p></div><div class="status"><span></span>Sky Q connected</div></header>
 <main>
 
@@ -24,6 +24,7 @@
   <span class="sky-state">CHECKING</span>
 </section>
 <div class="sport-now-controls" aria-label="Sky Q quick controls">
+  <button type="button" id="channelPadOpen" class="channel-pad-open" title="Enter channel number">⌨<span>Channel</span></button>
   <button type="button" data-sky-key="pause" title="Pause">⏸<span>Pause</span></button>
   <button type="button" data-sky-key="play" title="Play">▶<span>Play</span></button>
   <button type="button" data-sky-key="rewind" title="Rewind">⏪<span>Rewind</span></button>
@@ -52,6 +53,21 @@
   </div>
 </section>
 <p class="channel-note">First-pass Sport tab. We can add real artwork/logos and reorder favourites next.</p>
+<div id="channelPadOverlay" class="channel-pad-overlay" hidden>
+  <div class="channel-pad-dialog" role="dialog" aria-modal="true" aria-labelledby="channelPadTitle">
+    <div class="channel-pad-head">
+      <div><p class="eyebrow">SKY Q</p><h2 id="channelPadTitle">Go to channel</h2></div>
+      <button type="button" id="channelPadClose" class="channel-pad-close" aria-label="Close">×</button>
+    </div>
+    <div id="channelPadDisplay" class="channel-pad-display" aria-live="polite">—</div>
+    <div class="channel-pad-grid">
+      <button type="button" data-pad-digit="1">1</button><button type="button" data-pad-digit="2">2</button><button type="button" data-pad-digit="3">3</button>
+      <button type="button" data-pad-digit="4">4</button><button type="button" data-pad-digit="5">5</button><button type="button" data-pad-digit="6">6</button>
+      <button type="button" data-pad-digit="7">7</button><button type="button" data-pad-digit="8">8</button><button type="button" data-pad-digit="9">9</button>
+      <button type="button" id="channelPadClear" class="channel-pad-secondary">Clear</button><button type="button" data-pad-digit="0">0</button><button type="button" id="channelPadGo" class="channel-pad-go">Go</button>
+    </div>
+  </div>
+</div>
 </main>
-<script src="sport.js?v=29"></script>
+<script src="sport.js?v=31"></script>
 <script src="kiosk.js?v=1"></script></body></html>
