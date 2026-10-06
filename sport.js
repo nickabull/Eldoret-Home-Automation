@@ -53,11 +53,22 @@ async function refreshSportGuide(){
       if(logo && item.logo){logo.src=item.logo;logo.hidden=false;}
       if(item.programmeuuid){
         const artwork=programmeArtworkUrl(item.programmeuuid);
-        button.style.setProperty("--programme-artwork", 'url("' + artwork + '")');
-        button.classList.add("has-programme-artwork");
+        const probe=new Image();
+        probe.onload=()=>{
+          button.style.setProperty("--programme-artwork", 'url("' + artwork + '")');
+          button.classList.add("has-programme-artwork");
+          button.classList.remove("artwork-missing");
+        };
+        probe.onerror=()=>{
+          button.classList.remove("has-programme-artwork");
+          button.style.removeProperty("--programme-artwork");
+          button.classList.add("artwork-missing");
+        };
+        probe.src=artwork;
       } else {
         button.classList.remove("has-programme-artwork");
         button.style.removeProperty("--programme-artwork");
+        button.classList.add("artwork-missing");
       }
       if(onair){
         const nowTime=[skyClock(item.start),skyClock(item.end)].filter(Boolean).join("–");
