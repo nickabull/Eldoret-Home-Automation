@@ -33,6 +33,7 @@ NETWORK_PROBES = [
  {"ip":"10.0.0.43","name":"LG device","ports":[3000,3001,80]},
  {"ip":"10.0.0.47","name":"LG device","ports":[3000,3001,80]}
 ]
+GUIDE_GROUPS = {"news":["Sky News","BBC News","CNN","GB News","Bloomberg","BBC Parliament","CNBC"],"entertainment":["BBC One","BBC Two","ITV1","Channel 4","Channel 5","Sky Atlantic","Sky Max","Sky Witness","Gold","Dave","Comedy Central","Discovery"]}
 SPORT_CHANNEL_NUMBERS = ["401","402","403","404","405","406","407","408","409","410","411","412","413","414","418","419"]
 SKY_KEY_MAP = {
     "power":0,"select":1,"backup":2,"channelup":6,"channeldown":7,
@@ -168,6 +169,18 @@ def sky_channel_logo_url(service):
         return None
     chid = "".join(ch for ch in name.lower() if ch.isalnum())
     return f"https://imageservice.sky.com/logo/skychb_{sid}{chid}/600/600?territory=GB&provider=SKY&proposition=SKYQ"
+
+def sky_named_guide(group):
+    wanted = GUIDE_GROUPS.get(group, [])
+    services = sky_channel_list()
+    channels = []
+    for requested in wanted:
+        req = requested.lower()
+        service = next((s for s in services if req in str(s.get("t","")).lower()), None)
+        item = {"requested":requested,"channelno":service.get("c") if service else None,"channel":service.get("t") if service else requested,"sid":service.get("sid") if service else None,"logo":sky_channel_logo_url(service),"programme":None,"synopsis":None,"start":None,"end":None}
+        if service and service.get("sid"): item.update(sky_epg_now_next(service.get("sid")))
+        channels.append(item)
+    return {"group":group,"channels":channels}
 
 def sky_sport_guide():
     services = sky_channel_list()
@@ -467,6 +480,9 @@ class Handler(BaseHTTPRequestHandler):
             "/av.html": ("av.html", "text/html; charset=utf-8"),
             "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
             "/office.html": ("office.html", "text/html; charset=utf-8"),
+            "/news.html": ("news.html", "text/html; charset=utf-8"),
+            "/entertainment.html": ("entertainment.html", "text/html; charset=utf-8"),
+            "/guide.js": ("guide.js", "application/javascript; charset=utf-8"),
             "/sky.js": ("sky.js", "application/javascript; charset=utf-8"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "application/javascript; charset=utf-8"),
@@ -480,6 +496,13 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(network_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/sky/guide":
+            try:
+                group = query.get("group", [""])[0]
+                self.send_bytes(json.dumps(sky_named_guide(group)).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"channels": [], "error": str(e)}).encode())
             return
         if path == "/api/sky/sport-guide":
             try:
