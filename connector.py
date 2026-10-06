@@ -186,7 +186,7 @@ def sky_sport_guide():
             "end": None,
         }
         if service and service.get("sid"):
-            item.update(sky_epg_now(service.get("sid")))
+            item.update(sky_epg_now_next(service.get("sid")))
         channels.append(item)
     return {"channels": channels}
 
@@ -234,6 +234,53 @@ def sky_epg_now(sid):
     except Exception:
         pass
     return {}
+
+def sky_epg_now_next(sid):
+    now = datetime.now(timezone.utc)
+    date = now.strftime("%Y%m%d")
+    url = f"http://atlantis.epgsky.com/as/schedule/{date}/{sid}"
+    req = urllib.request.Request(url, headers={
+        "x-skyott-territory": "GB",
+        "x-skyott-provider": "SKY",
+        "x-skyott-proposition": "SKYQ",
+        "User-Agent": "Eldoret/1.0",
+    })
+    result = {}
+    try:
+        with urllib.request.urlopen(req, timeout=8) as response:
+            data = json.loads(response.read().decode("utf-8", errors="replace"))
+        events = []
+        for block in data.get("schedule", []):
+            events.extend(block.get("events", []))
+        events.sort(key=lambda e: int(e.get("st", 0)))
+        now_ts = int(now.timestamp())
+        current_index = None
+        for i, event in enumerate(events):
+            start = int(event.get("st", 0))
+            duration = int(event.get("d", 0))
+            if start <= now_ts < start + duration:
+                current_index = i
+                result.update({
+                    "programme": event.get("t"),
+                    "synopsis": event.get("sy"),
+                    "start": datetime.fromtimestamp(start, tz=timezone.utc).isoformat(),
+                    "end": datetime.fromtimestamp(start + duration, tz=timezone.utc).isoformat(),
+                    "programmeuuid": event.get("programmeuuid"),
+                })
+                break
+        if current_index is not None and current_index + 1 < len(events):
+            nxt = events[current_index + 1]
+            nstart = int(nxt.get("st", 0))
+            nduration = int(nxt.get("d", 0))
+            result["next"] = {
+                "programme": nxt.get("t"),
+                "synopsis": nxt.get("sy"),
+                "start": datetime.fromtimestamp(nstart, tz=timezone.utc).isoformat(),
+                "end": datetime.fromtimestamp(nstart + nduration, tz=timezone.utc).isoformat(),
+            }
+    except Exception:
+        pass
+    return result
 
 def sky_now_playing_v2():
     result = {"available": False, "live": False, "host": SKY_Q_HOST}
