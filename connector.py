@@ -3,6 +3,7 @@ import os
 import socket
 import ssl
 import time
+import threading
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -16,6 +17,10 @@ BRIDGES = {
 GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/"
 STATIC_CACHE = {}
 STATIC_CACHE_TTL = 30
+AGENT_TASK_URL = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/agent-task.json"
+AGENT_RESULTS_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-results.json")
+AGENT_STATE_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-state.json")
+AGENT_RESULT = {"status":"waiting","task":None,"task_id":None,"result":None,"error":None,"finished_at":None}
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
 SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
 SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
@@ -970,6 +975,72 @@ def sky_now_playing():
 
     return result
 
+def _agent_read_json(path, default):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+def _agent_write_json(path, value):
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp=path+".new"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(value, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, path)
+    except Exception:
+        pass
+
+def run_agent_task(task):
+    # Deliberately allow-listed. No arbitrary commands or shell execution.
+    allowed = {
+        "network_inventory": lan_inventory,
+        "network_status": network_status,
+        "velux_discovery": velux_active_discovery,
+        "homekit_discovery": homekit_discovery,
+        "velux_status": velux_status,
+        "lg_status": lg_tv_status,
+        "playstation_status": playstation_status,
+        "printer_status": printer_status,
+        "infrastructure_status": infrastructure_status,
+    }
+    fn=allowed.get(task)
+    if not fn:
+        raise ValueError("Task is not in the Eldoret allow-list")
+    return fn()
+
+def agent_loop():
+    global AGENT_RESULT
+    state=_agent_read_json(AGENT_STATE_FILE, {})
+    last_id=state.get("last_task_id")
+    while True:
+        try:
+            req=urllib.request.Request(AGENT_TASK_URL, headers={"User-Agent":"Eldoret-Agent/1.0","Cache-Control":"no-cache"})
+            with urllib.request.urlopen(req, timeout=10) as response:
+                job=json.loads(response.read().decode("utf-8",errors="replace"))
+            task_id=str(job.get("id") or "")
+            task=str(job.get("task") or "")
+            if task_id and task and task_id != last_id:
+                AGENT_RESULT={"status":"running","task":task,"task_id":task_id,"result":None,"error":None,
+                              "finished_at":None}
+                _agent_write_json(AGENT_RESULTS_FILE, AGENT_RESULT)
+                try:
+                    result=run_agent_task(task)
+                    AGENT_RESULT={"status":"complete","task":task,"task_id":task_id,"result":result,"error":None,
+                                  "finished_at":datetime.now(timezone.utc).isoformat()}
+                except Exception as exc:
+                    AGENT_RESULT={"status":"error","task":task,"task_id":task_id,"result":None,"error":str(exc)[:500],
+                                  "finished_at":datetime.now(timezone.utc).isoformat()}
+                _agent_write_json(AGENT_RESULTS_FILE, AGENT_RESULT)
+                last_id=task_id
+                _agent_write_json(AGENT_STATE_FILE, {"last_task_id":last_id})
+        except Exception:
+            saved=_agent_read_json(AGENT_RESULTS_FILE, None)
+            if saved:
+                AGENT_RESULT=saved
+        time.sleep(30)
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -1028,6 +1099,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/radio/stations":
             try: self.send_bytes(json.dumps(radio_stations()).encode())
             except Exception as e: self.send_bytes(json.dumps({"stations":[],"error":str(e)}).encode())
+            return
+        if path == "/api/agent/results":
+            try:
+                saved=_agent_read_json(AGENT_RESULTS_FILE, AGENT_RESULT)
+                self.send_bytes(json.dumps(saved).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"status":"error","error":str(e)}).encode())
             return
         if path == "/api/network/status":
             try:
@@ -1236,6 +1314,7 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
+threading.Thread(target=agent_loop, daemon=True).start()
 print("Eldoret live connector running")
 print("House Hue bridge: ready")
 print("Utility Hue bridge: ready")
