@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sport · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=34"></head>
+<title>Sport · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=35"></head>
 <body class="sport-page"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">One-tap sport channels</p></div><div class="status"><span></span>Sky Q connected</div></header>
 <main>
 
@@ -14,7 +14,7 @@
 
 <div class="sport-now-row">
 <section class="now-watching sport-now" id="skyNowLive" aria-live="polite">
-  <div class="sky-logo-wrap sky-live-icon">📺</div>
+  <div class="sky-logo-wrap sky-live-icon skyq-mark" aria-label="Sky Q"><span>sky</span><b>Q</b></div>
   <div class="sky-copy">
     <p class="sky-kicker">NOW WATCHING</p>
     <h2 class="sky-programme">Checking Sky Q…</h2>
@@ -38,7 +38,7 @@
 </div>
 
 <section class="sport-section sport-all">
-  <div class="sport-section-head"><div><p class="eyebrow">SPORT CHANNELS</p><h2>Sport</h2></div><span class="pill">Tap to tune</span></div>
+  <div class="sport-section-head"><div><p class="eyebrow">SPORT CHANNELS</p><h2>Sport</h2></div></div>
   <div class="sport-channel-grid sport-all-grid">
     <button class="sport-channel skybrand" data-channel="401"><img class="sport-channel-logo" alt="Sky Sports Main Event"><strong>Main Event</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>401</small></button>
     <button class="sport-channel skybrand" data-channel="402"><img class="sport-channel-logo" alt="Sky Sports Premier League"><strong>Premier League</strong><div class="sport-onair"><span>On now</span><b>Loading…</b></div><small>402</small></button>
@@ -64,7 +64,14 @@
       <button type="button" id="channelPadClose" class="channel-pad-close" aria-label="Close">×</button>
     </div>
     <div id="channelPadDisplay" class="channel-pad-display" aria-live="polite">—</div>
-    <div class="channel-pad-grid">
+    <div class="channel-pad-dpad" aria-label="Sky navigation">
+  <button type="button" class="dpad-up" data-pad-key="up" aria-label="Up"><i></i></button>
+  <button type="button" class="dpad-left" data-pad-key="left" aria-label="Left"><i></i></button>
+  <button type="button" class="dpad-select" data-pad-key="select" aria-label="Select"></button>
+  <button type="button" class="dpad-right" data-pad-key="right" aria-label="Right"><i></i></button>
+  <button type="button" class="dpad-down" data-pad-key="down" aria-label="Down"><i></i></button>
+</div>
+<div class="channel-pad-grid">
       <button type="button" data-pad-digit="1">1</button><button type="button" data-pad-digit="2">2</button><button type="button" data-pad-digit="3">3</button>
       <button type="button" data-pad-digit="4">4</button><button type="button" data-pad-digit="5">5</button><button type="button" data-pad-digit="6">6</button>
       <button type="button" data-pad-digit="7">7</button><button type="button" data-pad-digit="8">8</button><button type="button" data-pad-digit="9">9</button>
@@ -73,5 +80,5 @@
   </div>
 </div>
 </main>
-<script src="sport.js?v=31"></script>
+<script src="sport.js?v=35"></script>
 <script src="kiosk.js?v=1"></script></body></html>
