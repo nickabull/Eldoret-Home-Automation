@@ -249,6 +249,33 @@ def sky_radio_guide():
         channels.append(item)
     return {"channels":channels}
 
+def sky_apps():
+    data = sky_json("/as/apps")
+    raw = data.get("apps", data) if isinstance(data, dict) else data
+    apps = []
+    if isinstance(raw, list):
+        for a in raw:
+            if not isinstance(a, dict): continue
+            title = a.get("title") or a.get("name") or a.get("t") or a.get("appName")
+            appid = a.get("appId") or a.get("appid") or a.get("id") or a.get("app")
+            if title and appid:
+                apps.append({"title":title,"appid":appid,"icon":a.get("icon") or a.get("logo") or a.get("image"),"raw":a})
+    return {"apps":apps}
+
+def sky_launch_app(appid):
+    if not appid: raise ValueError("Missing app id")
+    paths = ["/as/apps/" + urllib.parse.quote(str(appid), safe=""), "/as/apps/launch/" + urllib.parse.quote(str(appid), safe="")]
+    last = None
+    for path in paths:
+        try:
+            url = f"http://{SKY_Q_HOST}:{SKY_Q_JSON_PORT}{path}"
+            req = urllib.request.Request(url, data=b"", method="POST", headers={"User-Agent":"Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=4) as response: response.read()
+            return True
+        except Exception as exc: last = exc
+    if last: raise last
+    return False
+
 def sky_search_channels(query):
     q = (query or "").strip().lower()
     if not q:
@@ -596,6 +623,8 @@ class Handler(BaseHTTPRequestHandler):
             "/office.html": ("office.html", "text/html; charset=utf-8"),
             "/radio.html": ("radio.html", "text/html; charset=utf-8"),
             "/sky-radio.html": ("sky-radio.html", "text/html; charset=utf-8"),
+            "/apps.html": ("apps.html", "text/html; charset=utf-8"),
+            "/sky-apps.js": ("sky-apps.js", "application/javascript; charset=utf-8"),
             "/sky-radio.js": ("sky-radio.js", "application/javascript; charset=utf-8"),
             "/radio.js": ("radio.js", "application/javascript; charset=utf-8"),
             "/recordings.html": ("recordings.html", "text/html; charset=utf-8"),
@@ -626,6 +655,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(network_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/sky/apps":
+            try: self.send_bytes(json.dumps(sky_apps()).encode())
+            except Exception as e: self.send_bytes(json.dumps({"apps":[],"error":str(e)}).encode())
             return
         if path == "/api/sky/radio":
             try: self.send_bytes(json.dumps(sky_radio_guide()).encode())
@@ -679,6 +712,13 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(length))
+        if self.path == "/api/sky/app/launch":
+            try:
+                sky_launch_app(payload.get("appid"))
+                self.send_bytes(json.dumps({"ok":True}).encode())
+            except Exception as e:
+                self.send_response(500); self.end_headers(); self.wfile.write(str(e).encode())
+            return
         if self.path == "/api/sky/recording/play":
             try:
                 sky_play_recording(payload.get("pvrid"))
