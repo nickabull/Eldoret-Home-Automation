@@ -349,6 +349,8 @@ class Handler(BaseHTTPRequestHandler):
             "/house.html": ("house.html", "text/html; charset=utf-8"),
             "/utility.html": ("utility.html", "text/html; charset=utf-8"),
             "/sky.html": ("sky.html", "text/html; charset=utf-8"),
+            "/sport.html": ("sport.html", "text/html; charset=utf-8"),
+            "/sport.js": ("sport.js", "application/javascript; charset=utf-8"),
             "/sky.js": ("sky.js", "application/javascript; charset=utf-8"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "application/javascript; charset=utf-8"),
