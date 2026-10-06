@@ -29,3 +29,24 @@ async function tune(button){
 }
 document.querySelectorAll(".sport-channel").forEach(b=>b.addEventListener("click",()=>tune(b)));
 refreshNow(); if(isLive)setInterval(refreshNow,15000);
+
+async function refreshSportGuide(){
+  try{
+    const r=await fetch("/api/sky/sport-guide",{cache:"no-store"});
+    const data=await r.json();
+    const byNo=new Map((data.channels||[]).map(x=>[String(x.channelno),x]));
+    document.querySelectorAll(".sport-channel[data-channel]").forEach(button=>{
+      const item=byNo.get(button.dataset.channel);
+      const logo=button.querySelector(".sport-channel-logo");
+      const onair=button.querySelector(".sport-onair b");
+      if(!item){ if(onair) onair.textContent="Programme unavailable"; return; }
+      if(logo && item.logo){logo.src=item.logo;logo.hidden=false;}
+      if(onair) onair.textContent=item.programme||"Programme unavailable";
+      button.title=[item.channel,item.programme].filter(Boolean).join(" · ");
+    });
+  }catch(e){
+    document.querySelectorAll(".sport-onair b").forEach(x=>x.textContent="Guide unavailable");
+  }
+}
+refreshSportGuide();
+if(isLive)setInterval(refreshSportGuide,60000);
