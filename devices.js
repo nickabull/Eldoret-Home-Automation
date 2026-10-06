@@ -20,4 +20,4 @@ async function refreshDeviceStatus(){
   if(note)note.textContent=pi&&pi.online?"Old Raspberry Pi is reachable on the network.":"Old Raspberry Pi did not answer the quick service probe.";
  }catch(e){document.querySelectorAll(".device-state").forEach(function(x){x.textContent="Local only";});}
 }
-if(location.protocol==="http:")setInterval(refreshDeviceStatus,30000);
+if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshDeviceStatus,30000);
