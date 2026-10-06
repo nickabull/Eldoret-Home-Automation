@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lights · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=43"></head>
+<body class="sport-page lights-page"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">Rooms, scenes and live Hue control</p></div><div class="status"><span></span>Hue connected</div></header>
+<main>
+<nav class="tabs" aria-label="Area"><a href="index.html">All</a><a class="active" href="lights.html">Lights</a><a href="house.html">House</a><a href="utility.html">Utility / Outside</a><a href="sky.html">Sky Q</a><a href="network.html">Network</a><a href="av.html">AV</a><a href="radio.html">Radio</a><a href="appliances.html">Appliances</a><a href="office.html">Office</a></nav>
+
+<section class="lights-hero">
+  <div class="lights-hero-mark" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 6c-12.2 0-22 9.8-22 22 0 8.2 4.4 15.5 11 19.3V54h22v-6.7C49.6 43.5 54 36.2 54 28 54 15.8 44.2 6 32 6Zm-8 52h16"/></svg></div>
+  <div><p class="eyebrow">PHILIPS HUE</p><h2>Lights</h2><p>Choose a room, then tap a scene. Live state and brightness come straight from the bridges.</p></div>
+</section>
+
+<section class="sport-section lights-section">
+  <div class="sport-section-head"><div><p class="eyebrow">ROOMS & ZONES</p><h2>Choose a room</h2></div><div class="radio-page-controls"><button id="roomPrev" aria-label="Previous rooms">‹</button><span id="roomPageLabel">1 / 1</span><button id="roomNext" aria-label="More rooms">›</button></div></div>
+  <div id="lightRoomGrid" class="lights-room-grid"></div>
+</section>
+
+<section class="sport-section lights-section lights-scenes-section">
+  <div class="sport-section-head"><div><p class="eyebrow">SCENES</p><h2 id="sceneRoomTitle">Select a room</h2></div><div class="radio-page-controls"><button id="scenePrev" aria-label="Previous scenes">‹</button><span id="scenePageLabel">—</span><button id="sceneNext" aria-label="More scenes">›</button></div></div>
+  <div id="lightSceneGrid" class="lights-scene-grid"></div>
+</section>
+</main>
+<script src="lights.js?v=1"></script><script src="kiosk.js?v=1"></script></body></html>
