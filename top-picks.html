@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Today’s Top Picks · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=42"></head>
+<body class="sport-page guide-page" data-guide-group="top-picks" data-guide-top-picks="1"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">Sky Guide · Today’s Top Picks</p></div><div class="status"><span></span>Sky Q connected</div></header>
+<main>
+
+<nav class="tabs" aria-label="Area"><a href="index.html">All</a><a href="house.html">House</a><a href="utility.html">Utility / Outside</a><a href="sky.html">Sky Q</a><a href="network.html">Network</a><a href="av.html">AV</a><a href="appliances.html">Appliances</a><a href="office.html">Office</a></nav>
+<div class="sky-subnav" aria-label="Sky Q sections">
+  <a href="sky.html">Search</a><a href="sport.html">Sport</a><a href="movies.html">Movies</a><a href="news.html">News</a><a href="documentaries.html">Documentaries</a><a href="hd.html">HD</a><a href="plus1.html">+1</a><a href="music.html">Music</a>
+  <a href="sky-radio.html">Radio</a><a href="recordings.html">Recordings</a><a href="apps.html">Apps</a><a href="top-picks.html" class="active">Today’s Top Picks</a>
+</div>
+
+<div class="sport-now-row">
+<section class="now-watching sport-now" id="skyNowLive" aria-live="polite">
+  <div class="sky-logo-wrap sky-live-icon skyq-official" aria-label="Sky Q"><img src="https://static.skyassets.com/contentstack/assets/blt4b099fa9cc3801a6/blt9bc5a338f50a49a6/695bd6e5c510a02d6e1ac7da/Sky-q-sky-black-tile.jpg?downsize=320,640:*&output-format=jpg" alt="Sky Q"></div>
+  <div class="sky-copy">
+    <p class="sky-kicker">NOW WATCHING</p>
+    <h2 class="sky-programme">Checking Sky Q…</h2>
+    <p class="sky-meta">Reading current programme.</p>
+    <p class="sky-synopsis"></p>
+  </div>
+  <span class="sky-state">CHECKING</span>
+</section>
+<div class="sport-now-controls" aria-label="Sky Q quick controls">
+  <button type="button" id="channelPadOpen" class="channel-pad-open" title="Enter channel number"><span class="remote-glyph digits">123</span><span>Channel</span></button>
+  <button type="button" data-sky-key="channelup" title="Channel up"><span class="remote-glyph channel-arrow up"></span><span>CH +</span></button>
+  <button type="button" data-sky-key="pause" title="Pause"><span class="remote-glyph pause-bars" aria-hidden="true"></span><span>Pause</span></button>
+  <button type="button" data-sky-key="play" title="Play"><span class="remote-glyph play-triangle" aria-hidden="true"></span><span>Play</span></button>
+  <button type="button" data-sky-key="rewind" title="Rewind"><span class="remote-glyph rewind-glyph" aria-hidden="true"><i></i><i></i></span><span>Rewind</span></button>
+  <button type="button" data-sky-key="fastforward" title="Fast forward"><span class="remote-glyph forward-glyph" aria-hidden="true"><i></i><i></i></span><span>Forward</span></button>
+  <button type="button" data-sky-key="record" class="record" title="Record"><span class="remote-glyph record-dot" aria-hidden="true"></span><span>Record</span></button>
+  <button type="button" data-sky-key="channeldown" title="Channel down"><span class="remote-glyph channel-arrow down"></span><span>CH -</span></button>
+  <button type="button" data-sky-key="home" title="Home"><span class="remote-glyph home-glyph" aria-hidden="true"><i></i></span><span>Home</span></button>
+  <button type="button" data-sky-key="backup" title="Back up"><span class="remote-glyph back-glyph" aria-hidden="true"><i></i></span><span>Backup</span></button>
+  <button type="button" data-sky-key="select" title="Select"><span class="remote-glyph select-glyph" aria-hidden="true"></span><span>Select</span></button>
+  <button type="button" data-sky-key="red" class="red-key" title="Red button"><span class="remote-glyph red-dot" aria-hidden="true"></span><span>Red</span></button>
+</div>
+</div>
+
+<section class="sport-section sport-all">
+  <div class="sport-section-head"><div><p class="eyebrow">SKY GUIDE</p><h2>Today’s Top Picks</h2></div><div class="radio-page-controls"><button id="guidePrev" aria-label="Previous top picks">‹</button><span id="guidePageLabel">1 / 1</span><button id="guideNext" aria-label="More top picks">›</button></div></div>
+  <div id="guideChannelGrid" class="sport-channel-grid sport-all-grid"></div>
+</section>
+
+<div id="channelPadOverlay" class="channel-pad-overlay" hidden>
+  <div class="channel-pad-dialog" role="dialog" aria-modal="true" aria-labelledby="channelPadTitle">
+    <div class="channel-pad-head">
+      <div><p class="eyebrow">SKY Q</p><h2 id="channelPadTitle">Go to channel</h2></div>
+      <button type="button" id="channelPadClose" class="channel-pad-close" aria-label="Close">×</button>
+    </div>
+    <div id="channelPadDisplay" class="channel-pad-display" aria-live="polite">—</div>
+    <div class="channel-pad-dpad" aria-label="Sky navigation">
+  <button type="button" class="dpad-up" data-pad-key="up" aria-label="Up"><i></i></button>
+  <button type="button" class="dpad-left" data-pad-key="left" aria-label="Left"><i></i></button>
+  <button type="button" class="dpad-select" data-pad-key="select" aria-label="Select"></button>
+  <button type="button" class="dpad-right" data-pad-key="right" aria-label="Right"><i></i></button>
+  <button type="button" class="dpad-down" data-pad-key="down" aria-label="Down"><i></i></button>
+</div>
+<button type="button" class="channel-pad-subtitles" data-pad-key="help"><span class="subtitle-icon">CC</span><span>Subtitles</span></button>
+<div class="channel-pad-grid">
+      <button type="button" data-pad-digit="1">1</button><button type="button" data-pad-digit="2">2</button><button type="button" data-pad-digit="3">3</button>
+      <button type="button" data-pad-digit="4">4</button><button type="button" data-pad-digit="5">5</button><button type="button" data-pad-digit="6">6</button>
+      <button type="button" data-pad-digit="7">7</button><button type="button" data-pad-digit="8">8</button><button type="button" data-pad-digit="9">9</button>
+      <button type="button" id="channelPadClear" class="channel-pad-secondary">Clear</button><button type="button" data-pad-digit="0">0</button><button type="button" id="channelPadGo" class="channel-pad-go">Go</button>
+    </div>
+  </div>
+</div>
+</main>
+<script src="guide-sport.js?v=3"></script>
+<script src="kiosk.js?v=1"></script></body></html>
