@@ -1072,11 +1072,43 @@ def _agent_write_json(path, value):
     except Exception:
         pass
 
+def sanitise_agent_result(value):
+    task=str(value.get("task") or "")
+    result=value.get("result") or {}
+    safe={"status":value.get("status"),"task":task,"task_id":value.get("task_id"),
+          "finished_at":value.get("finished_at"),"error":value.get("error")}
+    if task=="printer_status":
+        safe["result"]={k:result.get(k) for k in ("online","model","state","ink","detail","sources") if k in result}
+    elif task=="playstation_status":
+        safe["result"]={k:result.get(k) for k in ("online","host_type","host_name","system_version",
+            "running_app_name","running_app_titleid","status_code","detail") if k in result}
+    elif task=="lg_status":
+        safe["result"]={k:result.get(k) for k in ("online","webos_plain","webos_tls","paired","detail") if k in result}
+    elif task=="velux_status":
+        safe["result"]={k:result.get(k) for k in ("online","klf200_api","http","https","detail") if k in result}
+    elif task=="velux_discovery":
+        devices=result.get("devices") or []
+        safe["result"]={"device_count":len(devices),"candidates":[d.get("candidate") for d in devices if d.get("candidate")]}
+    elif task=="homekit_discovery":
+        services=result.get("services") or []
+        safe["result"]={"service_count":len(services),"detail":"HomeKit services detected" if services else "No HomeKit service detected"}
+    elif task=="network_inventory":
+        devices=result.get("devices") or []
+        safe["result"]={"device_count":len(devices),"candidates":[d.get("candidates") for d in devices if d.get("candidates")]}
+    elif task=="network_status":
+        devices=result.get("devices") or []
+        safe["result"]={"online_count":sum(1 for d in devices if d.get("online")),"device_count":len(devices)}
+    elif task=="infrastructure_status":
+        targets=result.get("targets") or []
+        safe["result"]={"online_count":sum(1 for d in targets if d.get("online")),"target_count":len(targets)}
+    else:
+        safe["result"]={"detail":"Task completed"}
+    return safe
+
 def agent_relay(value):
-    # One-way diagnostic relay. Only allow-listed task results are sent.
-    # Environment variables, credentials and local config files are never included.
+    # One-way diagnostic relay. Only sanitised allow-listed results are sent.
     try:
-        payload=json.dumps(value, ensure_ascii=False).encode("utf-8")
+        payload=json.dumps(sanitise_agent_result(value), ensure_ascii=False).encode("utf-8")
         req=urllib.request.Request(
             AGENT_RELAY_URL,
             data=payload,
