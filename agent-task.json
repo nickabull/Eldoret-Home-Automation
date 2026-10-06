@@ -1,5 +1,5 @@
 {
-  "id": "2026-10-06T22:46:30Z-printer-relay-1",
+  "id": "2026-10-06T22:49:00Z-printer-roundtrip-test",
   "task": "printer_status",
-  "note": "Read-only Epson ET-3850 live status and ink-level probe; relay approved diagnostic result"
+  "note": "Round-trip test: Epson ET-3850 live status and ink levels"
 }
