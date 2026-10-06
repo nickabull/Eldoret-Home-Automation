@@ -248,3 +248,78 @@
    font-size:11px!important;
  }
 }
+
+/* Sport polish v26 */
+@media (min-width:1000px) and (min-height:650px){
+  .sport-page .sport-now-row{
+    width:calc(100% - 8%);
+    margin:4px 4% 10px!important;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px;
+    align-items:stretch;
+  }
+  .sport-page .sport-now{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    min-width:0;
+  }
+  .sport-page .sport-now-controls{
+    display:grid;
+    grid-template-columns:repeat(5,72px);
+    gap:8px;
+    align-items:stretch;
+  }
+  .sport-page .sport-now-controls button{
+    min-width:0;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--card2);
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    font-weight:850;
+    font-size:18px;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .sport-page .sport-now-controls button span{font-size:10px;color:var(--muted)}
+  .sport-page .sport-now-controls button.record{color:#ffb3b3}
+  .sport-page .sport-now-controls button.sending{transform:scale(.97);border-color:var(--accent)}
+  .sport-page .sport-now-controls button.failed{border-color:#ff7474}
+
+  .sport-page .sport-all{
+    width:92%!important;
+    margin:0 4%!important;
+  }
+  .sport-page .sport-all-grid{
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .sport-page .sport-all-grid .sport-channel{
+    height:276px!important;
+    padding:11px!important;
+  }
+  .sport-page .sport-all-grid .sport-channel-logo{
+    height:48px!important;
+    max-height:48px!important;
+  }
+  .sport-page .sport-all-grid .sport-channel>strong{
+    font-size:18px!important;
+  }
+  .sport-page .sport-all-grid .sport-onair>b{
+    font-size:12.5px!important;
+  }
+  .sport-page .sport-all-grid .sport-synopsis{
+    -webkit-line-clamp:4!important;
+    font-size:10.5px!important;
+    line-height:1.22!important;
+  }
+  .sport-page .sport-all-grid .sport-next b{
+    font-size:11px!important;
+  }
+}
