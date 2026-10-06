@@ -30,6 +30,9 @@ async function tune(button){
 document.querySelectorAll(".sport-channel").forEach(b=>b.addEventListener("click",()=>tune(b)));
 refreshNow(); if(isLive)setInterval(refreshNow,15000);
 
+function programmeArtworkUrl(uuid){
+  return uuid ? "https://images.metadata.sky.com/pd-image/"+encodeURIComponent(uuid)+"/16-9" : "";
+}
 async function refreshSportGuide(){
   try{
     const r=await fetch("/api/sky/sport-guide",{cache:"no-store"});
@@ -44,6 +47,11 @@ async function refreshSportGuide(){
         return;
       }
       if(logo && item.logo){logo.src=item.logo;logo.hidden=false;}
+      if(button.dataset.channel==="401" && item.programmeuuid){
+        const artwork=programmeArtworkUrl(item.programmeuuid);
+        button.style.setProperty("--programme-artwork", 'url("' + artwork + '")');
+        button.classList.add("has-programme-artwork");
+      }
       if(onair){
         const nowTime=[skyClock(item.start),skyClock(item.end)].filter(Boolean).join("–");
         const nextTime=item.next&&item.next.start?skyClock(item.next.start):"";
