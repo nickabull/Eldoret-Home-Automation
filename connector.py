@@ -159,47 +159,100 @@ def playstation_status(ip="10.0.0.48"):
     return result
 
 def printer_status():
-    host = "10.0.0.3"
-    result = {"ip": host, "online": False, "ports": [], "model": None, "title": None,
-              "http": False, "https": False, "ipp": False, "raw_print": False,
-              "detail": None, "ink": [], "probe": []}
-    ports = [p for p in (80,443,631,9100) if _tcp_open(host,p,timeout=0.4)]
-    result.update({"ports":ports,"online":bool(ports),"http":80 in ports,"https":443 in ports,
-                   "ipp":631 in ports,"raw_print":9100 in ports})
-    if 80 in ports or 443 in ports:
-        # Epson models expose consumables differently. Probe common read-only WebConfig/status URLs.
-        paths = ["/", "/PRESENTATION/HTML/TOP/INDEX.HTML", "/PRESENTATION/HTML/TOP/PRTINFO.HTML",
-                 "/PRESENTATION/HTML/TOP/PRTINFO.JS", "/PRESENTATION/HTML/TOP/INK.HTML",
-                 "/PRESENTATION/HTML/TOP/STATUS.HTML", "/cgi-bin/PrinterStatus.cgi",
-                 "/cgi-bin/Status.cgi", "/cgi-bin/InkLevel.cgi"]
-        ctx = ssl._create_unverified_context()
-        for path in paths:
+    host="10.0.0.3"
+    result={"ip":host,"online":False,"model":"Epson ET-3850","state":None,
+            "ink":[],"alerts":[],"ports":[],"sources":[],"detail":None}
+    ports=[p for p in (80,443,631,9100) if _tcp_open(host,p,timeout=0.22)]
+    result["ports"]=ports
+    result["online"]=bool(ports)
+
+    # IPP Get-Printer-Attributes: read-only and often gives the cleanest live state.
+    if 631 in ports:
+        try:
+            import http.client, struct
+            attrs=[
+              (0x47,"attributes-charset","utf-8"),
+              (0x48,"attributes-natural-language","en"),
+              (0x45,"printer-uri","ipp://"+host+"/ipp/print"),
+              (0x44,"requested-attributes","printer-name"),
+              (0x44,"requested-attributes","printer-state"),
+              (0x44,"requested-attributes","printer-state-reasons"),
+              (0x44,"requested-attributes","marker-names"),
+              (0x44,"requested-attributes","marker-levels"),
+              (0x44,"requested-attributes","marker-colors"),
+              (0x44,"requested-attributes","marker-types"),
+            ]
+            body=bytearray(b"\x02\x00\x00\x0b\x00\x00\x00\x01\x01")
+            for tag,name,val in attrs:
+                nb=name.encode(); vb=val.encode()
+                body += bytes([tag])+struct.pack(">H",len(nb))+nb+struct.pack(">H",len(vb))+vb
+            body += b"\x03"
+            conn=http.client.HTTPConnection(host,631,timeout=2)
+            conn.request("POST","/ipp/print",bytes(body),{"Content-Type":"application/ipp"})
+            r=conn.getresponse(); raw=r.read(200000)
+            result["sources"].append("IPP")
+            # Extract printable strings and percentages conservatively.
+            txt=raw.decode("latin1",errors="ignore")
+            import re
+            for key in ("printer-state-reasons","marker-names","marker-levels","marker-colors","marker-types"):
+                if key in txt:
+                    result["sources"].append(key)
+            # IPP integer values are binary; keep raw discovery useful while WebConfig below parses levels.
+            if "none" in txt and "printer-state-reasons" in txt:
+                result["state"]="Ready"
+            conn.close()
+        except Exception as exc:
+            result["alerts"].append("IPP: "+str(exc)[:100])
+
+    # Epson WebConfig. Fetch both HTTP and HTTPS because firmware differs by model/version.
+    import re
+    pages=["/","/PRESENTATION/HTML/TOP/PRTINFO.HTML","/PRESENTATION/HTML/TOP/STATUS.HTML",
+           "/PRESENTATION/HTML/TOP/INK.HTML","/PRESENTATION/HTML/TOP/PRTINFO.JS",
+           "/cgi-bin/PrinterStatus.cgi","/cgi-bin/Status.cgi","/cgi-bin/InkLevel.cgi"]
+    blobs=[]
+    ctx=ssl._create_unverified_context()
+    for scheme in ("http","https"):
+        if (scheme=="http" and 80 not in ports) or (scheme=="https" and 443 not in ports):
+            continue
+        for path in pages:
             try:
-                req=urllib.request.Request("https://"+host+path,headers={"User-Agent":"Eldoret/1.0"})
-                with urllib.request.urlopen(req,timeout=2,context=ctx) as response:
-                    body=response.read(180000).decode("utf-8",errors="replace")
-                low=body.lower()
-                hits=[k for k in ("ink","black","cyan","magenta","yellow","cartridge","consumable","model") if k in low]
-                result["probe"].append({"path":path,"ok":True,"hits":hits,"length":len(body)})
-                if path == "/":
-                    import re
-                    m=re.search(r"<title[^>]*>(.*?)</title>",body,re.I|re.S)
-                    if m:
-                        title=" ".join(re.sub(r"<[^>]+>"," ",m.group(1)).split())
-                        result["title"]=title[:160]
-                        if "epson" in title.lower(): result["model"]=title
-                # Capture small text fragments around consumable terms for the next parser step.
-                for key in ("black","cyan","magenta","yellow","ink level","inklevel"):
-                    pos=low.find(key)
-                    if pos >= 0:
-                        frag=" ".join(re.sub(r"<[^>]+>"," ",body[max(0,pos-120):pos+260]).split())
-                        if frag and not any(x.get("text")==frag[:300] for x in result["ink"]):
-                            result["ink"].append({"source":path,"key":key,"text":frag[:300]})
-            except Exception as exc:
-                result["probe"].append({"path":path,"ok":False,"error":str(exc)[:120]})
-        result["detail"] = "Epson online; consumables probe complete."
-    if not result["detail"]:
-        result["detail"]="No printer web service answered."
+                req=urllib.request.Request(scheme+"://"+host+path,headers={"User-Agent":"Mozilla/5.0 Eldoret"})
+                with urllib.request.urlopen(req,timeout=1.2,context=ctx if scheme=="https" else None) as response:
+                    body=response.read(250000).decode("utf-8",errors="replace")
+                if body:
+                    blobs.append((path,body))
+            except Exception:
+                pass
+    colours={"black":"Black","cyan":"Cyan","magenta":"Magenta","yellow":"Yellow"}
+    found={}
+    for path,body in blobs:
+        low=body.lower()
+        if "epson" in low: result["sources"].append("Epson WebConfig")
+        title=re.search(r"<title[^>]*>(.*?)</title>",body,re.I|re.S)
+        if title:
+            clean=" ".join(re.sub(r"<[^>]+>"," ",title.group(1)).split())
+            if "et-3850" in clean.lower(): result["model"]="Epson ET-3850"
+        plain=" ".join(re.sub(r"<[^>]+>"," ",body).replace("&nbsp;"," ").split())
+        for k,label in colours.items():
+            # Epson pages vary: colour followed by a numeric percentage/value nearby.
+            for pat in [
+                r"(?i)"+k+r"[^0-9]{0,100}(100|[0-9]{1,2})\s*%",
+                r"(?i)"+k+r"[^0-9]{0,80}(100|[0-9]{1,2})(?:\s|[;,'\"])",
+                r"(?i)(?:ink|level)[^\n]{0,100}"+k+r"[^0-9]{0,80}(100|[0-9]{1,2})"
+            ]:
+                m=re.search(pat,plain)
+                if m:
+                    v=int(m.group(1))
+                    if 0 <= v <= 100:
+                        found[label]=v; break
+    result["ink"]=[{"colour":x,"percent":found[x]} for x in ("Black","Cyan","Magenta","Yellow") if x in found]
+    result["sources"]=list(dict.fromkeys(result["sources"]))
+    if result["ink"]:
+        result["detail"]="Live Epson ink levels read successfully."
+    elif result["online"]:
+        result["detail"]="Epson is online; live state read, but this firmware did not expose numeric ink percentages on the tested read-only interfaces."
+    else:
+        result["detail"]="Epson did not answer."
     return result
 
 def infrastructure_status():
