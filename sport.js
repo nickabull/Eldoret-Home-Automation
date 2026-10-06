@@ -87,3 +87,41 @@ async function sendSportSkyKey(key,button){
 document.querySelectorAll(".sport-now-controls [data-sky-key]").forEach(button=>{
   button.addEventListener("click",()=>sendSportSkyKey(button.dataset.skyKey,button));
 });
+
+const channelPadOverlay=document.querySelector("#channelPadOverlay");
+const channelPadOpen=document.querySelector("#channelPadOpen");
+const channelPadClose=document.querySelector("#channelPadClose");
+const channelPadDisplay=document.querySelector("#channelPadDisplay");
+const channelPadGo=document.querySelector("#channelPadGo");
+const channelPadClear=document.querySelector("#channelPadClear");
+let channelPadValue="";
+function renderChannelPad(){if(channelPadDisplay)channelPadDisplay.textContent=channelPadValue||"—";}
+function openChannelPad(){channelPadValue="";renderChannelPad();channelPadOverlay.hidden=false;requestAnimationFrame(()=>channelPadOverlay.classList.add("open"));}
+function closeChannelPad(){channelPadOverlay.classList.remove("open");setTimeout(()=>channelPadOverlay.hidden=true,120);}
+function addChannelDigit(d){if(channelPadValue.length<4){channelPadValue+=d;renderChannelPad();}}
+async function goChannelPad(){
+  if(!channelPadValue)return;
+  channelPadGo.classList.add("sending");
+  try{
+    const r=await fetch("/api/sky/channel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({channel:channelPadValue})});
+    if(!r.ok)throw new Error(await r.text());
+    closeChannelPad();
+    setTimeout(refreshNow,1700);
+  }catch(e){
+    channelPadDisplay.textContent="Error";
+    setTimeout(renderChannelPad,900);
+  }finally{setTimeout(()=>channelPadGo.classList.remove("sending"),180);}
+}
+if(channelPadOpen)channelPadOpen.addEventListener("click",openChannelPad);
+if(channelPadClose)channelPadClose.addEventListener("click",closeChannelPad);
+if(channelPadClear)channelPadClear.addEventListener("click",()=>{channelPadValue="";renderChannelPad();});
+if(channelPadGo)channelPadGo.addEventListener("click",goChannelPad);
+document.querySelectorAll("[data-pad-digit]").forEach(b=>b.addEventListener("click",()=>addChannelDigit(b.dataset.padDigit)));
+if(channelPadOverlay)channelPadOverlay.addEventListener("click",e=>{if(e.target===channelPadOverlay)closeChannelPad();});
+document.addEventListener("keydown",e=>{
+  if(!channelPadOverlay||channelPadOverlay.hidden)return;
+  if(/^\d$/.test(e.key))addChannelDigit(e.key);
+  else if(e.key==="Backspace"){channelPadValue=channelPadValue.slice(0,-1);renderChannelPad();}
+  else if(e.key==="Enter")goChannelPad();
+  else if(e.key==="Escape")closeChannelPad();
+});
