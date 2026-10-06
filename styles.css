@@ -562,3 +562,33 @@
 .skyq-official img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
 .sport-channel.artwork-missing{background:radial-gradient(circle at 50% 12%,rgba(36,71,118,.32),transparent 48%),linear-gradient(180deg,#111d2d,#0b1420)!important}
 .sport-channel[data-channel="407"].artwork-missing{background:radial-gradient(circle at 50% 5%,rgba(0,145,215,.34),transparent 48%),linear-gradient(145deg,#13243c,#0b1420 70%)!important}
+
+/* Sport v39: clean Sky-app D-pad geometry */
+.channel-pad-dpad{
+  width:260px!important;height:260px!important;
+  border-radius:50%!important;
+  background:#303136!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+.channel-pad-dpad button{background:#303136!important;border-radius:0!important;box-shadow:none!important}
+.channel-pad-dpad .dpad-up{left:65px!important;top:0!important;width:130px!important;height:86px!important;border-bottom:5px solid #111927!important}
+.channel-pad-dpad .dpad-down{left:65px!important;bottom:0!important;width:130px!important;height:86px!important;border-top:5px solid #111927!important}
+.channel-pad-dpad .dpad-left{left:0!important;top:65px!important;width:86px!important;height:130px!important;border-right:5px solid #111927!important}
+.channel-pad-dpad .dpad-right{right:0!important;top:65px!important;width:86px!important;height:130px!important;border-left:5px solid #111927!important}
+.channel-pad-dpad .dpad-select{
+  left:83px!important;top:83px!important;width:94px!important;height:94px!important;
+  border-radius:50%!important;background:#303136!important;
+  border:7px solid #111927!important;box-shadow:none!important;z-index:4!important
+}
+.channel-pad-dpad button i{width:18px!important;height:18px!important;border-width:5px 0 0 5px!important;border-style:solid!important;border-color:#d7d7d9!important}
+.channel-pad-dpad .dpad-up i{left:54px!important;top:31px!important;transform:rotate(45deg)!important}
+.channel-pad-dpad .dpad-down i{left:54px!important;bottom:31px!important;transform:rotate(225deg)!important}
+.channel-pad-dpad .dpad-left i{left:31px!important;top:54px!important;transform:rotate(-45deg)!important}
+.channel-pad-dpad .dpad-right i{right:31px!important;top:54px!important;transform:rotate(135deg)!important}
+.sport-channel[data-channel="407"].artwork-missing{
+  background:
+    linear-gradient(180deg,rgba(8,14,24,.12),rgba(8,14,24,.92)),
+    url("https://imageservice.sky.com/contentid/A5EK5anvvYyiWfVvKgEMf/LAND_16_9?language=eng&territory=GB&proposition=SKYQ") center/cover no-repeat,
+    linear-gradient(145deg,#172d4d,#0b1420)!important;
+}
