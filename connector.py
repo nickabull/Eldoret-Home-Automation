@@ -1,6 +1,7 @@
 import json
 import os
 import socket
+import ssl
 import time
 import urllib.parse
 import urllib.request
@@ -86,7 +87,7 @@ def printer_status():
     if 80 in ports:
         try:
             req = urllib.request.Request("http://" + host + "/", headers={"User-Agent":"Eldoret/1.0"})
-            with urllib.request.urlopen(req, timeout=3) as response:
+            with urllib.request.urlopen(req, timeout=3, context=ssl._create_unverified_context()) as response:
                 body = response.read(120000).decode("utf-8", errors="replace")
             low = body.lower()
             a = low.find("<title")
