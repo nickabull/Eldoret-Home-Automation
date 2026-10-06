@@ -138,3 +138,12 @@
  .sport-page .sport-channel .programme{font-size:11px!important;line-height:1.15!important}
  .sport-page .sport-channel .next{font-size:10px!important;line-height:1.12!important}
 }
+
+/* Sport actual grid fix v22 */
+@media (min-width:1000px) and (min-height:650px){
+ .sport-page .sport-channel-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:7px!important;width:100%!important;max-width:none!important}
+ .sport-page .sport-channel-grid.compact{grid-template-columns:repeat(7,minmax(0,1fr))!important;max-width:none!important}
+ .sport-page .sport-section{width:94%!important;max-width:none!important}
+ .sport-page .sport-channel{height:190px!important;padding:7px!important}
+ .sport-page .sport-channel .sport-synopsis{display:none!important}
+}
