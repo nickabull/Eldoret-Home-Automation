@@ -41,6 +41,7 @@ GUIDE_GROUPS = {
     "plus1": ["Channel 4 +1","Channel 5 +1","ITV1 +1","Sky Witness +1","Comedy Central +1","Gold +1","Dave ja vu"],
     "music": ["MTV Music","MTV Hits","MTV 80s","MTV 90s","Clubland TV","NOW 80s","NOW 90s","Trace Hits","4Music"]
 }
+GUIDE_CHANNEL_NUMBERS = {"movies":["301","302","303","304","305","306","307","308","309","310","311","313","855"]}
 SPORT_CHANNEL_NUMBERS = ["401","402","403","404","405","406","407","408","409","410","411","412","413","414","419"]
 SKY_KEY_MAP = {
     "power":0,"select":1,"backup":2,"channelup":6,"channeldown":7,
@@ -201,9 +202,18 @@ def sky_search_channels(query):
     return {"results": results[:20]}
 
 def sky_named_guide(group):
-    wanted = GUIDE_GROUPS.get(group, [])
     services = sky_channel_list()
+    numbered = GUIDE_CHANNEL_NUMBERS.get(group)
     channels = []
+    if numbered:
+        by_number = {str(s.get("c")): s for s in services}
+        for number in numbered:
+            service = by_number.get(number)
+            item = {"requested":number,"channelno":number,"channel":service.get("t") if service else None,"sid":service.get("sid") if service else None,"logo":sky_channel_logo_url(service),"programme":None,"synopsis":None,"start":None,"end":None}
+            if service and service.get("sid"): item.update(sky_epg_now_next(service.get("sid")))
+            channels.append(item)
+        return {"group":group,"channels":channels}
+    wanted = GUIDE_GROUPS.get(group, [])
     for requested in wanted:
         req = requested.lower()
         service = next((s for s in services if req in str(s.get("t","")).lower()), None)
