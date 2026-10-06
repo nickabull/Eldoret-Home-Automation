@@ -1,0 +1,26 @@
+{
+  "status": "complete",
+  "task": "printer_status",
+  "task_id": "2026-10-06T22:49:00Z-printer-roundtrip-test",
+  "result": {
+    "ip": "10.0.0.3",
+    "online": true,
+    "model": "Epson ET-3850",
+    "state": null,
+    "ink": [],
+    "alerts": [],
+    "ports": [
+      80,
+      443,
+      631,
+      9100
+    ],
+    "sources": [
+      "IPP",
+      "Epson WebConfig"
+    ],
+    "detail": "Epson is online; live state read, but this firmware did not expose numeric ink percentages on the tested read-only interfaces."
+  },
+  "error": null,
+  "finished_at": "2026-10-06T22:51:34.494078+00:00"
+}
