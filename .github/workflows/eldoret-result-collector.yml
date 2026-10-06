@@ -1,0 +1,63 @@
+name: Eldoret result collector
+
+on:
+  push:
+    paths:
+      - agent-task.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for matching Eldoret result
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request, sys
+          task=json.load(open("agent-task.json","r",encoding="utf-8"))
+          wanted=str(task.get("id") or "")
+          url="https://ntfy.sh/eldoret-relay-7e6b9d2c4f8a31b5a0c9e247d6f31c8e/json?poll=1&since=15m"
+          found=None
+          for _ in range(10):
+              try:
+                  with urllib.request.urlopen(url, timeout=15) as r:
+                      lines=r.read().decode("utf-8",errors="replace").splitlines()
+                  for line in reversed(lines):
+                      try:
+                          event=json.loads(line)
+                          if event.get("event")!="message":
+                              continue
+                          payload=json.loads(event.get("message") or "{}")
+                          if str(payload.get("task_id") or "")==wanted:
+                              found=payload
+                              break
+                      except Exception:
+                          pass
+                  if found:
+                      break
+              except Exception:
+                  pass
+              time.sleep(15)
+          if not found:
+              print("No matching Eldoret result found", file=sys.stderr)
+              sys.exit(1)
+          with open("agent-result.json","w",encoding="utf-8") as f:
+              json.dump(found,f,ensure_ascii=False,indent=2)
+              f.write("\n")
+          PY
+
+      - name: Commit latest result
+        shell: bash
+        run: |
+          git config user.name "Eldoret Agent"
+          git config user.email "eldoret-agent@users.noreply.github.com"
+          git add agent-result.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Update Eldoret agent result"
+          git push
