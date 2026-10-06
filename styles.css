@@ -522,3 +522,37 @@
 .channel-arrow.down::before{transform:rotate(225deg) translate(3px,3px)}
 .subtitle-icon{width:31px!important;height:23px!important;border:2px solid #d7d7d9!important;border-radius:5px!important;font-size:10px!important;letter-spacing:0!important}
 .channel-pad-dpad .dpad-select{background:radial-gradient(circle at 50% 42%,#3b3c41,#292a2f)!important;box-shadow:0 0 0 7px #111927,inset 0 1px 0 rgba(255,255,255,.08)!important}
+
+/* Sport v37: two-row quick controls, subtitles inside keypad */
+@media (min-width:1000px) and (min-height:650px){
+  .sport-page .sport-now-controls{
+    width:430px!important;
+    grid-template-columns:repeat(6,1fr)!important;
+    grid-template-rows:repeat(2,1fr)!important;
+    gap:6px!important;
+  }
+}
+.channel-pad-subtitles{
+  width:100%;
+  min-height:48px;
+  margin:0 0 14px;
+  border:1px solid #344358;
+  border-radius:14px;
+  background:linear-gradient(180deg,#263347,#1a2636);
+  color:#f4f7fb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+.channel-pad-subtitles .subtitle-icon{
+  display:grid;
+  place-items:center;
+  width:30px!important;
+  height:22px!important;
+  border:2px solid #d7d7d9!important;
+  border-radius:5px!important;
+  font-size:9px!important;
+}
