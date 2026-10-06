@@ -34,7 +34,8 @@ NETWORK_PROBES = [
  {"ip":"10.0.0.27","name":"Eldoret Chromebook","ports":[8765]},
  {"ip":"10.0.0.33","name":"LG webOS TV","ports":[3000,3001,80]},
  {"ip":"10.0.0.43","name":"LG device","ports":[3000,3001,80]},
- {"ip":"10.0.0.47","name":"LG device","ports":[3000,3001,80]}
+ {"ip":"10.0.0.47","name":"LG device","ports":[3000,3001,80]},
+ {"ip":"10.0.0.48","name":"PlayStation","ports":[80,443,9295,9304]}
 ]
 GUIDE_GROUPS = {
     "movies": ["Sky Cinema Premiere","Sky Cinema Select","Sky Cinema Hits","Sky Cinema Greats","Sky Cinema Animation","Sky Cinema Family","Sky Cinema Action","Sky Cinema Comedy","Sky Cinema Thriller","Sky Cinema Drama","Sky Cinema Sci-Fi Horror","Film4","Talking Pictures"],
