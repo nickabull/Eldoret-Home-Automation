@@ -59,9 +59,12 @@ async function refreshGuide(){
  const group=document.body.dataset.guideGroup,grid=document.querySelector("#guideChannelGrid"); if(!group||!grid)return;
  const start=document.body.dataset.guideStart,end=document.body.dataset.guideEnd||"399";
  try{
-   const url=start
-     ? "/api/sky/guide-range?start="+encodeURIComponent(start)+"&end="+encodeURIComponent(end)+"&page="+guidePage+"&size=14"
-     : "/api/sky/guide?group="+encodeURIComponent(group);
+   const topPicks=document.body.dataset.guideTopPicks==="1";
+   const url=topPicks
+     ? "/api/sky/top-picks?page="+guidePage+"&size=14"
+     : start
+       ? "/api/sky/guide-range?start="+encodeURIComponent(start)+"&end="+encodeURIComponent(end)+"&page="+guidePage+"&size=14"
+       : "/api/sky/guide?group="+encodeURIComponent(group);
    const r=await fetch(url,{cache:"no-store"}),data=await r.json();
    grid.replaceChildren(...(data.channels||[]).filter(x=>x.channelno).map(renderGuideCard));
    const label=document.querySelector("#guidePageLabel"),prev=document.querySelector("#guidePrev"),next=document.querySelector("#guideNext");
