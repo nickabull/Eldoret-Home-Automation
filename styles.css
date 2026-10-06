@@ -147,3 +147,67 @@
  .sport-page .sport-channel{height:190px!important;padding:7px!important}
  .sport-page .sport-channel .sport-synopsis{display:none!important}
 }
+
+/* Sport single-screen reference layout v23 */
+@media (min-width:1000px) and (min-height:650px){
+  .sport-page .sport-all{width:96%!important;max-width:none!important;margin:0 auto!important}
+  .sport-page .sport-all .sport-section-head{margin:0 0 6px!important}
+  .sport-page .sport-all .sport-section-head h2{font-size:18px!important;margin:0!important}
+  .sport-page .sport-all-grid{
+    display:grid!important;
+    grid-template-columns:repeat(8,minmax(0,1fr))!important;
+    grid-template-rows:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    width:100%!important;
+    max-width:none!important;
+  }
+  .sport-page .sport-all-grid .sport-channel{
+    height:220px!important;
+    min-height:0!important;
+    padding:8px!important;
+    border-radius:14px!important;
+  }
+  .sport-page .sport-all-grid .sport-channel-logo{
+    width:100%!important;
+    max-width:100%!important;
+    height:38px!important;
+    margin:0 0 5px!important;
+    transform:none!important;
+    object-position:left center!important;
+  }
+  .sport-page .sport-all-grid .sport-channel>strong{
+    font-size:15px!important;
+    line-height:1.05!important;
+    margin:2px 0!important;
+  }
+  .sport-page .sport-all-grid .sport-onair{
+    margin-top:4px!important;
+    padding-top:5px!important;
+    min-height:0!important;
+    gap:2px!important;
+  }
+  .sport-page .sport-all-grid .sport-onair>span,
+  .sport-page .sport-all-grid .sport-next span{
+    font-size:8px!important;
+  }
+  .sport-page .sport-all-grid .sport-onair>b{
+    font-size:11px!important;
+    line-height:1.15!important;
+  }
+  .sport-page .sport-all-grid .sport-synopsis{display:none!important}
+  .sport-page .sport-all-grid .sport-next{
+    margin-top:4px!important;
+    padding-top:4px!important;
+  }
+  .sport-page .sport-all-grid .sport-next b{
+    font-size:10px!important;
+    line-height:1.1!important;
+  }
+  .sport-page .sport-all-grid .sport-channel>small{
+    top:6px!important;
+    right:6px!important;
+    font-size:10px!important;
+    padding:3px 6px!important;
+  }
+  .sport-page .channel-note{display:none!important}
+}
