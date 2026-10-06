@@ -499,3 +499,26 @@
 .channel-pad-dpad .dpad-left i{transform:rotate(-45deg);left:31px;top:43px}
 .channel-pad-dpad .dpad-right i{transform:rotate(135deg);right:31px;top:43px}
 .channel-pad-dpad button:active{filter:brightness(1.35)}
+
+/* Sport v36: compact 16:9 fit and Sky-style controls */
+@media (min-width:1000px) and (min-height:650px){
+.sport-page header{padding-top:3px!important;padding-bottom:3px!important}
+.sport-page main{padding-top:0!important}
+.sport-page main>.tabs{margin-top:0!important;margin-bottom:3px!important}
+.sport-page main>.sky-subnav{margin-bottom:4px!important}
+.sport-page .sport-now-row{margin-top:1px!important;margin-bottom:4px!important;grid-template-columns:minmax(0,1fr) 430px!important}
+.sport-page .sport-section-head{margin-bottom:3px!important}
+.sport-page .sport-all-grid{gap:7px!important}
+.sport-page .sport-channel{height:258px!important}
+.sport-page .sport-now-controls{width:430px!important;grid-template-columns:repeat(7,1fr)!important;grid-template-rows:repeat(2,1fr)!important;gap:6px!important}
+.sport-now-controls button{min-width:0!important;min-height:55px!important;padding:5px 3px!important;border-radius:14px!important;background:linear-gradient(180deg,#3b3c42,#292a2f)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 5px 12px rgba(0,0,0,.24)!important}
+}
+.sport-now-controls button:active{transform:scale(.95);filter:brightness(1.18)}
+.skyq-mark{display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important}
+.skyq-mark span,.skyq-mark b{margin:0!important;line-height:1!important}
+.select-glyph{width:27px!important;height:27px!important;border:3px solid #d7d7d9!important;border-radius:50%!important;background:radial-gradient(circle,#3a3b40 0 45%,#292a2f 48% 100%)!important;box-shadow:none!important}
+.channel-arrow::before{content:"";display:block;width:12px;height:12px;border-top:4px solid #d7d7d9;border-left:4px solid #d7d7d9}
+.channel-arrow.up::before{transform:rotate(45deg) translate(3px,3px)}
+.channel-arrow.down::before{transform:rotate(225deg) translate(3px,3px)}
+.subtitle-icon{width:31px!important;height:23px!important;border:2px solid #d7d7d9!important;border-radius:5px!important;font-size:10px!important;letter-spacing:0!important}
+.channel-pad-dpad .dpad-select{background:radial-gradient(circle at 50% 42%,#3b3c41,#292a2f)!important;box-shadow:0 0 0 7px #111927,inset 0 1px 0 rgba(255,255,255,.08)!important}
