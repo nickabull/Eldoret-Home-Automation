@@ -53,6 +53,7 @@ async function refreshSkyLive(){
   const meta=panel.querySelector(".sky-meta");
   const synopsis=panel.querySelector(".sky-synopsis");
   const badge=panel.querySelector(".sky-state");
+  const kicker=panel.querySelector(".sky-kicker");
   if(!isLive){
     title.textContent="Local connection required";
     meta.textContent="Open Eldoret through the Chromebook/Pi connector.";
@@ -70,7 +71,9 @@ async function refreshSkyLive(){
       return;
     }
     if(data.live){
-      title.textContent=data.programme||data.channel||"Live TV";
+      const radio=!!data.is_radio || /^0\d{3}$/.test(String(data.channelno||""));
+      if(kicker)kicker.textContent=radio?"NOW LISTENING":"NOW WATCHING";
+      title.textContent=data.programme||data.channel||(radio?"Live radio":"Live TV");
       const bits=[];
       if(data.channelno)bits.push(data.channelno);
       if(data.channel)bits.push(data.channel);
@@ -79,7 +82,7 @@ async function refreshSkyLive(){
       if(!data.channel && data.sid)bits.push("Sky service "+data.sid);
       meta.textContent=bits.join(" · ");
       synopsis.textContent=data.synopsis||"";
-      badge.textContent="LIVE";
+      badge.textContent=radio?"LIVE RADIO":"LIVE";
     }else{
       title.textContent=data.playback==="recording"?"Recording playback":"Sky Q active";
       meta.textContent="Non-live playback";
