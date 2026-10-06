@@ -2,15 +2,17 @@ const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net"
 function skyClock(value){if(!value)return "";const d=new Date(value);if(Number.isNaN(d.getTime()))return "";return d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
 async function refreshNow(){
   const p=document.querySelector("#skyNowLive"); if(!p)return;
-  const title=p.querySelector(".sky-programme"), meta=p.querySelector(".sky-meta"), syn=p.querySelector(".sky-synopsis"), badge=p.querySelector(".sky-state");
+  const title=p.querySelector(".sky-programme"), meta=p.querySelector(".sky-meta"), syn=p.querySelector(".sky-synopsis"), badge=p.querySelector(".sky-state"), kicker=p.querySelector(".sky-kicker");
   try{
     const r=await fetch("/api/sky/now",{cache:"no-store"}); const d=await r.json();
     if(!d.available) throw new Error(d.error||"Unavailable");
     if(d.live){
-      title.textContent=d.programme||d.channel||"Live TV";
+      const radio=!!d.is_radio || /^0\d{3}$/.test(String(d.channelno||""));
+      if(kicker)kicker.textContent=radio?"NOW LISTENING":"NOW WATCHING";
+      title.textContent=d.programme||d.channel||(radio?"Live radio":"Live TV");
       const b=[]; if(d.channelno)b.push(d.channelno); if(d.channel)b.push(d.channel);
       const s=skyClock(d.start),e=skyClock(d.end); if(s&&e)b.push(s+"–"+e);
-      meta.textContent=b.join(" · "); syn.textContent=d.synopsis||""; badge.textContent="LIVE";
+      meta.textContent=b.join(" · "); syn.textContent=d.synopsis||""; badge.textContent=radio?"LIVE RADIO":"LIVE";
       if(d.programmeuuid){
         p.style.setProperty("--now-artwork",'url("'+programmeArtworkUrl(d.programmeuuid)+'")');
         p.classList.add("has-now-artwork");
