@@ -1,4 +1,4 @@
-const isLive=location.protocol==="http:";
+const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");
 function skyClock(value){if(!value)return "";const d=new Date(value);if(Number.isNaN(d.getTime()))return "";return d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
 async function refreshNow(){
   const p=document.querySelector("#skyNowLive"); if(!p)return;
