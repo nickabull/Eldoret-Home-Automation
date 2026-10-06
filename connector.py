@@ -1218,6 +1218,14 @@ def sanitise_agent_result(value):
     elif task=="infrastructure_status":
         targets=result.get("targets") or []
         safe["result"]={"online_count":sum(1 for d in targets if d.get("online")),"target_count":len(targets)}
+    elif task=="discover_devices":
+        found=result.get("found") or {}
+        safe["result"]={"devices_found":sorted(found.keys()),
+                        "lg_tv_count":len(found.get("lg_tvs") or []),
+                        "sky_q":bool(found.get("sky_q")),
+                        "printer":bool(found.get("epson_et3850")),
+                        "playstation":bool(found.get("playstation")),
+                        "velux":bool(found.get("velux_gateway"))}
     else:
         safe["result"]={"detail":"Task completed"}
     return safe
