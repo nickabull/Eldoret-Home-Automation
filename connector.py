@@ -16,6 +16,23 @@ GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automati
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
 SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
 SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
+NETWORK_PROBES = [
+ {"ip":"10.0.0.1","name":"Main Router","ports":[80,443]},
+ {"ip":"10.0.0.2","name":"House Hue Bridge","ports":[80]},
+ {"ip":"10.0.0.3","name":"Epson printer","ports":[80,443,9100,631]},
+ {"ip":"10.0.0.4","name":"Utility Hue Bridge","ports":[80]},
+ {"ip":"10.0.0.5","name":"Old Raspberry Pi","ports":[22,80,443]},
+ {"ip":"10.0.0.6","name":"UniFi Office/Kitchen","ports":[22,443,8080]},
+ {"ip":"10.0.0.7","name":"UniFi Utility","ports":[22,443,8080]},
+ {"ip":"10.0.0.8","name":"UniFi Garden","ports":[22,443,8080]},
+ {"ip":"10.0.0.9","name":"UniFi Landing","ports":[22,443,8080]},
+ {"ip":"10.0.0.18","name":"Sky Q","ports":[49160,49153]},
+ {"ip":"10.0.0.22","name":"VELUX Gateway","ports":[80,443]},
+ {"ip":"10.0.0.27","name":"Eldoret Chromebook","ports":[8765]},
+ {"ip":"10.0.0.33","name":"LG webOS TV","ports":[3000,3001,80]},
+ {"ip":"10.0.0.43","name":"LG device","ports":[3000,3001,80]},
+ {"ip":"10.0.0.47","name":"LG device","ports":[3000,3001,80]}
+]
 SPORT_CHANNEL_NUMBERS = ["401","402","403","404","405","406","407","408","409","410","411","412","413","414","418","419"]
 SKY_KEY_MAP = {
     "power":0,"select":1,"backup":2,"channelup":6,"channeldown":7,
@@ -23,6 +40,21 @@ SKY_KEY_MAP = {
     "0":48,"1":49,"2":50,"3":51,"4":52,"5":53,"6":54,"7":55,"8":56,"9":57,
     "play":64,"pause":65,"stop":66,"record":67,"fastforward":69,"rewind":71
 }
+
+def _tcp_open(ip, port, timeout=0.25):
+    try:
+        with socket.create_connection((ip, port), timeout=timeout):
+            return True
+    except Exception:
+        return False
+
+def network_status():
+    devices = []
+    for d in NETWORK_PROBES:
+        open_ports = [p for p in d["ports"] if _tcp_open(d["ip"], p)]
+        devices.append({"ip": d["ip"], "name": d["name"], "online": bool(open_ports), "ports": open_ports,
+                        "detail": ("Open ports: " + ", ".join(map(str, open_ports))) if open_ports else "No configured service answered"})
+    return {"devices": devices, "checked_at": datetime.now(timezone.utc).isoformat()}
 
 def sky_send_key(key):
     if key not in SKY_KEY_MAP:
@@ -383,6 +415,11 @@ class Handler(BaseHTTPRequestHandler):
             "/sky.html": ("sky.html", "text/html; charset=utf-8"),
             "/sport.html": ("sport.html", "text/html; charset=utf-8"),
             "/sport.js": ("sport.js", "application/javascript; charset=utf-8"),
+            "/devices.js": ("devices.js", "application/javascript; charset=utf-8"),
+            "/network.html": ("network.html", "text/html; charset=utf-8"),
+            "/av.html": ("av.html", "text/html; charset=utf-8"),
+            "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
+            "/office.html": ("office.html", "text/html; charset=utf-8"),
             "/sky.js": ("sky.js", "application/javascript; charset=utf-8"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "application/javascript; charset=utf-8"),
@@ -390,6 +427,12 @@ class Handler(BaseHTTPRequestHandler):
         if path in files:
             filename, ctype = files[path]
             self.send_bytes(fetch_github(filename), ctype)
+            return
+        if path == "/api/network/status":
+            try:
+                self.send_bytes(json.dumps(network_status()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
             return
         if path == "/api/sky/sport-guide":
             try:
