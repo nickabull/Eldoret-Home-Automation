@@ -232,6 +232,31 @@ def infrastructure_status():
     return {"targets":out,"checked_at":datetime.now(timezone.utc).isoformat(),
             "mode":"read-only fingerprint"}
 
+def local_neighbor_table():
+    # Read-only view of the Chromebook's existing kernel neighbour/ARP cache.
+    # This does not contact or authenticate to any device.
+    import subprocess
+    wanted="70:ee:50:5b:fb:b5"
+    rows=[]
+    commands=[["ip","neigh","show"],["arp","-an"]]
+    output=""
+    used=None
+    for cmd in commands:
+        try:
+            output=subprocess.check_output(cmd,stderr=subprocess.STDOUT,timeout=3,text=True)
+            used=" ".join(cmd)
+            if output: break
+        except Exception:
+            continue
+    for line in output.splitlines():
+        low=line.lower()
+        if "10.0.0." in low:
+            rows.append(line.strip()[:300])
+    matches=[x for x in rows if wanted in x.lower()]
+    return {"target_mac":wanted,"matches":matches,"neighbors":rows,
+            "source":used,"checked_at":datetime.now(timezone.utc).isoformat(),
+            "mode":"read-only local neighbour cache"}
+
 def homekit_discovery(timeout=3.0):
     # Read-only mDNS browse for HomeKit accessories (_hap._tcp.local).
     result={"services":[],"checked_at":datetime.now(timezone.utc).isoformat(),"mode":"read-only HomeKit mDNS discovery"}
@@ -1010,6 +1035,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(homekit_discovery()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"services": [], "error": str(e)}).encode())
+            return
+        if path == "/api/network/neighbors":
+            try:
+                self.send_bytes(json.dumps(local_neighbor_table()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"matches": [], "neighbors": [], "error": str(e)}).encode())
             return
         if path == "/api/network/infrastructure":
             try:
