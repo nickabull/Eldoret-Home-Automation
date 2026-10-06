@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sky Q · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=16"></head>
+<title>Sky Q · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=17"></head>
 <body><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">Touch-first home control</p></div><div class="status"><span></span>Local connector</div></header>
 <main>
 <section class="hero"><div><h2>Sky Q</h2><p>Touch remote for the Sky Q box on your home network.</p></div><div class="stats"><b>1</b><small>Sky Q box</small><b>LAN</b><small>local control</small></div></section>
@@ -16,6 +16,18 @@
     <p class="sky-synopsis"></p>
   </div>
   <span class="sky-state">CHECKING</span>
+</section>
+
+<section class="sky-channel-search">
+  <div>
+    <p class="eyebrow">FIND A CHANNEL</p>
+    <h2>Search Sky</h2>
+    <p>Type a channel name, then tap a result to tune instantly.</p>
+  </div>
+  <div class="sky-search-box">
+    <input id="skyChannelSearch" type="search" placeholder="Try Sky Atlantic, BBC News, TNT..." autocomplete="off">
+    <div id="skySearchResults" class="sky-search-results" aria-live="polite"></div>
+  </div>
 </section>
 
 <div class="sky-view-tabs" role="tablist" aria-label="Sky Q view">
@@ -86,5 +98,5 @@
   </div>
 </section>
 </main>
-<script src="sky.js?v=9"></script>
+<script src="sky.js?v=17"></script>
 </body></html>
