@@ -16,6 +16,7 @@ GITHUB_BASE = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automati
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
 SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
 SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
+SPORT_CHANNEL_NUMBERS = ["401","402","403","404","405","406","407","408","409","410","411","412","413","414","418","419"]
 SKY_KEY_MAP = {
     "power":0,"select":1,"backup":2,"channelup":6,"channeldown":7,
     "search":10,"home":11,"up":16,"down":17,"left":18,"right":19,
@@ -125,6 +126,37 @@ def sky_get_media_uri():
         if _localname(el.tag) == "CurrentURI":
             return el.text or ""
     return ""
+
+def sky_channel_logo_url(service):
+    if not service:
+        return None
+    sid = str(service.get("sid", ""))
+    name = str(service.get("t", ""))
+    if not sid or not name:
+        return None
+    chid = "".join(ch for ch in name.lower() if ch.isalnum())
+    return f"https://imageservice.sky.com/logo/skychb_{sid}{chid}/600/600?territory=GB&provider=SKY&proposition=SKYQ"
+
+def sky_sport_guide():
+    services = sky_channel_list()
+    by_number = {str(s.get("c")): s for s in services}
+    channels = []
+    for number in SPORT_CHANNEL_NUMBERS:
+        service = by_number.get(number)
+        item = {
+            "channelno": number,
+            "channel": service.get("t") if service else None,
+            "sid": service.get("sid") if service else None,
+            "logo": sky_channel_logo_url(service),
+            "programme": None,
+            "synopsis": None,
+            "start": None,
+            "end": None,
+        }
+        if service and service.get("sid"):
+            item.update(sky_epg_now(service.get("sid")))
+        channels.append(item)
+    return {"channels": channels}
 
 def sky_channel_list():
     candidates = ["/as/services/4/1", "/as/services/1/1", "/as/services/5/1"]
@@ -358,6 +390,13 @@ class Handler(BaseHTTPRequestHandler):
         if path in files:
             filename, ctype = files[path]
             self.send_bytes(fetch_github(filename), ctype)
+            return
+        if path == "/api/sky/sport-guide":
+            try:
+                payload = json.dumps(sky_sport_guide()).encode()
+                self.send_bytes(payload)
+            except Exception as e:
+                self.send_bytes(json.dumps({"channels": [], "error": str(e)}).encode())
             return
         if path == "/api/sky/now":
             try:
