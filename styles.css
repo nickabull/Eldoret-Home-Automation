@@ -36,3 +36,8 @@
 .sport-next span{text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:900;color:#9bb7d2}
 .sport-next b{font-size:13px;line-height:1.25;color:#dbe5ef}
 @media(max-width:620px){.sport-channel{min-height:275px;padding:16px}.sport-channel-logo{height:72px}.sport-synopsis{-webkit-line-clamp:2}}
+
+/* Sport logo optical sizing v14 */
+.sport-channel.skybrand .sport-channel-logo{height:112px;max-width:100%;transform:scale(1.16);transform-origin:left center}
+.sport-channel.tntbrand .sport-channel-logo{height:88px;max-width:90%}
+@media(max-width:620px){.sport-channel.skybrand .sport-channel-logo{height:88px;transform:scale(1.14)}.sport-channel.tntbrand .sport-channel-logo{height:72px}}
