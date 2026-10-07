@@ -1,3 +1,19 @@
+
+let eldoretPending=null,eldoretPendingTimer=null;
+function clearEldoretPending(){
+  if(eldoretPending&&eldoretPending.el)eldoretPending.el.classList.remove("eldoret-pending");
+  eldoretPending=null; clearTimeout(eldoretPendingTimer);
+  const box=document.querySelector("#eldoretConfirm"); if(box)box.remove();
+}
+function stageEldoretAction(label,run,el){
+  clearEldoretPending(); if(el)el.classList.add("eldoret-pending");
+  eldoretPending={run,el};
+  const box=document.createElement("div"); box.id="eldoretConfirm"; box.className="eldoret-confirm";
+  box.innerHTML='<span>'+label+'</span><button type="button">CONFIRM</button>';
+  box.querySelector("button").onclick=async()=>{const p=eldoretPending;clearEldoretPending();if(p)await p.run();};
+  document.body.appendChild(box);
+  eldoretPendingTimer=setTimeout(clearEldoretPending,10000);
+}
 const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");
 function skyClock(v){if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
 function programmeArtworkUrl(uuid){return uuid?"https://images.metadata.sky.com/pd-image/"+encodeURIComponent(uuid)+"/16-9":"";}
@@ -39,9 +55,9 @@ function renderResults(items,q){
    const detail=isChannel?(x.channelno+(programme?" · "+programme:"")):(x.channelno+" · "+x.channel+(x.matchtype==="next"?" · NEXT "+skyClock(x.matchstart):""));
    return '<button class="sky-search-result" data-channel="'+esc(x.channelno)+'">'+(x.logo?'<img src="'+esc(x.logo)+'" alt="">':'')+'<span><strong>'+esc(title)+'</strong><small>'+esc(detail)+'</small></span><em>Watch</em></button>';
  }).join("");
- results.querySelectorAll("[data-channel]").forEach(b=>b.onclick=()=>tune(b.dataset.channel));
+ results.querySelectorAll("[data-channel]").forEach(b=>b.onclick=()=>stageEldoretAction("Channel "+b.dataset.channel,()=>tune(b.dataset.channel),b));
 }
 input.addEventListener("input",searchSoon);refreshNow();if(isLive)setInterval(refreshNow,15000);
 const pad=document.querySelector("#channelPadOverlay"),padOpen=document.querySelector("#channelPadOpen"),padClose=document.querySelector("#channelPadClose"),padDisplay=document.querySelector("#channelPadDisplay"),padGo=document.querySelector("#channelPadGo"),padClear=document.querySelector("#channelPadClear");let padValue="";
 function renderPad(){if(padDisplay)padDisplay.textContent=padValue||"—"}function openPad(){padValue="";renderPad();pad.hidden=false;requestAnimationFrame(()=>pad.classList.add("open"))}function closePad(){pad.classList.remove("open");setTimeout(()=>pad.hidden=true,120)}
-padOpen&&padOpen.addEventListener("click",openPad);padClose&&padClose.addEventListener("click",closePad);padClear&&padClear.addEventListener("click",()=>{padValue="";renderPad()});document.querySelectorAll("[data-pad-digit]").forEach(b=>b.onclick=()=>{if(padValue.length<4){padValue+=b.dataset.padDigit;renderPad()}});document.querySelectorAll("[data-pad-key]").forEach(b=>b.onclick=()=>sendKey(b.dataset.padKey,b));padGo&&padGo.addEventListener("click",()=>{if(padValue)tune(padValue)});
+padOpen&&padOpen.addEventListener("click",openPad);padClose&&padClose.addEventListener("click",closePad);padClear&&padClear.addEventListener("click",()=>{padValue="";renderPad()});document.querySelectorAll("[data-pad-digit]").forEach(b=>b.onclick=()=>{if(padValue.length<4){padValue+=b.dataset.padDigit;renderPad()}});document.querySelectorAll("[data-pad-key]").forEach(b=>b.onclick=()=>sendKey(b.dataset.padKey,b));padGo&&padGo.addEventListener("click",()=>{if(padValue)stageEldoretAction("Channel "+padValue,()=>tune(padValue),padGo)});
