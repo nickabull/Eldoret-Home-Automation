@@ -20,6 +20,7 @@ STATIC_CACHE = {}
 STATIC_CACHE_TTL = 300
 AGENT_TASK_URL = "https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/agent-task.json"
 AGENT_RELAY_URL = "https://ntfy.sh/eldoret-relay-7e6b9d2c4f8a31b5a0c9e247d6f31c8e"
+REMOTE_STATE_URL = "https://ntfy.sh/eldoret-live-4f1c7a92d8e63b5a0f4d2c9b71e8a605"
 AGENT_RESULTS_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-results.json")
 AGENT_STATE_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-state.json")
 DEVICE_REGISTRY_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "device-registry.json")
@@ -1189,6 +1190,70 @@ def _agent_write_json(path, value):
     except Exception:
         pass
 
+def build_remote_state():
+    snapshot={"generated_at":datetime.now(timezone.utc).isoformat(),"hue":{}}
+    # Hue: expose only room/group state and brightness, never bridge credentials.
+    for bridge_name,group_ids in {"house":["1","2","3","4","5","6","7","8","9","10"],
+                                  "utility":["1","2","3","4","5","84","85"]}.items():
+        for group in group_ids:
+            key=bridge_name+":"+group
+            try:
+                raw=json.loads(hue_get(bridge_name,"groups/"+group).decode("utf-8",errors="replace"))
+                snapshot["hue"][key]={
+                    "state":{"any_on":bool((raw.get("state") or {}).get("any_on"))},
+                    "action":{"bri":(raw.get("action") or {}).get("bri")}
+                }
+            except Exception:
+                pass
+    try:
+        sky=sky_now_playing_v2()
+        snapshot["sky_now"]={k:sky.get(k) for k in ("available","live","channel","channelno","logo",
+            "is_radio","programme","start","end","synopsis","programmeuuid","playback") if k in sky}
+    except Exception:
+        snapshot["sky_now"]={"available":False}
+    try:
+        p=printer_status()
+        snapshot["printer"]={k:p.get(k) for k in ("online","model","state","ink","detail") if k in p}
+    except Exception:
+        snapshot["printer"]={"online":False}
+    try:
+        ps=playstation_status()
+        snapshot["playstation"]={k:ps.get(k) for k in ("online","host_type","host_name","system_version",
+            "running_app_name","running_app_titleid","status_code","detail") if k in ps}
+    except Exception:
+        snapshot["playstation"]={"online":False}
+    try:
+        reg=_registry_load()
+        snapshot["summary"]={
+            "lg_tv_count":len([k for k in reg if k.startswith("lg_tv_")]),
+            "sky_q":bool(reg.get("sky_q")),
+            "printer":bool(reg.get("epson_et3850")),
+            "playstation":bool(reg.get("playstation")),
+            "velux":bool(reg.get("velux_gateway"))
+        }
+    except Exception:
+        snapshot["summary"]={}
+    return snapshot
+
+def publish_remote_state():
+    try:
+        payload=json.dumps(build_remote_state(),ensure_ascii=False).encode("utf-8")
+        req=urllib.request.Request(REMOTE_STATE_URL,data=payload,
+            headers={"User-Agent":"Eldoret-Remote/1.0","Content-Type":"text/plain"},method="POST")
+        with urllib.request.urlopen(req,timeout=12) as response:
+            response.read()
+        return True
+    except Exception:
+        return False
+
+def remote_state_loop():
+    while True:
+        try:
+            publish_remote_state()
+        except Exception:
+            pass
+        time.sleep(60)
+
 def sanitise_agent_result(value):
     task=str(value.get("task") or "")
     result=value.get("result") or {}
@@ -1368,6 +1433,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(saved).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"status":"error","error":str(e)}).encode())
+            return
+        if path == "/api/remote/state":
+            try:
+                self.send_bytes(json.dumps(build_remote_state()).encode())
+            except Exception as e:
+                self.send_bytes(json.dumps({"error":str(e)}).encode())
             return
         if path == "/api/devices/registry":
             try:
@@ -1584,6 +1655,7 @@ class Handler(BaseHTTPRequestHandler):
 
 threading.Thread(target=agent_loop, daemon=True).start()
 threading.Thread(target=device_registry_loop, daemon=True).start()
+threading.Thread(target=remote_state_loop, daemon=True).start()
 print("Eldoret live connector running")
 print("House Hue bridge: ready")
 print("Utility Hue bridge: ready")
