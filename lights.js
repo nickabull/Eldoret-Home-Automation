@@ -1,3 +1,17 @@
+
+let eldoretPending=null,eldoretPendingTimer=null;
+function clearEldoretPending(){
+ if(eldoretPending&&eldoretPending.el)eldoretPending.el.classList.remove("eldoret-pending");
+ eldoretPending=null;clearTimeout(eldoretPendingTimer);
+ const box=document.querySelector("#eldoretConfirm");if(box)box.remove();
+}
+function stageEldoretAction(label,run,el){
+ clearEldoretPending();if(el)el.classList.add("eldoret-pending");eldoretPending={run,el};
+ const box=document.createElement("div");box.id="eldoretConfirm";box.className="eldoret-confirm";
+ box.innerHTML='<span>'+label+'</span><button type="button">CONFIRM</button>';
+ box.querySelector("button").onclick=async()=>{const p=eldoretPending;clearEldoretPending();if(p)await p.run();};
+ document.body.appendChild(box);eldoretPendingTimer=setTimeout(clearEldoretPending,10000);
+}
 const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");
 
 const LIGHT_ROOMS=[
@@ -81,16 +95,16 @@ function renderScenes(){
  const chunk=list.slice(scenePage*scenesPerPage,(scenePage+1)*scenesPerPage);
  sceneGrid.innerHTML=chunk.map((s,i)=>'<button class="light-scene-card" data-scene="'+s[1]+'" style="--scene-look:'+SCENE_LOOKS[(scenePage*scenesPerPage+i)%SCENE_LOOKS.length]+'">'+
    '<span class="scene-glow"></span><div><p>SCENE</p><h3>'+s[0]+'</h3><small>Tap to activate</small></div></button>').join("");
- sceneGrid.querySelectorAll(".light-scene-card").forEach(b=>b.addEventListener("click",()=>activateScene(b)));
+ sceneGrid.querySelectorAll(".light-scene-card").forEach(b=>b.addEventListener("click",()=>stageEldoretAction(selected.n+" · "+b.querySelector("h3").textContent,()=>activateScene(b),b)));
  setPager(document.querySelector("#scenePageLabel"),document.querySelector("#scenePrev"),document.querySelector("#sceneNext"),scenePage,pages);
 }
 function renderQuickControl(){
  const host=document.querySelector("#lightQuickControl"); if(!host)return;
  host.innerHTML='<button type="button" data-light-power="on">On</button><button type="button" data-light-power="off">Off</button><div class="dimmer-wrap"><span>Dimmer</span><input id="lightDimmer" type="range" min="1" max="100" value="70"><output id="lightDimmerValue">70%</output></div>';
- host.querySelectorAll("[data-light-power]").forEach(btn=>btn.addEventListener("click",()=>setRoomPower(btn.dataset.lightPower==="on")));
+ host.querySelectorAll("[data-light-power]").forEach(btn=>btn.addEventListener("click",()=>stageEldoretAction(selected.n+" · "+btn.textContent,()=>setRoomPower(btn.dataset.lightPower==="on"),btn)));
  const dim=host.querySelector("#lightDimmer"),out=host.querySelector("#lightDimmerValue");
  dim.addEventListener("input",()=>out.textContent=dim.value+"%");
- dim.addEventListener("change",()=>setRoomBrightness(Number(dim.value)));
+ dim.addEventListener("change",()=>stageEldoretAction(selected.n+" · "+dim.value+"%",()=>setRoomBrightness(Number(dim.value)),dim));
  refreshSelectedControl();
 }
 async function setRoomPower(on){
