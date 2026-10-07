@@ -1,3 +1,19 @@
+
+let eldoretPending=null,eldoretPendingTimer=null;
+function clearEldoretPending(){
+  if(eldoretPending&&eldoretPending.el)eldoretPending.el.classList.remove("eldoret-pending");
+  eldoretPending=null; clearTimeout(eldoretPendingTimer);
+  const box=document.querySelector("#eldoretConfirm"); if(box)box.remove();
+}
+function stageEldoretAction(label,run,el){
+  clearEldoretPending(); if(el)el.classList.add("eldoret-pending");
+  eldoretPending={run,el};
+  const box=document.createElement("div"); box.id="eldoretConfirm"; box.className="eldoret-confirm";
+  box.innerHTML='<span>'+label+'</span><button type="button">CONFIRM</button>';
+  box.querySelector("button").onclick=async()=>{const p=eldoretPending;clearEldoretPending();if(p)await p.run();};
+  document.body.appendChild(box);
+  eldoretPendingTimer=setTimeout(clearEldoretPending,10000);
+}
 const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");
 function skyClock(value){if(!value)return "";const d=new Date(value);if(Number.isNaN(d.getTime()))return "";return d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
 async function refreshNow(){
@@ -52,7 +68,7 @@ function renderGuideCard(item){
   }
   const onair=b.querySelector(".sport-onair"),nowTime=[skyClock(item.start),skyClock(item.end)].filter(Boolean).join("–"),nextTime=item.next&&item.next.start?skyClock(item.next.start):"";
   onair.innerHTML='<span>On now'+(nowTime?' · '+nowTime:'')+'</span><b>'+esc(item.programme||"Programme unavailable")+'</b>'+(item.synopsis?'<p class="sport-synopsis">'+esc(item.synopsis)+'</p>':'')+(item.next&&item.next.programme?'<div class="sport-next"><span>Next'+(nextTime?' · '+nextTime:'')+'</span><b>'+esc(item.next.programme)+'</b></div>':'');
-  b.addEventListener("click",()=>tune(b)); return b;
+  b.addEventListener("click",()=>stageEldoretAction("Channel "+no,()=>tune(b),b)); return b;
 }
 let guidePage=0;
 async function refreshGuide(){
@@ -119,7 +135,7 @@ async function goChannelPad(){
 if(channelPadOpen)channelPadOpen.addEventListener("click",openChannelPad);
 if(channelPadClose)channelPadClose.addEventListener("click",closeChannelPad);
 if(channelPadClear)channelPadClear.addEventListener("click",()=>{channelPadValue="";renderChannelPad();});
-if(channelPadGo)channelPadGo.addEventListener("click",goChannelPad);
+if(channelPadGo)channelPadGo.addEventListener("click",()=>{if(channelPadValue)stageEldoretAction("Channel "+channelPadValue,goChannelPad,channelPadGo);});
 document.querySelectorAll("[data-pad-digit]").forEach(b=>b.addEventListener("click",()=>addChannelDigit(b.dataset.padDigit)));
 document.querySelectorAll("[data-pad-key]").forEach(b=>b.addEventListener("click",()=>sendSportSkyKey(b.dataset.padKey,b)));
 if(channelPadOverlay)channelPadOverlay.addEventListener("click",e=>{if(e.target===channelPadOverlay)closeChannelPad();});
