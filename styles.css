@@ -787,3 +787,34 @@
 .lights-empty{grid-column:1/-1;border:1px dashed #ffffff24;border-radius:22px;padding:30px;text-align:center;color:#aeb8c8;background:#ffffff08}
 @media(max-width:900px){.lights-room-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lights-scene-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.lights-hero{align-items:flex-start}.lights-hero h2{font-size:31px}.lights-room-grid,.lights-scene-grid{grid-template-columns:1fr}.light-room-card,.light-room-content{min-height:210px}}
+
+
+/* Mobile app shell */
+html{background:#0b1018;-webkit-text-size-adjust:100%;touch-action:manipulation}
+body{overscroll-behavior-y:none;padding-bottom:max(0px,env(safe-area-inset-bottom))}
+button,a{-webkit-tap-highlight-color:transparent}
+.mobile-dock{display:none}
+@media(max-width:760px){
+  body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+  header{padding-top:max(18px,env(safe-area-inset-top))}
+  main{padding-left:14px;padding-right:14px;padding-bottom:30px}
+  .tabs{display:none}
+  .mobile-dock{
+    position:fixed;z-index:9999;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));
+    display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px;
+    border:1px solid #ffffff20;border-radius:22px;background:#0b1018e8;
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 16px 40px #0008
+  }
+  .mobile-dock a{
+    min-height:58px;border-radius:16px;color:#9eacbe;text-decoration:none;display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:800
+  }
+  .mobile-dock a span{font-size:20px;line-height:1}
+  .mobile-dock a small{font-size:10px;letter-spacing:.02em}
+  .mobile-dock a.active{background:#73d5b1;color:#07120e}
+  .sky-subnav{overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:4px}
+  .sky-subnav a{scroll-snap-align:start;min-height:44px}
+  .channel-pad-dialog,.sky-search-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;border-radius:24px}
+  input,textarea,select{font-size:16px}
+}
+@supports(height:100dvh){body{min-height:100dvh}}
