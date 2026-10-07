@@ -1,5 +1,5 @@
 {
-  "id": "2026-10-06T23:09:35Z-printer-win",
-  "task": "printer_status",
-  "note": "Get real Epson ET-3850 status and ink data"
+  "id": "2026-10-07T00:39:00Z-away-proof",
+  "task": "discover_devices",
+  "note": "Fresh unattended heartbeat before Nick heads away"
 }
