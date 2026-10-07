@@ -1,5 +1,5 @@
 {
-  "id": "2026-10-07T00:39:00Z-away-proof",
-  "task": "discover_devices",
-  "note": "Fresh unattended heartbeat before Nick heads away"
+  "id": "2026-10-07T09:08:30Z-remote-access",
+  "task": "remote_access_start",
+  "note": "Start authenticated Eldoret remote tunnel"
 }
