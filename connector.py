@@ -1381,6 +1381,7 @@ class Handler(BaseHTTPRequestHandler):
             "/lights.html": ("lights.html", "text/html; charset=utf-8"),
             "/lights.js": ("lights.js", "application/javascript; charset=utf-8"),
             "/mobile.js": ("mobile.js", "application/javascript; charset=utf-8"),
+            "/remote.js": ("remote.js", "application/javascript; charset=utf-8"),
             "/manifest.webmanifest": ("manifest.webmanifest", "application/manifest+json; charset=utf-8"),
             "/sw.js": ("sw.js", "application/javascript; charset=utf-8"),
 
