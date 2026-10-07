@@ -50,6 +50,12 @@ jobs:
           with open("agent-result.json","w",encoding="utf-8") as f:
               json.dump(found,f,ensure_ascii=False,indent=2)
               f.write("\n")
+          if found.get("task")=="remote_access_start":
+              url=((found.get("result") or {}).get("tunnel_url") or "").strip()
+              if url:
+                  with open("remote-url.json","w",encoding="utf-8") as f:
+                      json.dump({"url":url,"updated_at":found.get("finished_at")},f,ensure_ascii=False,indent=2)
+                      f.write("\n")
           PY
 
       - name: Commit latest result
@@ -57,7 +63,7 @@ jobs:
         run: |
           git config user.name "Eldoret Agent"
           git config user.email "eldoret-agent@users.noreply.github.com"
-          git add agent-result.json
+          git add agent-result.json remote-url.json 2>/dev/null || git add agent-result.json
           git diff --cached --quiet && exit 0
           git commit -m "Update Eldoret agent result"
           git push
