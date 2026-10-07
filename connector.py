@@ -1315,6 +1315,10 @@ class Handler(BaseHTTPRequestHandler):
             "/index.html": ("index.html", "text/html; charset=utf-8"),
             "/lights.html": ("lights.html", "text/html; charset=utf-8"),
             "/lights.js": ("lights.js", "application/javascript; charset=utf-8"),
+            "/mobile.js": ("mobile.js", "application/javascript; charset=utf-8"),
+            "/manifest.webmanifest": ("manifest.webmanifest", "application/manifest+json; charset=utf-8"),
+            "/sw.js": ("sw.js", "application/javascript; charset=utf-8"),
+
             "/house.html": ("house.html", "text/html; charset=utf-8"),
             "/utility.html": ("utility.html", "text/html; charset=utf-8"),
             "/sky.html": ("sky.html", "text/html; charset=utf-8"),
