@@ -68,7 +68,7 @@ function renderRooms(){
 function selectRoom(key){
  selected=LIGHT_ROOMS.find(r=>roomKey(r)===key)||selected;scenePage=0;
  document.querySelector("#sceneRoomTitle").textContent=selected.n;
- renderRooms();renderScenes();
+ renderRooms();renderQuickControl();renderScenes();
 }
 function renderScenes(){
  const list=LIGHT_SCENES[roomKey(selected)]||[];
@@ -83,6 +83,43 @@ function renderScenes(){
    '<span class="scene-glow"></span><div><p>SCENE</p><h3>'+s[0]+'</h3><small>Tap to activate</small></div></button>').join("");
  sceneGrid.querySelectorAll(".light-scene-card").forEach(b=>b.addEventListener("click",()=>activateScene(b)));
  setPager(document.querySelector("#scenePageLabel"),document.querySelector("#scenePrev"),document.querySelector("#sceneNext"),scenePage,pages);
+}
+function renderQuickControl(){
+ const host=document.querySelector("#lightQuickControl"); if(!host)return;
+ host.innerHTML='<button type="button" data-light-power="on">On</button><button type="button" data-light-power="off">Off</button><div class="dimmer-wrap"><span>Dimmer</span><input id="lightDimmer" type="range" min="1" max="100" value="70"><output id="lightDimmerValue">70%</output></div>';
+ host.querySelectorAll("[data-light-power]").forEach(btn=>btn.addEventListener("click",()=>setRoomPower(btn.dataset.lightPower==="on")));
+ const dim=host.querySelector("#lightDimmer"),out=host.querySelector("#lightDimmerValue");
+ dim.addEventListener("input",()=>out.textContent=dim.value+"%");
+ dim.addEventListener("change",()=>setRoomBrightness(Number(dim.value)));
+ refreshSelectedControl();
+}
+async function setRoomPower(on){
+ if(!isLive)return;
+ try{
+  const res=await fetch("/api/hue/group",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridge:selected.b,group:selected.g,on})});
+  if(!res.ok)throw new Error();
+  setTimeout(()=>{refreshRoomState(selected);refreshSelectedControl();},220);
+ }catch(e){}
+}
+async function setRoomBrightness(brightness){
+ if(!isLive)return;
+ try{
+  const res=await fetch("/api/hue/group",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridge:selected.b,group:selected.g,brightness})});
+  if(!res.ok)throw new Error();
+  setTimeout(()=>{refreshRoomState(selected);refreshSelectedControl();},220);
+ }catch(e){}
+}
+async function refreshSelectedControl(){
+ if(!isLive)return;
+ const host=document.querySelector("#lightQuickControl"); if(!host)return;
+ try{
+  const res=await fetch("/api/hue/group?bridge="+encodeURIComponent(selected.b)+"&group="+encodeURIComponent(selected.g),{cache:"no-store"});
+  if(!res.ok)throw new Error();
+  const d=await res.json(); const on=!!(d.state&&d.state.any_on);
+  const bri=(d.action&&typeof d.action.bri==="number")?Math.max(1,Math.round(d.action.bri*100/254)):70;
+  host.querySelectorAll("[data-light-power]").forEach(b=>b.classList.toggle("active",b.dataset.lightPower===(on?"on":"off")));
+  const dim=host.querySelector("#lightDimmer"),out=host.querySelector("#lightDimmerValue"); if(dim){dim.value=bri;out.textContent=bri+"%";}
+ }catch(e){}
 }
 async function refreshRoomState(r){
  if(!isLive)return;
@@ -111,5 +148,5 @@ document.querySelector("#roomNext").onclick=()=>{if(roomPage<pageCount(LIGHT_ROO
 document.querySelector("#scenePrev").onclick=()=>{if(scenePage>0){scenePage--;renderScenes()}};
 document.querySelector("#sceneNext").onclick=()=>{const list=LIGHT_SCENES[roomKey(selected)]||[];if(scenePage<pageCount(list,scenesPerPage)-1){scenePage++;renderScenes()}};
 
-document.querySelector("#sceneRoomTitle").textContent=selected.n;renderRooms();renderScenes();
+document.querySelector("#sceneRoomTitle").textContent=selected.n;renderRooms();renderQuickControl();renderScenes();
 if(isLive)setInterval(()=>LIGHT_ROOMS.slice(roomPage*roomsPerPage,(roomPage+1)*roomsPerPage).forEach(refreshRoomState),15000);
