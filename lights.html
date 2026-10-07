@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Lights · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=43"><meta name="theme-color" content="#0b1018"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="manifest.webmanifest"></head>
+<title>Lights · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=43"><meta name="theme-color" content="#0b1018"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="manifest.webmanifest"><style>
+.lights-quick-control{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:center;margin-top:16px}
+.lights-quick-control button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#eef4ff;border-radius:12px;padding:11px 16px;font:inherit;font-weight:800;cursor:pointer}
+.lights-quick-control button.active{background:rgba(76,155,255,.22);border-color:rgba(76,155,255,.48)}
+.lights-quick-control .dimmer-wrap{display:flex;align-items:center;gap:10px;min-width:180px}
+.lights-quick-control input{width:100%}.lights-quick-control output{min-width:42px;text-align:right;color:#b8c4d6;font-weight:800}
+@media(max-width:700px){.lights-quick-control{grid-template-columns:1fr 1fr}.lights-quick-control .dimmer-wrap{grid-column:1/-1}}
+</style></head>
 <body class="sport-page lights-page"><header><div><p class="eyebrow">ELDORET</p><h1>Home Automation</h1><p class="sub">Rooms, scenes and live Hue control</p></div><div class="status"><span></span>Hue connected</div></header>
 <main>
 <nav class="tabs" aria-label="Area"><a href="index.html">All</a><a class="active" href="lights.html">Lights</a><a href="house.html">House</a><a href="utility.html">Utility / Outside</a><a href="sky.html">Sky Q</a><a href="network.html">Network</a><a href="av.html">AV</a><a href="radio.html">Radio</a><a href="appliances.html">Appliances</a><a href="office.html">Office</a></nav>
@@ -12,7 +19,7 @@
 
 <section class="sport-section lights-section">
   <div class="sport-section-head"><div><p class="eyebrow">ROOMS & ZONES</p><h2>Choose a room</h2></div><div class="radio-page-controls"><button id="roomPrev" aria-label="Previous rooms">‹</button><span id="roomPageLabel">1 / 1</span><button id="roomNext" aria-label="More rooms">›</button></div></div>
-  <div id="lightRoomGrid" class="lights-room-grid"></div>
+  <div id="lightRoomGrid" class="lights-room-grid"></div><div id="lightQuickControl" class="lights-quick-control" aria-live="polite"></div>
 </section>
 
 <section class="sport-section lights-section lights-scenes-section">
