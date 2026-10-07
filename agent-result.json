@@ -1,8 +1,8 @@
 {
   "status": "complete",
   "task": "discover_devices",
-  "task_id": "2026-10-06T22:55:30Z-discovery-1",
-  "finished_at": "2026-10-06T22:57:02.223719+00:00",
+  "task_id": "2026-10-07T00:39:00Z-away-proof",
+  "finished_at": "2026-10-07T00:40:08.165222+00:00",
   "error": null,
   "result": {
     "devices_found": [
@@ -10,7 +10,7 @@
       "lg_tvs",
       "sky_q"
     ],
-    "lg_tv_count": 3,
+    "lg_tv_count": 0,
     "sky_q": true,
     "printer": true,
     "playstation": false,
