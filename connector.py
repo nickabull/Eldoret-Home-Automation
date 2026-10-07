@@ -4,6 +4,11 @@ import socket
 import ssl
 import time
 import threading
+import hashlib
+import base64
+import secrets
+import platform
+import subprocess
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -24,6 +29,11 @@ REMOTE_STATE_URL = "https://ntfy.sh/eldoret-live-4f1c7a92d8e63b5a0f4d2c9b71e8a60
 AGENT_RESULTS_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-results.json")
 AGENT_STATE_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "agent-state.json")
 DEVICE_REGISTRY_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "device-registry.json")
+REMOTE_TUNNEL_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"), "remote-tunnel.json")
+REMOTE_TUNNEL_PROCESS = None
+REMOTE_SESSIONS = set()
+REMOTE_LOGIN_SALT = "61PKtUm5Xl8+7jP1w7GC8Q=="
+REMOTE_LOGIN_HASH = "ApNkYRNpbpuUh7efM3oHprHfLOi1MRO79RGQh4YUehE="
 AGENT_RESULT = {"status":"waiting","task":None,"task_id":None,"result":None,"error":None,"finished_at":None}
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
 
@@ -1283,6 +1293,8 @@ def sanitise_agent_result(value):
     elif task=="infrastructure_status":
         targets=result.get("targets") or []
         safe["result"]={"online_count":sum(1 for d in targets if d.get("online")),"target_count":len(targets)}
+    elif task=="remote_access_start":
+        safe["result"]={"online":bool(result.get("online")),"tunnel_url":result.get("tunnel_url")}
     elif task=="discover_devices":
         found=result.get("found") or {}
         safe["result"]={"devices_found":sorted(found.keys()),
@@ -1324,6 +1336,7 @@ def run_agent_task(task):
         "printer_status": printer_status,
         "infrastructure_status": infrastructure_status,
         "discover_devices": discover_known_devices,
+        "remote_access_start": start_remote_tunnel,
     }
     fn=allowed.get(task)
     if not fn:
@@ -1362,6 +1375,76 @@ def agent_loop():
                 AGENT_RESULT=saved
         time.sleep(30)
 
+def _remote_request(handler):
+    return bool(handler.headers.get("CF-Connecting-IP") or handler.headers.get("CF-Ray"))
+
+def _remote_session_ok(handler):
+    if not _remote_request(handler):
+        return True
+    cookie=handler.headers.get("Cookie","")
+    for part in cookie.split(";"):
+        if part.strip().startswith("eldoret_session="):
+            token=part.strip().split("=",1)[1]
+            return token in REMOTE_SESSIONS
+    return False
+
+def _verify_remote_password(password):
+    try:
+        salt=base64.b64decode(REMOTE_LOGIN_SALT)
+        expected=base64.b64decode(REMOTE_LOGIN_HASH)
+        actual=hashlib.scrypt(password.encode("utf-8"),salt=salt,n=2**14,r=8,p=1,dklen=32)
+        return secrets.compare_digest(actual,expected)
+    except Exception:
+        return False
+
+def _login_page(error=False):
+    msg='<p class="err">That password was not accepted.</p>' if error else ''
+    return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1018"><title>Eldoret Login</title><style>
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(circle at 20% 0,#1a2942,#0b1018 42%,#070b11);color:#f4f7fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;padding:24px}
+    .card{width:min(440px,100%);background:#121a26;border:1px solid #2a3748;border-radius:28px;padding:30px;box-shadow:0 24px 70px #0008}.ey{color:#73d5b1;letter-spacing:.18em;font-weight:900;font-size:12px}.mark{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,#73d5b1,#786fe9);display:grid;place-items:center;font-size:38px;margin-bottom:22px}h1{margin:5px 0 8px;font-size:34px}p{color:#9eacbe;line-height:1.5}.err{color:#ff9c9c}input{width:100%;min-height:58px;border:1px solid #36475e;border-radius:16px;background:#0b111a;color:white;padding:0 16px;font-size:18px;margin:12px 0}button{width:100%;min-height:58px;border:0;border-radius:16px;background:#73d5b1;color:#07120e;font-size:17px;font-weight:900}small{display:block;color:#77869a;margin-top:16px;text-align:center}</style></head><body><form class="card" method="post" action="/login"><div class="mark">E</div><div class="ey">ELDORET</div><h1>Welcome home</h1><p>Enter your Eldoret password to connect securely to Donkey.</p>"""+msg+"""<input name="password" type="password" autocomplete="current-password" placeholder="Eldoret password" autofocus><button type="submit">Open Eldoret</button><small>Remote access · encrypted HTTPS tunnel</small></form></body></html>"""
+
+def start_remote_tunnel():
+    global REMOTE_TUNNEL_PROCESS
+    saved=_agent_read_json(REMOTE_TUNNEL_FILE,{})
+    if REMOTE_TUNNEL_PROCESS is not None and REMOTE_TUNNEL_PROCESS.poll() is None and saved.get("url"):
+        return {"online":True,"tunnel_url":saved.get("url"),"reused":True}
+    arch=platform.machine().lower()
+    asset="cloudflared-linux-arm64" if arch in ("aarch64","arm64") else "cloudflared-linux-amd64"
+    folder=os.path.expanduser("~/eldoret-connector")
+    os.makedirs(folder,exist_ok=True)
+    binary=os.path.join(folder,"cloudflared")
+    if not os.path.exists(binary):
+        url="https://github.com/cloudflare/cloudflared/releases/latest/download/"+asset
+        req=urllib.request.Request(url,headers={"User-Agent":"Eldoret/1.0"})
+        with urllib.request.urlopen(req,timeout=45) as r, open(binary,"wb") as f:
+            while True:
+                chunk=r.read(1024*1024)
+                if not chunk: break
+                f.write(chunk)
+        os.chmod(binary,0o755)
+    proc=subprocess.Popen([binary,"tunnel","--url","http://127.0.0.1:8765","--no-autoupdate"],
+        stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True,bufsize=1)
+    REMOTE_TUNNEL_PROCESS=proc
+    deadline=time.time()+25
+    tunnel_url=None
+    while time.time()<deadline:
+        line=proc.stderr.readline()
+        if not line:
+            if proc.poll() is not None: break
+            time.sleep(.1); continue
+        import re
+        m=re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com",line)
+        if m:
+            tunnel_url=m.group(0); break
+    if not tunnel_url:
+        try: proc.terminate()
+        except Exception: pass
+        REMOTE_TUNNEL_PROCESS=None
+        raise RuntimeError("Cloudflare quick tunnel did not return a URL")
+    data={"url":tunnel_url,"started_at":datetime.now(timezone.utc).isoformat()}
+    _agent_write_json(REMOTE_TUNNEL_FILE,data)
+    return {"online":True,"tunnel_url":tunnel_url,"reused":False}
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -1375,6 +1458,13 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        if path == "/login":
+            self.send_bytes(_login_page(False).encode(),"text/html; charset=utf-8")
+            return
+        if _remote_request(self) and not _remote_session_ok(self):
+            if path.startswith("/api/"):
+                self.send_response(401); self.end_headers(); return
+            self.send_response(302); self.send_header("Location","/login"); self.end_headers(); return
         files = {
             "/": ("index.html", "text/html; charset=utf-8"),
             "/index.html": ("index.html", "text/html; charset=utf-8"),
@@ -1586,7 +1676,23 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
-        payload = json.loads(self.rfile.read(length))
+        raw_body = self.rfile.read(length)
+        if self.path == "/login":
+            form=urllib.parse.parse_qs(raw_body.decode("utf-8",errors="replace"))
+            password=(form.get("password") or [""])[0]
+            if _verify_remote_password(password):
+                token=secrets.token_urlsafe(32); REMOTE_SESSIONS.add(token)
+                self.send_response(303)
+                self.send_header("Location","/")
+                self.send_header("Set-Cookie","eldoret_session="+token+"; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=604800")
+                self.end_headers()
+            else:
+                body=_login_page(True).encode()
+                self.send_response(401); self.send_header("Content-Type","text/html; charset=utf-8"); self.send_header("Content-Length",str(len(body))); self.end_headers(); self.wfile.write(body)
+            return
+        if _remote_request(self) and not _remote_session_ok(self):
+            self.send_response(401); self.end_headers(); return
+        payload = json.loads(raw_body or b"{}")
         if self.path == "/api/sky/app/launch":
             try:
                 sky_launch_app(payload.get("appid"))
