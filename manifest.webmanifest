@@ -1,0 +1,11 @@
+{
+  "name": "Eldoret Home",
+  "short_name": "Eldoret",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1018",
+  "theme_color": "#0b1018",
+  "description": "Eldoret home automation dashboard"
+}
