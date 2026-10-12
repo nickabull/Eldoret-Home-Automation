@@ -21,7 +21,14 @@ async function refreshNow(){
   const title=p.querySelector(".sky-programme"), meta=p.querySelector(".sky-meta"), syn=p.querySelector(".sky-synopsis"), badge=p.querySelector(".sky-state"), kicker=p.querySelector(".sky-kicker");
   try{
     const r=await fetch("/api/sky/now",{cache:"no-store"}); const d=await r.json();
-    if(!d.available) throw new Error(d.error||"Unavailable");
+    if(!d.available){
+      if(d.uri==="" && /no current media URI/i.test(d.error||"")){
+        if(kicker)kicker.textContent="SKY Q STATUS";
+        title.textContent="App or Sky Q menu";meta.textContent="Sky Q is responding, but is not reporting live TV.";syn.textContent="You may be using Netflix or another app.";badge.textContent="APP / MENU";
+        p.classList.remove("has-now-artwork");p.style.removeProperty("--now-artwork");return;
+      }
+      throw new Error(d.error||"Unavailable");
+    }
     if(d.live){
       const radio=!!d.is_radio || /^0\d{3}$/.test(String(d.channelno||""));
       if(kicker)kicker.textContent=radio?"NOW LISTENING":"NOW WATCHING";
