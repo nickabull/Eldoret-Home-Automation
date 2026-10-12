@@ -618,9 +618,20 @@ def sky_send_channel(channel):
     digits = str(channel)
     if not digits.isdigit() or len(digits) > 4:
         raise ValueError("Invalid channel")
+
+    # Apps such as Netflix can consume digit key presses instead of Sky Q.
+    # Only leave the app when Sky Q reports no current media URI.
+    try:
+        current_uri = sky_get_media_uri()
+    except Exception:
+        current_uri = None  # Unknown: preserve normal live-TV switching.
+    if current_uri == "":
+        sky_send_key("home")
+        time.sleep(1.8)
+
     for digit in digits:
         sky_send_key(digit)
-        time.sleep(0.08)
+        time.sleep(0.12)
 
 def _localname(tag):
     return tag.split("}", 1)[-1] if "}" in tag else tag.split(":", 1)[-1]
