@@ -835,3 +835,8 @@ button,a{-webkit-tap-highlight-color:transparent}
    Crop to the logo carousel so the wording baked into the image is not duplicated. */
 .sport-now.has-app-banner{position:relative!important;overflow:hidden!important;background:linear-gradient(90deg,#0b1421 0%,rgba(11,20,33,.98) 35%,rgba(11,20,33,.68) 65%,rgba(11,20,33,.2) 100%),url("Apps%20Banner.png") right center/auto 220% no-repeat!important}
 .sport-now.has-app-banner>*{position:relative;z-index:1}
+
+/* Cinematic Sky Q streaming backdrop; activates when sky-streaming-background.png is uploaded. */
+body.sport-page{background-image:linear-gradient(90deg,rgba(6,10,19,.91),rgba(6,10,19,.76)),linear-gradient(180deg,rgba(6,10,19,.24),rgba(6,10,19,.92)),url('sky-streaming-background.png');background-position:center center;background-size:cover;background-attachment:fixed}
+body.sport-page .guide-card,body.sport-page .sport-now{backdrop-filter:blur(5px)}
+@media(max-width:760px){body.sport-page{background-attachment:scroll;background-position:center top}}
