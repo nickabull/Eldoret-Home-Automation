@@ -830,3 +830,8 @@ button,a{-webkit-tap-highlight-color:transparent}
 .eldoret-confirm span{max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ffb3ae}
 .eldoret-confirm button{border:0;border-radius:10px;padding:11px 17px;background:#ff3b30;color:#fff;font:inherit;font-weight:900;letter-spacing:.04em;cursor:pointer}
 @media(max-width:700px){.eldoret-confirm{top:10px;right:10px;left:10px;justify-content:space-between}.eldoret-confirm span{max-width:55vw}}
+
+/* Streaming status: show the uploaded artwork behind the live dashboard text.
+   Crop to the logo carousel so the wording baked into the image is not duplicated. */
+.sport-now.has-app-banner{position:relative!important;overflow:hidden!important;background:linear-gradient(90deg,#0b1421 0%,rgba(11,20,33,.98) 35%,rgba(11,20,33,.68) 65%,rgba(11,20,33,.2) 100%),url("Apps%20Banner.png") right center/auto 220% no-repeat!important}
+.sport-now.has-app-banner>*{position:relative;z-index:1}
