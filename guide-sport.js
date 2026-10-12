@@ -52,7 +52,19 @@ async function tune(button){
     if(!r.ok)throw new Error(await r.text());
     document.querySelectorAll(".sport-channel").forEach(x=>x.classList.remove("selected"));
     button.classList.add("selected");
-    setTimeout(refreshNow,1800);
+    const panel=document.querySelector("#skyNowLive");
+    if(panel){
+      const title=panel.querySelector(".sky-programme"),meta=panel.querySelector(".sky-meta"),badge=panel.querySelector(".sky-state"),syn=panel.querySelector(".sky-synopsis");
+      const name=button.querySelector("strong")?.textContent||("Channel "+channel);
+      if(title)title.textContent="Changing to "+name+"…";
+      if(meta)meta.textContent="Channel "+channel+" · Waiting for Sky Q";
+      if(syn)syn.textContent="";
+      if(badge)badge.textContent="TUNING";
+      panel.classList.remove("has-now-artwork");panel.style.removeProperty("--now-artwork");
+    }
+    // Sky Q reports the old programme briefly after accepting a tune command.
+    // Refresh repeatedly, stopping once the requested channel is confirmed.
+    [1200,2500,4500,7000].forEach(delay=>setTimeout(refreshNow,delay));
   }catch(e){button.classList.add("failed");setTimeout(()=>button.classList.remove("failed"),1200);}
   finally{setTimeout(()=>button.classList.remove("sending"),180);}
 }
