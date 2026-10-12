@@ -1513,6 +1513,8 @@ class Handler(BaseHTTPRequestHandler):
             "/sky-search.js": ("sky-search.js", "application/javascript; charset=utf-8"),
             "/guide.js": ("guide.js", "application/javascript; charset=utf-8"),
             "/sky.js": ("sky.js", "application/javascript; charset=utf-8"),
+            "/sky-streaming-background.png": ("sky-streaming-background.png", "image/png"),
+            "/Apps Banner.png": ("Apps Banner.png", "image/png"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "application/javascript; charset=utf-8"),
         }
