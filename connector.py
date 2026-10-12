@@ -577,9 +577,7 @@ def sky_send_key(key):
     finally:
         client.close()
 
-for name, config in BRIDGES.items():
-    if not config["key"]:
-        raise SystemExit(f"{name} Hue key is not set")
+# Hue credentials are optional at startup; individual Hue requests validate their keys.
 
 def fetch_github(path):
     now = time.time()
