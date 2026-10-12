@@ -25,10 +25,11 @@ async function refreshNow(){
       if(d.uri==="" && /no current media URI/i.test(d.error||"")){
         if(kicker)kicker.textContent="SKY Q STATUS";
         title.textContent="App or Sky Q menu";meta.textContent="Sky Q is responding, but is not reporting live TV.";syn.textContent="You may be using Netflix or another app.";badge.textContent="APP / MENU";
-        p.classList.remove("has-now-artwork");p.style.removeProperty("--now-artwork");return;
+        p.classList.remove("has-now-artwork");p.style.removeProperty("--now-artwork");p.classList.add("has-app-banner");return;
       }
       throw new Error(d.error||"Unavailable");
     }
+    p.classList.remove("has-app-banner");
     if(d.live){
       const radio=!!d.is_radio || /^0\d{3}$/.test(String(d.channelno||""));
       if(kicker)kicker.textContent=radio?"NOW LISTENING":"NOW WATCHING";
@@ -41,7 +42,7 @@ async function refreshNow(){
         p.classList.add("has-now-artwork");
       }else{p.classList.remove("has-now-artwork");p.style.removeProperty("--now-artwork");}
     }else{title.textContent="Sky Q playback";meta.textContent="Non-live playback";syn.textContent="";badge.textContent="PLAYBACK";}
-  }catch(e){title.textContent="Sky Q unavailable";meta.textContent="Control may still work.";syn.textContent="";badge.textContent="UNKNOWN";}
+  }catch(e){p.classList.remove("has-app-banner");title.textContent="Sky Q unavailable";meta.textContent="Control may still work.";syn.textContent="";badge.textContent="UNKNOWN";}
 }
 async function tune(button){
   if(!isLive)return;
