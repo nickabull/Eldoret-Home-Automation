@@ -1454,6 +1454,122 @@ def start_remote_tunnel():
     _agent_write_json(REMOTE_TUNNEL_FILE,data)
     return {"online":True,"tunnel_url":tunnel_url,"reused":False}
 
+# Temporary, cart-only browser sessions. Audio never passes through this relay.
+PLAYOUT_ORIGIN = "https://nickabull.github.io"
+PLAYOUT_LOCK = threading.Lock()
+PLAYOUT_SESSIONS = {}
+
+def playout_http(handler):
+    origin = handler.headers.get("Origin", "")
+    def reply(code, data):
+        body = json.dumps(data).encode()
+        handler.send_response(code)
+        if origin == PLAYOUT_ORIGIN:
+            handler.send_header("Access-Control-Allow-Origin", PLAYOUT_ORIGIN)
+            handler.send_header("Vary", "Origin")
+            handler.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+            handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            handler.send_header("Access-Control-Allow-Private-Network", "true")
+        handler.send_header("Content-Type", "application/json")
+        handler.send_header("Cache-Control", "no-store")
+        handler.send_header("Content-Length", str(len(body)))
+        handler.end_headers()
+        handler.wfile.write(body)
+
+    if origin != PLAYOUT_ORIGIN:
+        reply(403, {"error": "Open the Eldoret playout website to pair"}); return
+    if handler.command == "OPTIONS":
+        reply(200, {"ok": True}); return
+    if handler.command not in ("GET", "POST"):
+        reply(405, {"error": "Unsupported method"}); return
+    try:
+        length = int(handler.headers.get("Content-Length", "0"))
+        if length < 0 or length > 16384:
+            reply(413, {"error": "Message too large"}); return
+        payload = json.loads(handler.rfile.read(length) or b"{}") if handler.command == "POST" else {}
+        if not isinstance(payload, dict):
+            raise ValueError("Expected an object")
+    except (ValueError, UnicodeError):
+        reply(400, {"error": "Invalid message"}); return
+    path = urllib.parse.urlparse(handler.path).path
+    now = time.monotonic()
+    with PLAYOUT_LOCK:
+        expired = [sid for sid, s in PLAYOUT_SESSIONS.items() if now-s["created"] > 43200 or now-s["heartbeat"] > 300]
+        for sid in expired:
+            del PLAYOUT_SESSIONS[sid]
+        if path == "/api/playout/session" and handler.command == "POST":
+            # Pairing can only be enabled through Donkey's loopback interface.
+            host = handler.headers.get("Host", "").split(":")[0]
+            if handler.client_address[0] not in ("127.0.0.1", "::1") or host not in ("localhost", "127.0.0.1") or any(handler.headers.get(h) for h in ("Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "CF-Connecting-IP")):
+                reply(403, {"error": "Enable hosting on Donkey using localhost"}); return
+            if len(PLAYOUT_SESSIONS) >= 8:
+                reply(409, {"error": "Too many sessions; wait five minutes and retry"}); return
+            sid = secrets.token_urlsafe(12)
+            host_key, control_key = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
+            PLAYOUT_SESSIONS[sid] = {"created": now, "heartbeat": now, "state": None,
+                "host_key": host_key, "control_key": control_key, "commands": [], "seen": set()}
+            reply(201, {"session": sid, "hostKey": host_key, "controlKey": control_key}); return
+        parts = path.strip("/").split("/")
+        if len(parts) != 4 or parts[:2] != ["api", "playout"]:
+            reply(404, {"error": "Unknown playout route"}); return
+        sid, action = parts[2:]
+        session = PLAYOUT_SESSIONS.get(sid)
+        token = handler.headers.get("Authorization", "")
+        token = token[7:] if token.startswith("Bearer ") else ""
+        if not session:
+            reply(404, {"error": "Pairing ended; create a new link on Donkey"}); return
+        host_auth = secrets.compare_digest(token, session["host_key"])
+        control_auth = secrets.compare_digest(token, session["control_key"])
+        if not host_auth and not control_auth:
+            reply(401, {"error": "Invalid pairing key"}); return
+        if action == "end" and handler.command == "POST" and host_auth:
+            del PLAYOUT_SESSIONS[sid]
+            reply(200, {"ok": True}); return
+        if action == "host" and handler.command == "POST" and host_auth:
+            raw_carts, bank = payload.get("carts"), payload.get("bank")
+            if type(bank) is not int or not 0 <= bank < 4 or not isinstance(raw_carts, list) or len(raw_carts) != 3:
+                reply(400, {"error": "Invalid host state"}); return
+            carts = []
+            for item in raw_carts:
+                if not isinstance(item, dict):
+                    reply(400, {"error": "Invalid cart state"}); return
+                try:
+                    duration, position = float(item.get("duration", 0)), float(item.get("position", 0))
+                    if not (0 <= duration <= 86400 and 0 <= position <= 86400):
+                        raise ValueError()
+                except (ValueError, TypeError, OverflowError):
+                    reply(400, {"error": "Invalid cart timing"}); return
+                carts.append({"title": str(item.get("title", ""))[:240], "artist": str(item.get("artist", ""))[:240],
+                    "loaded": item.get("loaded") is True, "playing": item.get("playing") is True,
+                    "duration": duration, "position": position})
+            session["heartbeat"] = now
+            session["state"] = {"bank": bank, "carts": carts}
+            commands = [c for c in session["commands"] if now-c["queued"] <= 2 and c["bank"] == bank]
+            session["commands"] = []
+            reply(200, {"commands": [{k:v for k,v in c.items() if k != "queued"} for c in commands]}); return
+        if action == "state" and handler.command == "GET" and control_auth:
+            age = now-session["heartbeat"]
+            reply(200, {"online": session["state"] is not None and age <= 3, "ageMs": round(age*1000),
+                "state": session["state"]}); return
+        if action == "command" and handler.command == "POST" and control_auth:
+            state = session["state"]
+            if not state or now-session["heartbeat"] > 3:
+                reply(409, {"error": "Donkey is offline; no command queued"}); return
+            slot, bank, name, command_id = payload.get("slot"), payload.get("bank"), payload.get("action"), payload.get("id")
+            if type(slot) is not int or not 0 <= slot < 3 or type(bank) is not int or bank != state["bank"] or name not in ("start", "stop") or not isinstance(command_id, str) or not 8 <= len(command_id) <= 80:
+                reply(400, {"error": "Invalid cart command or bank changed"}); return
+            if name == "start" and not state["carts"][slot]["loaded"]:
+                reply(409, {"error": "Load audio into this cart on Donkey first"}); return
+            if command_id in session["seen"]:
+                reply(200, {"ok": True, "duplicate": True}); return
+            if len(session["commands"]) >= 20 or len(session["seen"]) >= 10000:
+                reply(429, {"error": "Command limit reached; reconnect"}); return
+            session["seen"].add(command_id)
+            session["commands"].append({"id": command_id, "action": name, "slot": slot, "bank": bank, "queued": now})
+            reply(202, {"ok": True}); return
+        reply(403, {"error": "Not permitted for this pairing key"})
+
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -1463,7 +1579,14 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def do_OPTIONS(self):
+        if urllib.parse.urlparse(self.path).path.startswith('/api/playout/'):
+            playout_http(self); return
+        self.send_error(404)
+
     def do_GET(self):
+        if urllib.parse.urlparse(self.path).path.startswith('/api/playout/'):
+            playout_http(self); return
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
@@ -1686,6 +1809,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
 
     def do_POST(self):
+        if urllib.parse.urlparse(self.path).path.startswith('/api/playout/'):
+            playout_http(self); return
         length = int(self.headers.get("Content-Length", 0))
         raw_body = self.rfile.read(length)
         if self.path == "/login":
@@ -1781,3 +1906,4 @@ print("Live state + scenes: ready")
 print(f"Sky Q now-playing target: {sky_q_host()}:{SKY_Q_JSON_PORT}")
 print("Open http://localhost:8765 in Chrome")
 ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
+
