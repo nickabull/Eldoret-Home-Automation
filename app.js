@@ -1,3 +1,4 @@
+const ROOM_ART={"Living Room": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1000&q=82", "Kitchen": "https://images.unsplash.com/photo-1556912167-f556f1f39fdf?auto=format&fit=crop&w=1000&q=82", "Dining Room": "https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=1000&q=82", "Dining Filaments": "https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=1000&q=82", "Office Spots": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1000&q=82", "Office Rail": "https://images.unsplash.com/photo-1497215842964-222b430dc094?auto=format&fit=crop&w=1000&q=82", "Office Spots + Rail": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=82", "Kitchen + Dining": "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1000&q=82", "Kitchen Music Area": "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=1000&q=82", "Outside Lights": "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1000&q=82", "Outside Back Door": "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1000&q=82", "BBQ": "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1000&q=82", "Utility": "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=1000&q=82", "Shower": "https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=1000&q=82", "Hallway": "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1000&q=82", "Toilet": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=82"};
 const rooms=[
 {n:"Living Room",b:"house",g:"1",i:"🛋️",l:2,x:"Room",color:true,d:["2 colour bulbs","Living Room Hue dimmer · 79% battery"]},
 {n:"Kitchen",b:"house",g:"2",i:"🍳",l:16,x:"Room",color:true,d:["10 ceiling spots","Hue Lightstrip Plus","Table & corner lamps","2 filament bulbs","Hue Tap + dimmer switch","Smart plug · unreachable"]},
@@ -47,7 +48,8 @@ function render(filter="all"){
   rooms.filter(r=>filter==="all"||r.b===filter).forEach(r=>{
     const button=document.createElement("button");
     button.type="button";
-    button.className="card";
+    button.className="card hue-room-card";
+    if(ROOM_ART[r.n])button.style.setProperty("--room-image",'url("'+ROOM_ART[r.n]+'")');
     button.innerHTML='<div><span class="icon">'+r.i+'</span><h3>'+r.n+'</h3><p>'+(r.b==="house"?"House":"Utility")+' bridge</p></div><div class="meta"><span class="pill">'+r.x+'</span><span class="pill">'+r.l+' lights</span></div>';
     button.addEventListener("click",()=>openRoom(r));
     grid.appendChild(button);
@@ -236,3 +238,4 @@ async function refreshSkyNow(){
 
 refreshSkyNow();
 if(isLive)setInterval(refreshSkyNow,20000);
+
