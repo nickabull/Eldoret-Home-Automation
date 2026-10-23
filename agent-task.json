@@ -1,5 +1,5 @@
 {
-  "id": "2026-10-07T10:38:00Z-heartbeat-after-update",
-  "task": "discover_devices",
-  "note": "Confirm Donkey agent is still polling after remote-access update"
+  "id": "velux-readonly-1792796224835",
+  "task": "velux_discovery",
+  "note": "User requested a read-only VELUX hub probe for the upstairs/downstairs Eldoret dashboards; no pairing or device movement."
 }
