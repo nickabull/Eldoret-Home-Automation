@@ -344,6 +344,73 @@ def _ipp_ink(attributes):
     return [{"colour":label, "percent":found[label]} for label in ("Black", "Cyan", "Magenta", "Yellow") if label in found]
 
 
+def _epson_web_status(markup):
+    """Read explicit percentage bars and status text from Epson WebConfig."""
+    from html.parser import HTMLParser
+    import re
+
+    class Page(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.root = {"tag":"", "attrs":{}, "children":[], "text":[]}
+            self.stack = [self.root]
+
+        def handle_starttag(self, tag, attrs):
+            node = {"tag":tag, "attrs":dict(attrs), "children":[], "text":[]}
+            self.stack[-1]["children"].append(node)
+            if tag not in ("area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"):
+                self.stack.append(node)
+
+        def handle_startendtag(self, tag, attrs):
+            self.handle_starttag(tag, attrs)
+            self.handle_endtag(tag)
+
+        def handle_endtag(self, tag):
+            for i in range(len(self.stack)-1, 0, -1):
+                if self.stack[i]["tag"] == tag:
+                    del self.stack[i:]
+                    break
+
+        def handle_data(self, data):
+            for node in self.stack:
+                node["text"].append(data)
+
+    page = Page(); page.feed(markup)
+    def walk(node):
+        yield node
+        for child in node["children"]:
+            yield from walk(child)
+    def classes(node):
+        return (node["attrs"].get("class") or "").lower().split()
+    def text_of(node):
+        return " ".join(" ".join(node["text"]).split())
+    colours = {"BK":"Black", "BLACK":"Black", "C":"Cyan", "CYAN":"Cyan",
+               "M":"Magenta", "MAGENTA":"Magenta", "Y":"Yellow", "YELLOW":"Yellow"}
+    ink, state = {}, None
+    for node in walk(page.root):
+        if node["attrs"].get("id", "").upper() == "PRT_STATUS":
+            state = re.sub(r"^printer\s+status\s*[:\-]?\s*", "", text_of(node), flags=re.I).strip()[:200] or None
+        if node["tag"] != "li" or "tank" not in classes(node):
+            continue
+        descendants = list(walk(node))
+        if any("mbicn" in classes(n) for n in descendants):
+            continue
+        label = next((colours.get(text_of(n).upper()) for n in descendants if "clrname" in classes(n)), None)
+        if not label: continue
+        for bar in descendants:
+            if bar["tag"] != "div" or "tank" not in classes(bar): continue
+            style = bar["attrs"].get("style") or ""
+            gradient = re.search(r"linear-gradient\((.*)\)", style, re.I|re.S)
+            values = re.findall(r"(?<![\d.\-])(\d+(?:\.\d+)?)\s*%", gradient.group(1)) if gradient else []
+            # Only trust an explicit shared boundary between the filled and empty stops.
+            stops = [float(x) for x in values]
+            boundary = stops if len(stops) == 2 else stops[1:3] if len(stops) == 4 and stops[0] == 0 and stops[3] == 100 else []
+            if len(boundary) == 2 and boundary[0] == boundary[1]:
+                value = boundary[0]
+                if 0 <= value <= 100: ink[label] = round(value)
+    return {"ink":[{"colour":c, "percent":ink[c]} for c in ("Black", "Cyan", "Magenta", "Yellow") if c in ink], "state":state}
+
+
 PRINTER_CACHE = {}
 PRINTER_LOCK = threading.Lock()
 
@@ -406,7 +473,7 @@ def _read_printer_status():
 
     # Epson WebConfig. Fetch both HTTP and HTTPS because firmware differs by model/version.
     import re
-    pages=["/","/PRESENTATION/HTML/TOP/PRTINFO.HTML","/PRESENTATION/HTML/TOP/STATUS.HTML",
+    pages=["/PRESENTATION/HTML/TOP/PRTINFO.HTML","/PRESENTATION/HTML/TOP/INDEX.HTML","/","/PRESENTATION/HTML/TOP/STATUS.HTML",
            "/PRESENTATION/HTML/TOP/INK.HTML","/PRESENTATION/HTML/TOP/PRTINFO.JS",
            "/cgi-bin/PrinterStatus.cgi","/cgi-bin/Status.cgi","/cgi-bin/InkLevel.cgi"]
     blobs=[]
@@ -427,6 +494,13 @@ def _read_printer_status():
     found={}
     for path,body in blobs:
         low=body.lower()
+        web_status = _epson_web_status(body)
+        if web_status["state"] and not result["state"]:
+            result["state"] = web_status["state"]
+        for item in web_status["ink"]:
+            found[item["colour"]] = item["percent"]
+        if web_status["ink"]:
+            result["sources"].append("Epson WebConfig percentage bars")
         if "epson" in low: result["sources"].append("Epson WebConfig")
         title=re.search(r"<title[^>]*>(.*?)</title>",body,re.I|re.S)
         if title:
@@ -449,7 +523,7 @@ def _read_printer_status():
     if result["ink"]:
         result["detail"]="Live Epson ink levels read successfully."
     elif result["online"]:
-        result["detail"]="Epson is online; live state read, but this firmware did not expose numeric ink percentages on the tested read-only interfaces."
+        result["detail"]="Epson is reachable, but the current reader has not decoded ink percentages from its status feeds."
     else:
         result["detail"]="Epson did not answer."
     return result
