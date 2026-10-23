@@ -1032,3 +1032,14 @@ body.eldoret-dashboard.lights-page{background-image:linear-gradient(90deg,rgba(6
  body.sport-page .sport-now-controls [data-sky-key="select"]{grid-area:select}
  body.sport-page .sport-now-controls [data-sky-key="red"]{grid-area:red}
 }
+
+
+/* Full-width power strip above the existing Sky remote keys. */
+body.sport-page .sport-now-controls .sky-power-switch{grid-column:1/-1;grid-row:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;min-height:44px!important;height:44px;padding:8px 16px!important;border-radius:14px!important;background:linear-gradient(135deg,#1d403e,#172b32)!important;border:1px solid #73d5b145!important;color:#d6f9ed!important}
+body.sport-page .sport-now-controls .sky-power-switch svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;flex:0 0 auto}
+body.sport-page .sport-now-controls .sky-power-switch>span:last-child{font-size:12px!important;font-weight:750;color:#d6f9ed!important;letter-spacing:.04em}
+body.sport-page .sport-now-controls .sky-power-switch:disabled{cursor:default;opacity:.6}
+@media(max-width:760px){
+ body.sport-page .sport-now-controls{grid-template-areas:"power power power power" "channel channelup pause play" "record channeldown rewind forward" "home backup select red";grid-template-rows:44px repeat(3,auto)!important}
+ body.sport-page .sport-now-controls .sky-power-switch{grid-area:power}
+}
