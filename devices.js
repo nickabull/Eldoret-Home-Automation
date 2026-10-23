@@ -36,23 +36,59 @@ async function refreshDeviceStatus(){
  }catch(e){document.querySelectorAll(".device-state").forEach(function(x){x.textContent="Local only";});}
 }
 if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshDeviceStatus,30000);
-async function refreshPrinterStatus(){
- const panel=document.querySelector("#printerPanel"); if(!panel)return;
- const badge=document.querySelector("#printerBadge"),name=document.querySelector("#printerName"),detail=document.querySelector("#printerDetail");
- const live=document.querySelector("#printerLive"),protocols=document.querySelector("#printerProtocols"),identity=document.querySelector("#printerIdentity");
- try{
-  const r=await fetch("/api/printer/status",{cache:"no-store"}),p=await r.json();
-  badge.textContent=p.online?"ONLINE":"NO RESPONSE"; badge.classList.toggle("online",!!p.online);
-  name.textContent=p.model||p.title||"Epson printer";
-  identity.textContent=(p.model||p.title||"Epson network printer")+" · "+(p.ip||"10.0.0.3");
-  live.textContent=p.online?"Printer is reachable from Eldoret.":"Printer did not answer the current probes.";
-  const bits=[]; if(p.http)bits.push("Web"); if(p.https)bits.push("HTTPS"); if(p.ipp)bits.push("IPP"); if(p.raw_print)bits.push("Raw print");
-  protocols.textContent=bits.length?bits.join(" · "):"No known printer services detected.";
-  detail.textContent=p.detail||"Read-only probe complete.";
- }catch(e){
-  badge.textContent="UNAVAILABLE"; detail.textContent="Printer status probe unavailable.";
- }
+let printerBusy=false;
+function renderInkLevels(ink){
+ const grid=document.querySelector('#printerInkGrid');if(!grid)return;
+ const colours=[['Black','#8091a4'],['Cyan','#14c6ee'],['Magenta','#f63c9b'],['Yellow','#f3cf36']];
+ grid.replaceChildren(...colours.map(([name,colour])=>{
+  const value=(ink||[]).find(x=>String(x.colour).toLowerCase()===name.toLowerCase())?.percent;
+  const known=typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100;
+  const card=document.createElement('article');card.className='ink-card'+(known&&value<=15?' low':'')+(known?'':' unknown');card.style.setProperty('--ink-colour',colour);
+  card.innerHTML='<div class="ink-card-head"><span class="ink-dot"></span><h3>'+name+'</h3><span class="ink-level-label"></span></div><div class="ink-tank" role="img"><div class="ink-fill"></div><div class="ink-tank-shine"></div></div><strong class="ink-percent"></strong><p></p>';
+  card.querySelector('.ink-fill').style.height=known?value+'%':'0%';
+  card.querySelector('.ink-percent').textContent=known?Math.round(value)+'%':'—';
+  card.querySelector('.ink-level-label').textContent=known?(value<=15?'LOW':'REPORTED'):'UNKNOWN';
+  card.querySelector('p').textContent=known?'Reported by printer':'Not reported';
+  card.querySelector('.ink-tank').setAttribute('aria-label',name+' ink: '+(known?value+' percent':'not reported'));
+  return card;
+ }));
 }
+async function refreshPrinterStatus(){
+ const panel=document.querySelector('#printerPanel');if(!panel||printerBusy)return;
+ printerBusy=true;
+ const badge=document.querySelector('#printerBadge'),name=document.querySelector('#printerName'),detail=document.querySelector('#printerDetail');
+ const live=document.querySelector('#printerLive'),protocols=document.querySelector('#printerProtocols'),identity=document.querySelector('#printerIdentity');
+ const checked=document.querySelector('#printerChecked'),note=document.querySelector('#printerInkNote'),refresh=document.querySelector('#printerRefresh');
+ if(refresh)refresh.disabled=true;
+ const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),25000);
+ try{
+  const r=await fetch('/api/printer/status',{cache:'no-store',signal:abort.signal});if(!r.ok)throw new Error('Status unavailable');const p=await r.json();
+  if(typeof p.online!=='boolean')throw new Error('Status unavailable');
+  badge.textContent=p.online?'ONLINE':'NO RESPONSE';badge.classList.toggle('online',p.online);
+  name.textContent=p.model||'Epson ET-3850';
+  identity.textContent=(p.model||'Epson ET-3850')+' · '+(p.ip||'10.0.0.3');
+  live.textContent=p.online?(p.state||'Connected'):'No response';
+  const ports=p.ports||[],bits=[];if(p.http||ports.includes(80))bits.push('Web');if(p.https||ports.includes(443))bits.push('HTTPS');if(p.ipp||ports.includes(631))bits.push('IPP');if(p.raw_print||ports.includes(9100))bits.push('Print service');
+  protocols.textContent=bits.join(' · ')||'No printer services detected';
+  const ink=p.online?(p.ink||[]):[];renderInkLevels(ink);
+  const available=ink.filter(x=>typeof x.percent==='number'&&x.percent>=0&&x.percent<=100).length;
+  if(note)note.textContent=available?available+' colour'+(available===1?'':'s')+' reported':p.online?'Levels not supplied':'Printer unavailable';
+  detail.textContent=p.online?(available?'Your printer, status and ink in one place.':'Printer connected. Numeric ink levels are not currently being reported.'):'The printer did not answer. Check that it is switched on and connected.';
+  const stamp=p.checked_at?new Date(p.checked_at):new Date();
+  if(checked)checked.textContent=Number.isNaN(stamp.getTime())?'—':stamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+ }catch(e){
+  badge.textContent='UNAVAILABLE';badge.classList.remove('online');detail.textContent='Printer status could not be read. Try refreshing when Donkey is connected.';live.textContent='Status unavailable';renderInkLevels([]);if(note)note.textContent='No live reading';if(checked)checked.textContent='—';
+ }finally{clearTimeout(timeout);printerBusy=false;if(refresh)refresh.disabled=false;}
+}
+renderInkLevels([]);
+const printerRefresh=document.querySelector('#printerRefresh');if(printerRefresh)printerRefresh.addEventListener('click',refreshPrinterStatus);
+function officeView(){
+ const epson=document.querySelector('#epsonView'),devices=document.querySelector('#officeDevicesView');if(!epson||!devices)return;
+ const office=location.hash==='#devices';epson.hidden=office;devices.hidden=!office;
+ document.querySelectorAll('.device-view-tabs a').forEach(a=>{const active=a.hash===(office?'#devices':'#epson');a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+}
+officeView();window.addEventListener('hashchange',officeView);
+
 refreshPrinterStatus();
 if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshPrinterStatus,30000);
 
@@ -82,4 +118,5 @@ async function refreshPlaystationStatus(){
 }
 refreshPlaystationStatus();
 if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshPlaystationStatus,15000);
+
 

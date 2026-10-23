@@ -164,3 +164,40 @@ document.querySelector("#sceneNext").onclick=()=>{const list=LIGHT_SCENES[roomKe
 
 document.querySelector("#sceneRoomTitle").textContent=selected.n;renderRooms();renderQuickControl();renderScenes();
 if(isLive)setInterval(()=>LIGHT_ROOMS.slice(roomPage*roomsPerPage,(roomPage+1)*roomsPerPage).forEach(refreshRoomState),15000);
+
+
+// Read-only Hue sensor view, sharing the existing bridge connection.
+(()=>{
+ const host=document.querySelector('#hueSensorsView'),grid=document.querySelector('#hueSensorGrid');if(!host||!grid)return;
+ let sensors=[],page=0,busy=false;
+ const valid=v=>typeof v==='number'&&Number.isFinite(v);
+ function render(){
+  const pages=Math.max(1,Math.ceil(sensors.length/6));page=Math.min(page,pages-1);grid.replaceChildren();
+  for(const sensor of sensors.slice(page*6,page*6+6)){
+   const card=document.createElement('article');card.className='sensor-card';
+   const offline=sensor.reachable===false;
+   card.innerHTML='<div class="sensor-card-top"><p class="eyebrow"></p><span class="sensor-badge"></span></div><h3></h3><div class="sensor-values"></div><p class="sensor-age"></p>';
+   card.querySelector('.eyebrow').textContent=sensor.bridge==='house'?'HOUSE':'UTILITY';card.querySelector('h3').textContent=sensor.name||'Hue sensor';
+   const badge=card.querySelector('.sensor-badge');badge.textContent=offline?'NO RESPONSE':valid(sensor.battery)&&sensor.battery<=15?'LOW BATTERY':sensor.reachable===true?'CONNECTED':'UNKNOWN';badge.classList.toggle('warn',offline||valid(sensor.battery)&&sensor.battery<=15);
+   const values=[['Temperature',!offline&&valid(sensor.temperature)?sensor.temperature.toFixed(1)+'°C':'—'],['Light level',!offline&&valid(sensor.lux)?Math.round(sensor.lux).toLocaleString()+' lux':'—'],['Motion',offline?'—':sensor.motion===true?'Detected':sensor.motion===false?'Clear':'—'],['Battery',valid(sensor.battery)?sensor.battery+'%':'—']];
+   const list=card.querySelector('.sensor-values');for(const [label,value] of values){const item=document.createElement('div'),l=document.createElement('span'),v=document.createElement('strong');l.textContent=label;v.textContent=value;item.append(l,v);list.appendChild(item);}
+   const stamp=new Date(sensor.updated_at);card.querySelector('.sensor-age').textContent=sensor.updated_at&&!Number.isNaN(stamp.getTime())?'Last reported '+stamp.toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'No report time supplied';grid.appendChild(card);
+  }
+  document.querySelector('#sensorPageLabel').textContent=(page+1)+' / '+pages;document.querySelector('#sensorPrev').disabled=page<=0;document.querySelector('#sensorNext').disabled=page>=pages-1;
+ }
+ async function load(){
+  if(busy||host.hidden)return;busy=true;
+  const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),15000);
+  try{
+   const r=await fetch('/api/hue/sensors',{cache:'no-store',signal:abort.signal});if(!r.ok)throw new Error('Sensor feed unavailable');const data=await r.json();if(!Array.isArray(data.devices))throw new Error('Invalid sensor feed');sensors=data.devices;render();
+   const low=sensors.filter(x=>valid(x.battery)&&x.battery<=15).length;
+   document.querySelector('#sensorSummary').textContent=sensors.length+' devices'+(low?' · '+low+' low batter'+(low===1?'y':'ies'):'')+(data.errors?.length?' · One or more bridges unavailable':'');
+   if(!sensors.length)grid.innerHTML='<div class="lights-empty">'+(data.errors?.length?'The Hue bridges could not be read.':'No supported sensors were reported by the bridges.')+'</div>';
+   const time=new Date(data.checked_at);document.querySelector('#sensorChecked').textContent='Read-only sensor readings'+(!Number.isNaN(time.getTime())?' · Checked '+time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+'. Motion reports are not a guarantee that a room is occupied.';
+  }catch(e){sensors=[];render();document.querySelector('#sensorSummary').textContent='Live readings unavailable';grid.innerHTML='<div class="lights-empty">The Hue sensor feed is not available yet. Donkey may need to load the updated connector.</div>';document.querySelector('#sensorChecked').textContent='No live readings available.';}
+  finally{clearTimeout(timeout);busy=false;}
+ }
+ function view(){const active=location.hash==='#sensors';document.body.classList.toggle('hue-sensors-active',active);const title=document.querySelector('.lights-hero h2'),copy=document.querySelector('.lights-hero>div:last-child>p:last-child');if(title)title.textContent=active?'Sensors & batteries':'Lights';if(copy)copy.textContent=active?'Motion, room conditions and battery health from your Hue bridges.':'Set the mood. Choose a room, adjust the lights or select a scene.';host.hidden=!active;document.querySelectorAll('.lights-control-view').forEach(x=>x.hidden=active);document.querySelectorAll('.device-view-tabs a').forEach(a=>{const selected=a.hash===(active?'#sensors':'#lights');a.classList.toggle('active',selected);if(selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});if(active)load();}
+ document.querySelector('#sensorPrev').onclick=()=>{if(page>0){page--;render();}};document.querySelector('#sensorNext').onclick=()=>{if(page<Math.ceil(sensors.length/6)-1){page++;render();}};
+ window.addEventListener('hashchange',view);view();setInterval(load,30000);
+})();

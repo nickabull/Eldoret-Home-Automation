@@ -59,3 +59,11 @@
   document.body.appendChild(box);
  });
 })();
+
+
+(()=>{
+ const tabs=document.querySelector('.tabs');if(!tabs)return;
+ const existing=[...tabs.querySelectorAll('a')].find(a=>a.getAttribute('href')==='office.html');
+ if(existing){existing.textContent='Epson';existing.href='office.html#epson';}
+ else{const link=document.createElement('a');link.href='office.html#epson';link.textContent='Epson';tabs.appendChild(link);}
+})();

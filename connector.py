@@ -287,7 +287,78 @@ def playstation_status(ip=None):
             sock.close()
     return result
 
+def _ipp_attributes(raw):
+    """Decode IPP scalar attributes, including repeated values (RFC 8010)."""
+    import struct
+    if len(raw) < 8 or int.from_bytes(raw[2:4], "big") > 0x00ff:
+        raise ValueError("Printer returned an invalid or unsuccessful IPP response")
+    attrs, pos, name = {}, 8, None
+    while pos < len(raw):
+        tag = raw[pos]; pos += 1
+        if tag == 3:
+            break
+        if tag < 0x10:
+            name = None
+            continue
+        if pos + 2 > len(raw): raise ValueError("Truncated IPP attribute")
+        size = int.from_bytes(raw[pos:pos+2], "big"); pos += 2
+        if pos + size + 2 > len(raw): raise ValueError("Truncated IPP attribute name")
+        if size: name = raw[pos:pos+size].decode("utf-8", "replace")
+        pos += size
+        length = int.from_bytes(raw[pos:pos+2], "big"); pos += 2
+        if pos + length > len(raw): raise ValueError("Truncated IPP value")
+        value = raw[pos:pos+length]; pos += length
+        if not name: continue
+        if tag in (0x21, 0x23) and length == 4:
+            value = struct.unpack(">i", value)[0]
+        elif tag == 0x22 and length == 1:
+            value = bool(value[0])
+        elif tag in (0x41, 0x42, 0x44, 0x45, 0x47, 0x48, 0x49):
+            value = value.decode("utf-8", "replace")
+        else:
+            value = None
+        attrs.setdefault(name, []).append(value)
+    return attrs
+
+
+def _ipp_ink(attributes):
+    """Keep only explicitly reported CMYK ink percentages; negative values mean unknown."""
+    import re
+    names = attributes.get("marker-names", [])
+    colours = attributes.get("marker-colors", [])
+    levels = attributes.get("marker-levels", [])
+    types = attributes.get("marker-types", [])
+    hex_names = {"#000000":"Black", "#00ffff":"Cyan", "#ff00ff":"Magenta", "#ffff00":"Yellow"}
+    found = {}
+    for i, level in enumerate(levels):
+        if type(level) is not int or not 0 <= level <= 100: continue
+        kind = str(types[i] if i < len(types) else "").lower()
+        name = str(names[i] if i < len(names) else "").lower()
+        if kind and kind not in ("ink", "ink-cartridge", "ink-ribbon"): continue
+        if any(word in name for word in ("waste", "maintenance")): continue
+        colour = str(colours[i] if i < len(colours) else "").lower()
+        label = hex_names.get(colour)
+        if not label:
+            label = next((word.title() for word in ("black", "cyan", "magenta", "yellow") if re.search(r"\b"+word+r"\b", name)), None)
+        if label: found[label] = level
+    return [{"colour":label, "percent":found[label]} for label in ("Black", "Cyan", "Magenta", "Yellow") if label in found]
+
+
+PRINTER_CACHE = {}
+PRINTER_LOCK = threading.Lock()
+
 def printer_status():
+    with PRINTER_LOCK:
+        now = time.monotonic()
+        if PRINTER_CACHE and now - PRINTER_CACHE["time"] < 30:
+            return PRINTER_CACHE["value"]
+        result = _read_printer_status()
+        result["checked_at"] = datetime.now(timezone.utc).isoformat()
+        PRINTER_CACHE.update(time=time.monotonic(), value=result)
+        return result
+
+
+def _read_printer_status():
     host=_registry_ip("epson_et3850","10.0.0.3")
     result={"ip":host,"online":False,"model":"Epson ET-3850","state":None,
             "ink":[],"alerts":[],"ports":[],"sources":[],"detail":None}
@@ -312,23 +383,23 @@ def printer_status():
               (0x44,"requested-attributes","marker-types"),
             ]
             body=bytearray(b"\x02\x00\x00\x0b\x00\x00\x00\x01\x01")
+            previous_name = None
             for tag,name,val in attrs:
-                nb=name.encode(); vb=val.encode()
+                nb=("" if name == previous_name else name).encode(); vb=val.encode()
+                previous_name = name
                 body += bytes([tag])+struct.pack(">H",len(nb))+nb+struct.pack(">H",len(vb))+vb
             body += b"\x03"
             conn=http.client.HTTPConnection(host,631,timeout=2)
             conn.request("POST","/ipp/print",bytes(body),{"Content-Type":"application/ipp"})
             r=conn.getresponse(); raw=r.read(200000)
             result["sources"].append("IPP")
-            # Extract printable strings and percentages conservatively.
-            txt=raw.decode("latin1",errors="ignore")
-            import re
-            for key in ("printer-state-reasons","marker-names","marker-levels","marker-colors","marker-types"):
-                if key in txt:
-                    result["sources"].append(key)
-            # IPP integer values are binary; keep raw discovery useful while WebConfig below parses levels.
-            if "none" in txt and "printer-state-reasons" in txt:
-                result["state"]="Ready"
+            parsed = _ipp_attributes(raw)
+            result["ink"] = _ipp_ink(parsed)
+            state = (parsed.get("printer-state") or [None])[0]
+            result["state"] = {3:"Ready", 4:"Printing", 5:"Stopped"}.get(state)
+            reasons = [x for x in parsed.get("printer-state-reasons", []) if isinstance(x, str) and x != "none"]
+            result["alerts"].extend(reasons)
+            result["sources"].extend(k for k in ("marker-names", "marker-levels", "marker-colors") if k in parsed)
             conn.close()
         except Exception as exc:
             result["alerts"].append("IPP: "+str(exc)[:100])
@@ -340,7 +411,7 @@ def printer_status():
            "/cgi-bin/PrinterStatus.cgi","/cgi-bin/Status.cgi","/cgi-bin/InkLevel.cgi"]
     blobs=[]
     ctx=ssl._create_unverified_context()
-    for scheme in ("http","https"):
+    for scheme in (() if result["ink"] else ("http","https")):
         if (scheme=="http" and 80 not in ports) or (scheme=="https" and 443 not in ports):
             continue
         for path in pages:
@@ -365,16 +436,15 @@ def printer_status():
         for k,label in colours.items():
             # Epson pages vary: colour followed by a numeric percentage/value nearby.
             for pat in [
-                r"(?i)"+k+r"[^0-9]{0,100}(100|[0-9]{1,2})\s*%",
-                r"(?i)"+k+r"[^0-9]{0,80}(100|[0-9]{1,2})(?:\s|[;,'\"])",
-                r"(?i)(?:ink|level)[^\n]{0,100}"+k+r"[^0-9]{0,80}(100|[0-9]{1,2})"
+                r"(?i)\b"+k+r"\b[^0-9]{0,60}(100|[0-9]{1,2})\s*%"
             ]:
                 m=re.search(pat,plain)
                 if m:
                     v=int(m.group(1))
                     if 0 <= v <= 100:
                         found[label]=v; break
-    result["ink"]=[{"colour":x,"percent":found[x]} for x in ("Black","Cyan","Magenta","Yellow") if x in found]
+    if not result["ink"]:
+        result["ink"]=[{"colour":x,"percent":found[x]} for x in ("Black","Cyan","Magenta","Yellow") if x in found]
     result["sources"]=list(dict.fromkeys(result["sources"]))
     if result["ink"]:
         result["detail"]="Live Epson ink levels read successfully."
@@ -603,6 +673,56 @@ def hue_get(bridge_name, path):
     url = f"http://{bridge['ip']}/api/{bridge['key']}/{path}"
     with urllib.request.urlopen(url, timeout=5) as response:
         return response.read()
+
+HUE_SENSOR_CACHE = {}
+HUE_SENSOR_LOCK = threading.Lock()
+
+def _normalise_hue_sensors(bridge_name, resources):
+    if not isinstance(resources, dict): raise ValueError("Hue sensor response unavailable")
+    devices = {}
+    for sensor_id, sensor in resources.items():
+        if not isinstance(sensor, dict) or "error" in sensor: continue
+        state, config = sensor.get("state") or {}, sensor.get("config") or {}
+        if not any(k in state for k in ("presence", "temperature", "lightlevel", "buttonevent")) and "battery" not in config: continue
+        unique = str(sensor.get("uniqueid") or sensor_id).split("-")[0]
+        key = bridge_name+":"+unique
+        item = devices.setdefault(key, {"id":key, "bridge":bridge_name, "name":sensor.get("name") or "Hue sensor", "model":sensor.get("modelid"), "motion":None, "temperature":None, "lux":None, "battery":None, "reachable":None, "updated_at":None})
+        if "presence" in state: item["name"] = sensor.get("name") or item["name"]
+        if isinstance(config.get("reachable"), bool):
+            item["reachable"] = config["reachable"] if item["reachable"] is None else item["reachable"] and config["reachable"]
+        battery = config.get("battery")
+        if type(battery) in (int, float) and 0 <= battery <= 100: item["battery"] = battery
+        valid = state.get("status") not in ("notavailable", "unknown")
+        if valid and isinstance(state.get("presence"), bool): item["motion"] = state["presence"]
+        temperature = state.get("temperature")
+        if valid and state.get("temperaturevalid", True) and type(temperature) in (int, float) and -5000 <= temperature <= 10000: item["temperature"] = round(temperature/100, 1)
+        light = state.get("lightlevel")
+        if valid and state.get("lightlevelvalid", True) and type(light) in (int, float) and 0 <= light <= 65534:
+            item["lux"] = round(10 ** ((light-1)/10000), 1)
+        updated = state.get("lastupdated")
+        if isinstance(updated, str) and updated != "none":
+            stamp = updated if updated.endswith("Z") else updated+"Z"
+            if not item["updated_at"] or stamp > item["updated_at"]: item["updated_at"] = stamp
+    return list(devices.values())
+
+
+def hue_sensors():
+    with HUE_SENSOR_LOCK:
+        if HUE_SENSOR_CACHE and time.monotonic()-HUE_SENSOR_CACHE["time"] < 10: return HUE_SENSOR_CACHE["value"]
+        devices, errors = [], []
+        def read(bridge):
+            if not BRIDGES[bridge].get("key"): raise ValueError("Bridge not configured")
+            return _normalise_hue_sensors(bridge, json.loads(hue_get(bridge, "sensors").decode("utf-8")))
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            jobs = {pool.submit(read, bridge):bridge for bridge in BRIDGES}
+            for job in as_completed(jobs):
+                try: devices.extend(job.result())
+                except Exception: errors.append(jobs[job].title()+" bridge unavailable")
+        devices.sort(key=lambda d:(d["bridge"], d["name"].lower()))
+        result = {"devices":devices, "errors":errors, "checked_at":datetime.now(timezone.utc).isoformat()}
+        HUE_SENSOR_CACHE.update(time=time.monotonic(), value=result)
+        return result
+
 
 def hue_put(bridge_name, path, payload):
     bridge = BRIDGES[bridge_name]
@@ -1638,6 +1758,7 @@ class Handler(BaseHTTPRequestHandler):
             "/sky.js": ("sky.js", "application/javascript; charset=utf-8"),
             "/sky-streaming-background.png": ("sky-streaming-background.png", "image/png"),
             "/Apps Banner.png": ("Apps Banner.png", "image/png"),
+            "/epson-et3850-background.webp": ("epson-et3850-background.webp", "image/webp"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "application/javascript; charset=utf-8"),
         }
@@ -1796,6 +1917,10 @@ class Handler(BaseHTTPRequestHandler):
                 payload = json.dumps({"available": False, "error": str(e)}).encode()
                 self.send_bytes(payload)
             return
+        if path == "/api/hue/sensors":
+            try: self.send_bytes(json.dumps(hue_sensors()).encode())
+            except Exception: self.send_bytes(json.dumps({"devices":[], "errors":["Hue sensors unavailable"]}).encode())
+            return
         if path == "/api/hue/group":
             bridge_name = query.get("bridge", [None])[0]
             group = query.get("group", [None])[0]
@@ -1906,4 +2031,5 @@ print("Live state + scenes: ready")
 print(f"Sky Q now-playing target: {sky_q_host()}:{SKY_Q_JSON_PORT}")
 print("Open http://localhost:8765 in Chrome")
 ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
+
 

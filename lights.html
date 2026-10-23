@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Lights · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=52"><meta name="theme-color" content="#0b1018"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="manifest.webmanifest"><style>
+<title>Lights · Eldoret Home Automation</title><link rel="stylesheet" href="styles.css?v=54"><meta name="theme-color" content="#0b1018"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="manifest.webmanifest"><style>
 .lights-quick-control{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:center;margin-top:16px}
 .lights-quick-control button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#eef4ff;border-radius:12px;padding:11px 16px;font:inherit;font-weight:800;cursor:pointer}
 .lights-quick-control button.active{background:rgba(76,155,255,.22);border-color:rgba(76,155,255,.48)}
@@ -17,14 +17,16 @@
   <div><p class="eyebrow">PHILIPS HUE</p><h2>Lights</h2><p>Set the mood. Choose a room, adjust the lights or select a scene.</p></div>
 </section>
 
-<section class="sport-section lights-section">
+<nav class="device-view-tabs" aria-label="Hue views"><a href="#lights" class="active">Lights & scenes</a><a href="#sensors">Sensors & batteries</a></nav>
+<section class="sport-section lights-section lights-control-view">
   <div class="sport-section-head"><div><p class="eyebrow">ROOMS & ZONES</p><h2>Choose a room</h2></div><div class="radio-page-controls"><button id="roomPrev" aria-label="Previous rooms">‹</button><span id="roomPageLabel">1 / 1</span><button id="roomNext" aria-label="More rooms">›</button></div></div>
   <div id="lightRoomGrid" class="lights-room-grid"></div><div id="lightQuickControl" class="lights-quick-control" aria-live="polite"></div>
 </section>
 
-<section class="sport-section lights-section lights-scenes-section">
+<section class="sport-section lights-section lights-scenes-section lights-control-view">
   <div class="sport-section-head"><div><p class="eyebrow">SCENES</p><h2 id="sceneRoomTitle">Select a room</h2></div><div class="radio-page-controls"><button id="scenePrev" aria-label="Previous scenes">‹</button><span id="scenePageLabel">—</span><button id="sceneNext" aria-label="More scenes">›</button></div></div>
   <div id="lightSceneGrid" class="lights-scene-grid"></div>
 </section>
-</main>
-<script src="remote.js?v=1"></script><script src="lights.js?v=1"></script><script src="kiosk.js?v=1"></script><script src="mobile.js?v=1"></script></body></html>
+<section id="hueSensorsView" class="panel-view" hidden><div class="sport-section-head"><div><p class="eyebrow">PHILIPS HUE</p><h2>Sensors & batteries</h2><p class="sensor-summary" id="sensorSummary">Checking both bridges…</p></div><div class="radio-page-controls"><button id="sensorPrev" aria-label="Previous sensors">‹</button><span id="sensorPageLabel">—</span><button id="sensorNext" aria-label="More sensors">›</button></div></div><div class="sensor-grid" id="hueSensorGrid" aria-live="polite"></div><p class="sensor-footnote" id="sensorChecked">Sensor readings come from your Hue bridges.</p></section></main>
+<script src="remote.js?v=1"></script><script src="lights.js?v=2"></script><script src="kiosk.js?v=1"></script><script src="mobile.js?v=2"></script></body></html>
+
