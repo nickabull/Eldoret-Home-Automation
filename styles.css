@@ -868,3 +868,73 @@ body.sport-page .guide-card,body.sport-page .sport-now{backdrop-filter:blur(5px)
 }
 
 .recordings-hint{color:var(--muted);font-size:12px;margin:0 0 14px}.recordings-hint{display:none}@media(max-width:999px){.recordings-hint{display:block}}
+
+
+/* Eldoret: the Sky Q visual system across rooms and devices. */
+body.eldoret-dashboard{background:linear-gradient(90deg,#060a13f0,#060a13c2),linear-gradient(180deg,#060a1340,#060a13eb),url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1600&q=82') center/cover fixed;color:var(--text)}
+.eldoret-dashboard main{max-width:1600px;margin:auto}
+.eldoret-dashboard header{max-width:1600px;margin:auto}
+.eldoret-dashboard .hero,.eldoret-dashboard .lights-hero{width:100%!important;max-width:none;margin:18px 0 24px!important;padding:26px;border:1px solid #ffffff20;border-radius:22px;background:linear-gradient(110deg,#152337ed,#172436a6);box-shadow:0 12px 32px #0003;backdrop-filter:blur(8px)}
+.eldoret-dashboard .hero h2,.eldoret-dashboard .lights-hero h2{font-size:clamp(28px,3vw,38px);line-height:1.12}
+.eldoret-dashboard .hero p,.eldoret-dashboard .lights-hero p{max-width:640px;line-height:1.5}
+.eldoret-dashboard .dashboard-tabs{width:100%!important;margin:18px 0!important;padding:3px;gap:8px;scroll-snap-type:x proximity}
+.eldoret-dashboard .dashboard-tabs a{border-radius:14px;min-height:48px;background:#151d29ca;scroll-snap-align:start;backdrop-filter:blur(8px)}
+.eldoret-dashboard .dashboard-tabs a.active{background:var(--accent);color:#07120e}
+.eldoret-dashboard .status{font-size:12px;border:1px solid #ffffff1c;background:#14231fe0}
+.eldoret-dashboard .sport-section{max-width:none;margin:28px 0}
+.eldoret-dashboard .sport-section-head{align-items:center!important}
+.eldoret-dashboard .sport-section-head h2,.eldoret-dashboard .dashboard-section-head h2{font-size:26px;line-height:1.15;margin:5px 0 0}
+.eldoret-dashboard .dashboard-section-head{margin:28px 0 16px}
+.eldoret-dashboard .dashboard-section-head>p:last-child:not(.eyebrow){color:var(--muted);font-size:13px;margin:7px 0 0}
+.eldoret-dashboard .grid,.eldoret-dashboard .device-grid,.eldoret-dashboard .lights-room-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.eldoret-dashboard .hue-room-card{position:relative;isolation:isolate;overflow:hidden;min-height:260px;padding:20px;justify-content:flex-end;gap:14px;border-radius:22px;border:1px solid #ffffff20;background:linear-gradient(180deg,#08101c20,#08101c88 38%,#08101cf5),var(--room-image,linear-gradient(135deg,#2e4266,#111b2b)) center/cover;box-shadow:0 12px 30px #0004}
+.eldoret-dashboard .hue-room-card .icon{position:absolute;top:18px;left:18px;display:grid;place-items:center;width:42px;height:42px;border:1px solid #ffffff28;border-radius:14px;background:#0b1421b8;font-size:23px;backdrop-filter:blur(8px)}
+.eldoret-dashboard .hue-room-card h3{font-size:24px;line-height:1.12;margin:0 0 7px;text-shadow:0 2px 12px #000}
+.eldoret-dashboard .hue-room-card p{font-size:12px;color:#c8d6e5}
+.eldoret-dashboard .hue-room-card .pill{background:#0b1421b8;border:1px solid #ffffff18;font-size:11px}
+.eldoret-dashboard .light-room-card,.eldoret-dashboard .light-room-content{min-height:260px;border-radius:22px}
+.eldoret-dashboard .light-room-content{padding:20px}
+.eldoret-dashboard .light-room-content h3{font-size:24px;line-height:1.12}
+.eldoret-dashboard .light-room-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px #73d5b133,0 12px 30px #0004}
+.eldoret-dashboard .lights-scene-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.eldoret-dashboard .light-scene-card{min-height:170px;border-radius:22px;padding:20px}
+.eldoret-dashboard .lights-quick-control{padding:14px;border:1px solid #ffffff18;border-radius:22px;background:linear-gradient(145deg,#172332ed,#0b1420ed);gap:10px}
+.eldoret-dashboard .lights-quick-control button,.eldoret-dashboard .power-btn,.eldoret-dashboard .scene-btn,.eldoret-dashboard .radio-page-controls button{min-height:54px;border:1px solid #ffffff18;border-radius:16px;background:linear-gradient(160deg,#26374a,#192635);color:#edf4fc;box-shadow:inset 0 1px 0 #ffffff09,0 3px 8px #0002}
+.eldoret-dashboard .lights-quick-control button.active,.eldoret-dashboard .power-btn.on,.eldoret-dashboard .scene-btn.selected{background:linear-gradient(145deg,#245c51,#173c37);border-color:#73d5b166;color:#d0fff0}
+.eldoret-dashboard input[type=range]{accent-color:var(--accent);min-height:44px}
+.eldoret-dashboard .dimmer-wrap{padding:0 12px}
+.eldoret-dashboard .device-card{display:flex;flex-direction:column;justify-content:flex-end;min-height:270px;padding:20px;gap:18px;overflow:hidden;isolation:isolate;border:1px solid #ffffff20;border-radius:22px;background:radial-gradient(ellipse at 75% 0,#2e4966aa,transparent 70%),linear-gradient(155deg,#182b40,#0b1421 80%);box-shadow:0 12px 30px #0004}
+.eldoret-dashboard .device-art{height:105px;width:100%;display:flex;align-items:center;justify-content:center;color:#b8cfe0;opacity:.8;margin-top:22px}
+.eldoret-dashboard .device-art svg{height:100%;width:140px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 10px 22px #0008)}
+.eldoret-dashboard .device-copy{width:100%;min-width:0}
+.eldoret-dashboard .device-copy h3{font-size:23px;line-height:1.12;margin:5px 0 7px;overflow-wrap:anywhere}
+.eldoret-dashboard .device-copy .device-brand{color:var(--accent);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;margin:0}
+.eldoret-dashboard .device-copy p:not(.device-brand){font-size:12px;color:#c1cedd;line-height:1.4;margin:0 0 8px}
+.eldoret-dashboard .device-copy code{color:#8498af;font-size:11px}
+.eldoret-dashboard .device-state{top:14px;right:14px;padding:7px 10px;background:#0b1421bf;backdrop-filter:blur(8px)}
+.eldoret-dashboard .device-state.online{background:#173128e8;border-color:#376955;color:var(--accent)}
+.eldoret-dashboard .info-strip>div,.eldoret-dashboard .warnings article,.eldoret-dashboard .control-block{background:#101b2bc9;border-color:#ffffff18;border-radius:18px;backdrop-filter:blur(8px)}
+.eldoret-dashboard .info-strip a{color:var(--accent);text-decoration:none}
+.eldoret-dashboard .now-watching,.eldoret-dashboard .printer-panel{max-width:none;border-radius:22px;background:linear-gradient(110deg,#182b40eb,#101b2bc9);border-color:#ffffff20;padding:22px;margin:22px 0;backdrop-filter:blur(8px)}
+.eldoret-dashboard .dashboard-link{display:flex;align-items:center;gap:14px;padding:15px 20px;border:1px solid #73d5b144;border-radius:16px;background:#173c37;color:#d0fff0;font-weight:750;text-decoration:none;white-space:nowrap}
+.eldoret-dashboard dialog{max-height:85dvh;overflow:auto;border:1px solid #ffffff25;border-radius:24px;background:linear-gradient(145deg,#172332,#0b1420);box-shadow:0 24px 80px #0008}
+@media(max-width:1100px){.eldoret-dashboard .grid,.eldoret-dashboard .device-grid,.eldoret-dashboard .lights-room-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+ body.eldoret-dashboard{background-attachment:scroll}
+ .eldoret-dashboard .dashboard-tabs{display:flex;overflow-x:auto}
+ .eldoret-dashboard .hero,.eldoret-dashboard .lights-hero{padding:20px;gap:16px}
+ .eldoret-dashboard .lights-hero-mark{width:54px;height:54px;border-radius:16px}
+ .eldoret-dashboard .lights-hero-mark svg{width:32px;height:32px}
+ .eldoret-dashboard .grid,.eldoret-dashboard .device-grid,.eldoret-dashboard .lights-room-grid{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:clamp(240px,78vw,330px);gap:14px;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding:2px;padding:3px 2px 16px}
+ .eldoret-dashboard .grid>*,.eldoret-dashboard .device-grid>*,.eldoret-dashboard .lights-room-grid>*{scroll-snap-align:start;min-width:0}
+ .eldoret-dashboard .lights-scenes-section{margin-bottom:30px}
+ .eldoret-dashboard .lights-scene-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .eldoret-dashboard .light-scene-card{min-height:150px;padding:16px}
+ .eldoret-dashboard .light-scene-card h3{font-size:20px;overflow-wrap:anywhere}
+ .eldoret-dashboard .sport-section-head{flex-direction:row;gap:10px}
+ .eldoret-dashboard .sport-section-head h2{font-size:22px}
+ .eldoret-dashboard .dimmer-wrap{min-width:0!important;padding:0}
+ .eldoret-dashboard .radio-page-controls{flex-shrink:0}
+ .eldoret-dashboard .hero{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){.eldoret-dashboard *{scroll-behavior:auto!important;transition:none!important}}
