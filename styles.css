@@ -1011,3 +1011,24 @@ body.eldoret-dashboard.lights-page{background-image:linear-gradient(90deg,rgba(6
  .eldoret-dashboard .now-watching,.eldoret-dashboard .printer-panel{margin:12px 0;padding:16px}
  .eldoret-dashboard .dashboard-link{padding:12px 16px;font-size:13px}
 }
+
+
+/* Keep Sky's channel headings left-aligned and remote key pairs together. */
+@media(max-width:760px){
+ body.sport-page .sport-section-head{align-items:flex-start!important;text-align:left}
+ body.sport-page .sport-section-head>div:first-child{align-self:flex-start;text-align:left}
+ body.sport-page .sport-section-head .radio-page-controls{align-self:flex-end}
+ body.sport-page .sport-now-controls{grid-template-areas:"channel channelup pause play" "record channeldown rewind forward" "home backup select red";grid-template-rows:repeat(3,auto)!important}
+ body.sport-page .sport-now-controls .channel-pad-open{grid-area:channel}
+ body.sport-page .sport-now-controls [data-sky-key="channelup"]{grid-area:channelup}
+ body.sport-page .sport-now-controls [data-sky-key="channeldown"]{grid-area:channeldown}
+ body.sport-page .sport-now-controls [data-sky-key="pause"]{grid-area:pause}
+ body.sport-page .sport-now-controls [data-sky-key="play"]{grid-area:play}
+ body.sport-page .sport-now-controls [data-sky-key="rewind"]{grid-area:rewind}
+ body.sport-page .sport-now-controls [data-sky-key="fastforward"]{grid-area:forward}
+ body.sport-page .sport-now-controls [data-sky-key="record"]{grid-area:record}
+ body.sport-page .sport-now-controls [data-sky-key="home"]{grid-area:home}
+ body.sport-page .sport-now-controls [data-sky-key="backup"]{grid-area:backup}
+ body.sport-page .sport-now-controls [data-sky-key="select"]{grid-area:select}
+ body.sport-page .sport-now-controls [data-sky-key="red"]{grid-area:red}
+}
