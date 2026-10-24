@@ -1,15 +1,13 @@
-// Eldoret kiosk inactivity return: deeper screens go Home after 2 minutes without interaction.
+// Return detailed views to Home after two minutes without interaction.
 (()=>{
-  const HOME="/";
-  const TIMEOUT=120000;
-  let timer;
-  const reset=()=>{
-    clearTimeout(timer);
-    timer=setTimeout(()=>{
-      if(location.pathname!==HOME && !location.pathname.endsWith("/index.html")) location.href=HOME;
-    },TIMEOUT);
-  };
-  ["pointerdown","pointermove","keydown","touchstart","wheel"].forEach(evt=>addEventListener(evt,reset,{passive:true}));
-  document.addEventListener("visibilitychange",()=>{if(!document.hidden)reset();});
-  reset();
+ const HOME=new URL('index.html',location.href).href,TIMEOUT=120000;
+ if(location.pathname==='/'||location.pathname.endsWith('/index.html'))return;
+ let last=Date.now();
+ const active=()=>{last=Date.now();};
+ ['pointerdown','pointermove','keydown','touchstart','wheel','input'].forEach(name=>addEventListener(name,active,{passive:true}));
+ setInterval(()=>{
+  // Let an active radio player continue; navigation would stop its audio.
+  if([...document.querySelectorAll('audio,video')].some(media=>!media.paused&&!media.ended)){active();return;}
+  if(!document.hidden&&Date.now()-last>=TIMEOUT)location.assign(HOME);
+ },1000);
 })();

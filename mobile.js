@@ -67,3 +67,9 @@
  if(existing){existing.textContent='Epson';existing.href='office.html#epson';}
  else{const link=document.createElement('a');link.href='office.html#epson';link.textContent='Epson';tabs.appendChild(link);}
 })();
+
+// The shared mobile shell also covers older detailed pages without a kiosk script.
+(()=>{
+ if(document.querySelector('script[src^="kiosk.js"]')||location.pathname==='/'||location.pathname.endsWith('/index.html'))return;
+ const script=document.createElement('script');script.src='kiosk.js?v=2';document.body.appendChild(script);
+})();
