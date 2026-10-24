@@ -39,7 +39,7 @@ if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInter
 let printerBusy=false;
 function renderInkLevels(ink,estimated=false){
  const grid=document.querySelector('#printerInkGrid');if(!grid)return;
- const colours=[['Black','#8091a4'],['Cyan','#14c6ee'],['Magenta','#f63c9b'],['Yellow','#f3cf36']];
+ const colours=[['Black','#000000'],['Cyan','#14c6ee'],['Magenta','#f63c9b'],['Yellow','#f3cf36']];
  grid.replaceChildren(...colours.map(([name,colour])=>{
   const value=(ink||[]).find(x=>String(x.colour).toLowerCase()===name.toLowerCase())?.percent;
   const known=typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100;
