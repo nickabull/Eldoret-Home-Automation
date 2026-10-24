@@ -3,8 +3,7 @@
  const $=id=>document.getElementById(id), health=new Map(), checks=new Map(), busy=new Set();
  const icons={router:'<rect x="3" y="11" width="18" height="9" rx="2"/><path d="M7 11V4m10 7V4M7 16h.1m4 0h.1m4 0h2"/>',lights:'<path d="M9 18h6m-5 3h4M8 13a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z"/>',tv:'<rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 22h8m-4-4v4"/>',game:'<path d="M7 7h10c4 0 6 12 3 13-2 1-5-4-6-4h-4c-1 0-4 5-6 4C1 19 3 7 7 7Z"/><path d="M6 11v5m-2-2h5m7-2h.1m3 3h.1"/>',wifi:'<path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0m-11 4a6 6 0 0 1 8 0m-4 4h.1"/>',printer:'<path d="M6 8V2h12v6M6 18H2V8h20v10h-4M6 14h12v8H6zM18 11h.1"/>',dishwasher:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M4 7h16M7 4.5h.1m3 0h.1"/><circle cx="12" cy="14" r="4"/>'};
  document.querySelectorAll('[data-icon]').forEach(el=>{el.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[el.dataset.icon]+'</svg>';});
- function clock(){const now=new Date();$('homeTime').textContent=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});$('homeDate').textContent=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});}
- clock();setInterval(clock,1000);
+ // The shared shell owns the clock on every page.
  function overall(){
   const list=[...health.values()], good=list.filter(x=>x==='good').length, warn=list.filter(x=>x==='warning').length, missing=8-good-warn;
   $('homeSummary').textContent=(good+warn)?(good+warn)+' of 8 areas reporting in. '+(warn?'A few things are worth a look.':'A little peace of mind, all in one place.'):'Your home’s live details, together in one place.';

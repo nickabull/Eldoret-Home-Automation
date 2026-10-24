@@ -1112,3 +1112,144 @@ body.eldoret-dashboard.epson-page{background-image:linear-gradient(90deg,#060c18
  .epson-page .epson-hero{width:62%;grid-template-columns:54px minmax(0,1fr) auto;background:linear-gradient(110deg,#142538eb,#111d30ca);backdrop-filter:blur(5px)}
  .epson-page .epson-hero h2{font-size:25px}
 }
+
+/* ELDORET SHARED SHELL v1: one header, one menu, one 16:9 canvas. */
+html:has(body.eldoret-shell){background:#061019;scrollbar-gutter:auto}
+body.eldoret-shell{font-family:Arial,Helvetica,sans-serif!important;box-sizing:border-box!important;color:#edf4f6}
+body.eldoret-shell *,body.eldoret-shell *::before,body.eldoret-shell *::after{box-sizing:border-box}
+body.eldoret-shell :is(h1,h2,h3,h4,p,a,button,input,select,textarea,time){font-family:Arial,Helvetica,sans-serif!important}
+body.eldoret-shell>header.eldoret-header{position:relative!important;z-index:5!important;width:100%!important;max-width:none!important;height:68px!important;min-height:68px!important;margin:0!important;padding:12px 36px 4px!important;display:flex!important;flex-direction:row!important;justify-content:space-between!important;align-items:center!important;background:none!important;border:0!important;flex:none!important}
+body.eldoret-shell .eldoret-brand{display:flex!important;align-items:center!important;gap:14px!important;color:#f4f8fc!important;text-decoration:none!important;font-size:22px!important;font-weight:700!important;letter-spacing:.19em!important;line-height:1.05!important}
+body.eldoret-shell .eldoret-brand>span:first-child{font-size:31px!important;font-weight:400!important;letter-spacing:0!important;color:#91dec9!important}
+body.eldoret-shell .eldoret-brand small{display:block!important;margin-top:7px!important;font-size:8px!important;font-weight:600!important;letter-spacing:.2em!important;color:#a7bec5!important}
+body.eldoret-shell .eldoret-clock{display:flex!important;flex-direction:column!important;gap:4px!important;text-align:right!important}
+body.eldoret-shell .eldoret-clock time{font-size:26px!important;line-height:1.1!important;font-weight:400!important;font-variant-numeric:tabular-nums}
+body.eldoret-shell .eldoret-clock>span{font-size:10px!important;line-height:1.3!important;color:#b7c8d1!important}
+body.eldoret-shell>nav.eldoret-primary{position:relative!important;z-index:5!important;display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:center!important;gap:5px!important;height:48px!important;min-height:48px!important;width:calc(100% - 72px)!important;max-width:none!important;margin:0 36px!important;padding:0 0 10px!important;border:0!important;border-bottom:1px solid #c4e5df26!important;background:none!important;overflow:visible!important;flex:none!important}
+body.eldoret-shell>nav.eldoret-primary>a{display:flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;height:32px!important;min-height:32px!important;padding:0 16px!important;margin:0!important;border:1px solid transparent!important;border-radius:8px!important;background:transparent!important;box-shadow:none!important;color:#b7c8d1!important;font-size:13px!important;font-weight:500!important;letter-spacing:0!important;text-decoration:none!important;white-space:nowrap!important;line-height:1!important;transform:none!important}
+body.eldoret-shell>nav.eldoret-primary>a.active{background:#a9edda18!important;color:#b6f5e2!important;border-color:#abedd732!important}
+body.eldoret-shell>nav.eldoret-primary>a:hover{color:#fff!important;background:#a9edda0d!important}
+body.eldoret-shell .eldoret-primary a:focus-visible,body.eldoret-shell .shell-pager button:focus-visible{outline:2px solid #a4ebd4!important;outline-offset:3px!important}
+body.eldoret-shell .mobile-dock,body.eldoret-shell .shell-legacy-status{display:none!important}
+body.eldoret-shell .shell-subnav{display:flex;gap:7px;align-items:center;padding:0;margin:8px 0 12px}
+body.eldoret-shell .shell-subnav a{color:#bdcdd8;text-decoration:none;padding:8px 12px;border-radius:8px;font-size:12px;border:1px solid #c4e5df24;background:#14233780}
+body.eldoret-shell .shell-subnav a.active{color:#b6f5e2;background:#a9edda18;border-color:#abedd732}
+body.eldoret-shell .shell-pager{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:9px 0;font-size:12px;color:#bccfda}
+body.eldoret-shell .shell-pager button{background:#172b3b;border:1px solid #a4ebd43d;border-radius:9px;width:42px;height:34px;color:#c3f4e1;font-size:23px;cursor:pointer}
+body.eldoret-shell .shell-pager button:disabled{opacity:.3;cursor:default}
+body.eldoret-shell [data-shell-hidden]{display:none!important}
+@media(min-aspect-ratio:4/3) and (min-width:760px){
+ html:has(body.eldoret-shell){height:100%;overflow:hidden!important}
+ body.eldoret-shell{position:fixed!important;inset:50% auto auto 50%!important;width:1600px!important;height:900px!important;min-height:0!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;transform:translate(-50%,-50%) scale(var(--eldoret-screen-scale,1))!important;transform-origin:center!important}
+ body.eldoret-shell>main{position:relative!important;z-index:1!important;display:block!important;flex:1 1 auto!important;min-height:0!important;height:auto!important;width:100%!important;max-width:none!important;margin:0!important;padding:16px 36px 18px!important;overflow:hidden!important;scrollbar-width:none!important}
+ body.eldoret-shell .eldoret-content{position:relative;width:100%;height:auto;min-height:0;transform-origin:top left;display:flow-root}
+ body.eldoret-shell .eldoret-content>.hero{margin:8px 0 12px!important;padding:12px 18px!important}
+ body.eldoret-shell .eldoret-content>.hero h2{font-size:26px!important}
+ body.eldoret-shell .eldoret-content>.hero p{font-size:12px!important}
+ body.eldoret-shell .sky-subnav{width:100%!important;max-width:none!important;margin:0 0 12px!important;display:flex!important;flex-wrap:nowrap!important;gap:5px!important;overflow:visible!important}
+ body.eldoret-shell .sky-subnav a{flex:1 1 auto!important;min-width:0!important;padding:9px 7px!important;font-size:11px!important;text-align:center!important;white-space:nowrap!important}
+ body.eldoret-shell .sport-now-row{width:100%!important;margin:0 0 12px!important;grid-template-columns:minmax(0,1fr) 520px!important;gap:12px!important}
+ body.eldoret-shell .sport-now-row>.sport-now{width:100%!important;margin:0!important;max-width:none!important}
+ body.eldoret-shell .sport-section{width:100%!important;max-width:none!important;margin:10px 0!important}
+ body.eldoret-shell .sport-section-head{width:100%!important;margin:0 0 9px!important}
+ body.eldoret-shell .sport-section-head h2{font-size:24px!important}
+ body.eldoret-shell .device-grid,body.eldoret-shell #rooms{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important}
+ body.eldoret-shell .device-card,body.eldoret-shell .hue-room-card{min-height:165px!important;padding:17px!important;border-radius:18px!important}
+ body.eldoret-shell .device-art{height:64px!important}
+ body.eldoret-shell .device-copy h3{font-size:18px!important}
+ body.eldoret-shell .device-copy p{font-size:11px!important}
+ body.eldoret-shell .info-strip{margin:10px 0!important}
+ body.eldoret-shell .info-strip>div{padding:12px!important}
+ body.eldoret-shell .dashboard-section-head{margin:10px 0!important}
+ body.eldoret-shell .dashboard-section-head h2{font-size:23px!important}
+ body.eldoret-shell .home-hero{min-height:175px!important;padding:18px 0 12px!important}
+ body.eldoret-shell .home-hero h1{font-size:48px!important;margin-bottom:10px!important}
+ body.eldoret-shell .home-health{margin-top:12px!important}
+ body.eldoret-shell .home-weather{margin-top:12px!important}
+ body.eldoret-shell .home-orbit{width:140px!important;height:140px!important}
+ body.eldoret-shell .home-vitals{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
+ body.eldoret-shell .vital-card{min-height:172px!important;padding:17px!important}
+ body.eldoret-shell .vital-top{margin-bottom:12px!important}
+ body.eldoret-shell .vital-title{font-size:18px!important}
+ body.eldoret-shell .home-speeds strong{font-size:30px!important}
+ body.eldoret-shell .home-spark{height:24px!important}
+ body.eldoret-shell .home-news{margin-top:12px!important;padding:14px 18px!important}
+ body.eldoret-shell .home-footer{padding:12px 0 0!important;gap:10px!important}
+ body.eldoret-shell .lights-hero{padding:10px 16px!important;margin:4px 0 9px!important}
+ body.eldoret-shell .light-room-card,body.eldoret-shell .light-room-content{min-height:150px!important}
+ body.eldoret-shell .light-scene-card{min-height:115px!important}
+ body.eldoret-shell .net-heading{margin:8px 0 12px!important}
+ body.eldoret-shell .net-heading h2{font-size:27px!important}
+ body.eldoret-shell .net-overview{grid-template-columns:1.1fr 1fr!important;gap:16px!important}
+ body.eldoret-shell .net-hero{height:280px!important;aspect-ratio:auto!important}
+ body.eldoret-shell .net-copy h2{font-size:38px!important}
+ body.eldoret-shell .net-copy p{font-size:14px!important}
+ body.eldoret-shell .net-card{padding:14px 18px!important;border-radius:18px!important}
+ body.eldoret-shell .net-icon{width:32px!important;height:32px!important;margin:0 0 5px!important}
+ body.eldoret-shell .net-value{font-size:31px!important}
+ body.eldoret-shell .net-card small{font-size:10px!important;margin-top:5px!important}
+ body.eldoret-shell .net-card p{font-size:12px!important;margin:4px 0!important}
+ body.eldoret-shell .net-traffic{padding:15px 20px!important;margin-top:12px!important}
+ body.eldoret-shell #trafficPlot{height:135px!important;aspect-ratio:auto!important;margin:8px 0!important}
+ body.eldoret-shell .net-traffic h3{font-size:20px!important}
+ body.eldoret-shell .net-traffic p{font-size:11px!important}
+ body.eldoret-shell .net-detail{padding:13px 20px!important;margin:12px 0 0!important}
+ body.eldoret-shell .net-note{font-size:11px!important;margin:9px 0!important}
+ body.eldoret-shell .net-devices{margin-top:12px!important}
+ body.eldoret-shell .epson-hero{margin:4px 0 10px!important}
+ body.eldoret-shell .ink-tank{height:140px!important}
+ body.eldoret-shell .ink-card{padding:17px!important}
+ body.eldoret-shell .epson-footer{padding:12px 18px!important}
+ body.eldoret-shell .radio-player{margin:5px 0 14px!important}
+ body.eldoret-shell .radio-station{height:180px!important;min-height:0!important}
+ body.eldoret-shell dialog{max-height:820px!important;overflow:hidden!important}
+}
+@media(max-aspect-ratio:4/3),(max-width:759px){
+ body.eldoret-shell{margin:0!important;padding:0!important;width:100%!important;height:auto!important;min-height:100dvh!important;overflow-x:hidden!important}
+ body.eldoret-shell>header.eldoret-header{padding:16px 18px 5px!important;height:72px!important;min-height:72px!important}
+ body.eldoret-shell .eldoret-brand{font-size:17px!important;gap:10px!important}
+ body.eldoret-shell .eldoret-brand small{font-size:6px!important}
+ body.eldoret-shell .eldoret-clock time{font-size:22px!important}
+ body.eldoret-shell .eldoret-clock>span{font-size:9px!important}
+ body.eldoret-shell>nav.eldoret-primary{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;width:calc(100% - 36px)!important;height:86px!important;margin:0 18px!important;gap:2px!important;padding-bottom:9px!important}
+ body.eldoret-shell>nav.eldoret-primary>a{padding:0 4px!important;width:100%!important;font-size:11px!important}
+ body.eldoret-shell>main{padding:16px 18px 30px!important;margin:0!important;max-width:none!important;width:100%!important}
+ body.eldoret-shell .eldoret-content{width:100%!important;zoom:1!important}
+}
+/* Glass tiles: transparency belongs to the background, keeping text at full opacity. */
+body.eldoret-shell.home-page .vital-card{background:rgba(15,31,44,.80)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
+body.eldoret-shell.home-page .vital-router{background:rgba(23,53,55,.80)!important}
+body.eldoret-shell.home-page .home-news{background:rgba(10,23,39,.80)!important;backdrop-filter:blur(8px)!important}
+@media(min-aspect-ratio:4/3) and (min-width:760px){
+ body.eldoret-shell .home-vitals{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+ body.eldoret-shell .vital-router{grid-column:auto!important}
+ body.eldoret-shell .home-speeds{gap:26px!important}
+ body.eldoret-shell #recordingsGrid,body.eldoret-shell #guideGrid{grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-rows:220px!important;gap:10px!important}
+ body.eldoret-shell #guideGrid .guide-channel{min-height:0!important;height:220px!important;padding:12px!important}
+ body.eldoret-shell #guideGrid .guide-logo{height:42px!important}
+ body.eldoret-shell #guideGrid .guide-channel>strong{font-size:16px!important}
+ body.eldoret-shell #skyAppsGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+ body.eldoret-shell #skyAppsGrid .sky-app-card{height:160px!important;min-height:0!important}
+}
+body.eldoret-shell [hidden]{display:none!important}
+@media(max-aspect-ratio:4/3),(max-width:759px){
+ body.eldoret-shell .sky-search-overlay{padding:10px!important}
+ body.eldoret-shell .sky-search-dialog{width:calc(100vw - 20px)!important;max-width:100%!important;height:calc(100dvh - 20px)!important;max-height:calc(100dvh - 20px)!important;padding:14px!important;gap:9px!important;overflow:hidden!important;grid-template-rows:auto auto minmax(0,1fr) auto!important}
+ body.eldoret-shell .sky-search-dialog>*{min-width:0!important}
+ body.eldoret-shell .sky-search-input-row{height:48px!important;padding:0 10px!important;font-size:17px!important;gap:8px!important}
+ body.eldoret-shell .sky-search-input-row input{min-width:0!important;width:100%!important}
+ body.eldoret-shell .sky-keyboard-row{gap:4px!important}
+ body.eldoret-shell .sky-touch-keyboard{gap:5px!important}
+ body.eldoret-shell .sky-keyboard-row button{flex:1 1 0!important;width:auto!important;min-width:0!important;height:42px!important;padding:0!important;border-radius:7px!important;font-size:15px!important}
+ body.eldoret-shell .sky-keyboard-bottom .space{min-width:0!important;flex:4 1 0!important}
+ body.eldoret-shell .sky-search-live-results{min-height:0!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+ body.eldoret-shell .sky-search-hint{padding:22px 10px!important;font-size:16px!important}
+}
+@media(max-aspect-ratio:4/3),(max-width:759px){
+ body.eldoret-shell .sky-subnav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important;width:100%!important;max-width:100%!important;margin:0 0 14px!important;padding:0!important;overflow:visible!important}
+ body.eldoret-shell .sky-subnav a{min-width:0!important;padding:9px 2px!important;font-size:9px!important;white-space:normal!important;text-align:center!important}
+ body.eldoret-shell .eldoret-search-panel{display:grid!important;grid-template-columns:minmax(0,1fr)!important;padding:20px!important;width:100%!important;min-width:0!important;gap:20px!important}
+ body.eldoret-shell .eldoret-search-panel>*{min-width:0!important;width:100%!important;max-width:100%!important}
+ body.eldoret-shell #skySearchOpen{width:100%!important;min-width:0!important;max-width:100%!important}
+ body.eldoret-shell #skySearchPreview{width:100%!important;min-width:0!important;max-width:100%!important}
+}
