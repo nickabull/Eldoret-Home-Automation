@@ -1959,6 +1959,76 @@ def playout_http(handler):
         reply(403, {"error": "Not permitted for this pairing key"})
 
 
+# Compact home briefing. External reads are cached independently of local controls.
+HOME_BRIEFING_CACHE = {}
+HOME_BRIEFING_LOCK = threading.Lock()
+
+def _home_cached(key, ttl, read):
+    # Keep failures cached briefly too, so a disconnected service is not hammered.
+    with HOME_BRIEFING_LOCK:
+        cached = HOME_BRIEFING_CACHE.get(key)
+        if cached and time.monotonic() - cached["at"] < cached["ttl"]:
+            return cached["value"]
+    try:
+        value = read()
+        value.update(available=True, checked_at=datetime.now(timezone.utc).isoformat())
+        cache_for = ttl
+    except Exception:
+        value = {"available": False, "message": "Reading temporarily unavailable."}
+        cache_for = 60
+    with HOME_BRIEFING_LOCK:
+        if len(HOME_BRIEFING_CACHE) > 100:
+            HOME_BRIEFING_CACHE.clear()
+        HOME_BRIEFING_CACHE[key] = {"at": time.monotonic(), "ttl": cache_for, "value": value}
+    return value
+
+def _home_external(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Eldoret-Home/1.0"})
+    with urllib.request.urlopen(req, timeout=7) as response:
+        return response.read(1000000)
+
+def home_news():
+    def read():
+        root = ET.fromstring(_home_external("https://feeds.bbci.co.uk/news/rss.xml"))
+        for item in root.findall("./channel/item"):
+            title = (item.findtext("title") or "").strip()
+            link = (item.findtext("link") or "").strip()
+            url = urllib.parse.urlparse(link)
+            if title and url.scheme == "https" and url.hostname in ("bbc.co.uk", "www.bbc.co.uk", "bbc.com", "www.bbc.com"):
+                return {"title": title, "url": link, "published_at": item.findtext("pubDate"), "source": "BBC News"}
+        raise ValueError("No BBC headline")
+    return _home_cached("news", 300, read)
+
+def home_locations(name):
+    name = name.strip()[:80]
+    if len(name) < 2:
+        return {"available": False, "results": []}
+    def read():
+        params = urllib.parse.urlencode({"name": name, "count": 6, "language": "en", "format": "json", "countryCode": "GB"})
+        data = json.loads(_home_external("https://geocoding-api.open-meteo.com/v1/search?" + params))
+        results = [{k: x.get(k) for k in ("name", "admin1", "admin2", "country", "latitude", "longitude")}
+                   for x in data.get("results", []) if x.get("country_code") == "GB"]
+        return {"results": results}
+    return _home_cached("location:" + name.casefold(), 86400, read)
+
+def home_weather(latitude, longitude):
+    try:
+        lat, lon = float(latitude), float(longitude)
+        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+            raise ValueError("Invalid coordinates")
+    except (ValueError, TypeError):
+        return {"available": False, "message": "Choose your weather location."}
+    def read():
+        params = urllib.parse.urlencode({"latitude": lat, "longitude": lon,
+            "current": "temperature_2m,weather_code", "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+            "forecast_days": 1, "timezone": "Europe/London"})
+        data = json.loads(_home_external("https://api.open-meteo.com/v1/forecast?" + params))
+        current, daily = data["current"], data["daily"]
+        return {"temperature": current["temperature_2m"], "weather_code": current["weather_code"],
+            "high": daily["temperature_2m_max"][0], "low": daily["temperature_2m_min"][0],
+            "rain_chance": daily["precipitation_probability_max"][0], "forecast_at": current["time"], "source": "Open-Meteo"}
+    return _home_cached("weather:" + str(round(lat, 3)) + ":" + str(round(lon, 3)), 900, read)
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -1989,6 +2059,9 @@ class Handler(BaseHTTPRequestHandler):
         files = {
             "/": ("index.html", "text/html; charset=utf-8"),
             "/index.html": ("index.html", "text/html; charset=utf-8"),
+            "/home-briefing.js": ("home-briefing.js", "application/javascript; charset=utf-8"),
+            "/home.js": ("home.js", "application/javascript; charset=utf-8"),
+            "/home.css": ("home.css", "text/css; charset=utf-8"),
             "/lights.html": ("lights.html", "text/html; charset=utf-8"),
             "/lights.js": ("lights.js", "application/javascript; charset=utf-8"),
             "/mobile.js": ("mobile.js", "application/javascript; charset=utf-8"),
@@ -2027,6 +2100,7 @@ class Handler(BaseHTTPRequestHandler):
             "/sky.js": ("sky.js", "application/javascript; charset=utf-8"),
             "/sky-streaming-background.png": ("sky-streaming-background.png", "image/png"),
             "/Apps Banner.png": ("Apps Banner.png", "image/png"),
+            "/eldoret-house-night.webp": ("eldoret-house-night.webp", "image/webp"),
             "/epson-et3850-background.webp": ("epson-et3850-background.webp", "image/webp"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "application/javascript; charset=utf-8"),
@@ -2060,6 +2134,15 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps({"registry":_registry_load()}).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"registry":{},"error":str(e)}).encode())
+            return
+        if path == "/api/home/news":
+            self.send_bytes(json.dumps(home_news()).encode())
+            return
+        if path == "/api/home/locations":
+            self.send_bytes(json.dumps(home_locations(query.get("q", [""])[0])).encode())
+            return
+        if path == "/api/home/weather":
+            self.send_bytes(json.dumps(home_weather(query.get("lat", [None])[0], query.get("lon", [None])[0])).encode())
             return
         if path == "/api/router/status":
             self.send_bytes(json.dumps(router_status()).encode())

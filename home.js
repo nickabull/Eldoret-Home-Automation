@@ -6,11 +6,11 @@
  function clock(){const now=new Date();$('homeTime').textContent=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});$('homeDate').textContent=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});}
  clock();setInterval(clock,1000);
  function overall(){
-  const list=[...health.values()], good=list.filter(x=>x==='good').length, warn=list.filter(x=>x==='warning').length, missing=7-good-warn;
-  $('homeSummary').textContent=(good+warn)?(good+warn)+' of 7 areas reporting in. '+(warn?'A few things are worth a look.':'A little peace of mind, all in one place.'):'Your home’s live details, together in one place.';
-  $('homeHealthTitle').textContent=warn?warn+' thing'+(warn===1?'':'s')+' to look at':good===7?'Your world is OK.':good?'Home is checking in.':'Connecting the dots';
-  $('homeHealthDetail').textContent=warn?'Amber cards have the details.':missing?missing+' area'+(missing===1?' is':'s are')+' waiting for a live reading or connection.':'All seven monitored areas are reporting normally.';
-  $('homeHealthIcon').textContent=warn?'!':good===7?'✓':'⌁';
+  const list=[...health.values()], good=list.filter(x=>x==='good').length, warn=list.filter(x=>x==='warning').length, missing=8-good-warn;
+  $('homeSummary').textContent=(good+warn)?(good+warn)+' of 8 areas reporting in. '+(warn?'A few things are worth a look.':'A little peace of mind, all in one place.'):'Your home’s live details, together in one place.';
+  $('homeHealthTitle').textContent=warn?warn+' thing'+(warn===1?'':'s')+' to look at':good===8?'Your world is OK.':good?'Home is checking in.':'Connecting the dots';
+  $('homeHealthDetail').textContent=warn?'Amber cards have the details.':missing?missing+' area'+(missing===1?' is':'s are')+' waiting for a live reading or connection.':'All eight monitored areas are reporting normally.';
+  $('homeHealthIcon').textContent=warn?'!':good===8?'✓':'⌁';
   document.querySelector('.home-health').classList.toggle('attention',warn>0);
  }
  function card(id,state,badge,title,detail){const el=$('vital-'+id);el.dataset.state=state;el.querySelector('.vital-state').textContent=badge;el.querySelector('.vital-title').textContent=title;el.querySelector('.vital-detail').textContent=detail;health.set(id,state);overall();}
@@ -45,6 +45,7 @@
   card('wifi',count===4?'good':'unknown',count===4?'REACHABLE':'CHECKING',count===4?'Four access points, all reachable.':count+' / 4 access points reachable','Network replies only · detailed UniFi health comes with the controller.');
   $('homeAps').replaceChildren(...aps.map(ap=>{const span=document.createElement('span');span.className='ap-pill'+(ap.online?' reachable':'');span.textContent=(ap.name||'').replace(/^UniFi\s*/i,'');span.title=ap.name+': '+(ap.online?'responding':'no service reply');return span;}));
  }
+ card('car','unknown','NOT LINKED','One for another day.','Battery level, charging and range once connected.');
  card('dishwasher','unknown','NOT LINKED','Dishwasher, waiting to connect.','Wash cycle and time remaining are not connected yet.');
  function printer(p){
   const ink=(p.ink||[]).filter(x=>number(x.percent)&&x.percent<=100),low=ink.filter(x=>x.percent<=15);
