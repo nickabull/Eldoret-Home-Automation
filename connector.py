@@ -652,6 +652,173 @@ def lan_inventory():
     return {"devices":found,"checked_at":datetime.now(timezone.utc).isoformat(),
             "mode":"read-only known-service discovery"}
 
+# Router telemetry is read-only and restricted to the verified DrayTek LAN address.
+ROUTER_SNMP_DIR = os.path.expanduser('~/eldoret-connector/router-snmp')
+ROUTER_LOCK = threading.Lock()
+ROUTER_STATE = {'online': False, 'message': 'Waiting for the first router reading.', 'history': []}
+ROUTER_PREVIOUS = None
+ROUTER_ACTIVE = False
+ROUTER_LAST_REQUEST = 0
+
+def _router_rates(previous, current, elapsed):
+    if not previous or not 0 < elapsed < 25:
+        return None, None
+    if current['uptime_ticks'] <= previous['uptime_ticks']:
+        return None, None
+    # Agent time and wall time must agree; pauses/restarts invalidate a sample.
+    if abs((current['uptime_ticks'] - previous['uptime_ticks']) / 100 - elapsed) > 3:
+        return None, None
+    if current['link_code'] != 1 or previous['link_code'] != 1:
+        return None, None
+    if current['last_change'] != previous['last_change'] or current['discontinuity'] != previous['discontinuity']:
+        return None, None
+    result = []
+    for key in ('in_octets', 'out_octets'):
+        old, new = previous[key], current[key]
+        if new < old and not (old > 3 * 2**30 and new < 2**30):
+            return None, None
+        delta = (new - old) % 2**32
+        mbps = delta * 8 / elapsed / 1e6
+        if mbps > 1000:
+            return None, None
+        result.append(round(mbps, 3))
+    return tuple(result)
+
+def _router_read():
+    import re
+    import stat
+    configured = os.path.isfile(os.path.join(ROUTER_SNMP_DIR, 'snmp.conf'))
+    level = 'authPriv' if configured else 'noAuthNoPriv'
+    if configured:
+        config_stat = os.stat(os.path.join(ROUTER_SNMP_DIR, 'snmp.conf'))
+        if config_stat.st_uid != os.getuid() or stat.S_IMODE(config_stat.st_mode) & 0o077:
+            raise RuntimeError('Router credential file must be private to the Eldoret user (chmod 600).')
+    # An isolated config path prevents unrelated ~/.snmp defaults affecting this probe.
+    env = dict(os.environ, SNMPCONFPATH=ROUTER_SNMP_DIR, MIBS='')
+    oids = ['.1.3.6.1.2.1.1.1.0', '.1.3.6.1.2.1.1.3.0',
+            '.1.3.6.1.2.1.2.2.1.2.5', '.1.3.6.1.2.1.2.2.1.8.5',
+            '.1.3.6.1.2.1.2.2.1.10.5', '.1.3.6.1.2.1.2.2.1.16.5',
+            '.1.3.6.1.2.1.2.2.1.9.5', '.1.3.6.1.2.1.31.1.1.1.19.5']
+    cmd = ['snmpget', '-v3', '-u', 'eldoret', '-l', level, '-a', 'SHA', '-x', 'AES',
+           '-t', '2', '-r', '1', '-Oqv', '-Ot', '10.0.0.1'] + oids
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=10, env=env)
+    except FileNotFoundError:
+        raise RuntimeError('The SNMP reader is not installed on the Eldoret host.')
+    except subprocess.TimeoutExpired:
+        raise RuntimeError('The router did not reply in time.')
+    # Never return command stderr: local configuration diagnostics may contain secrets.
+    if proc.returncode:
+        raise RuntimeError('Encrypted router read failed. Check the local SNMP settings.' if configured else 'The router did not answer the SNMP read.')
+    lines = proc.stdout.strip().splitlines()
+    if len(lines) != len(oids):
+        raise RuntimeError('The router returned an incomplete reading.')
+    def number(value, optional=False):
+        if optional and 'No Such' in value:
+            return None
+        if not re.fullmatch(r'\d+', value.strip()):
+            raise RuntimeError('The router returned an unsupported reading.')
+        return int(value.strip())
+    description = lines[0].strip('"')
+    name = lines[2].strip('"')
+    if 'Vigor2865' not in description or name != 'WAN2':
+        raise RuntimeError('Router or WAN2 identity changed; telemetry needs checking.')
+    version = re.search(r'Version:\s*([^,]+)', description)
+    cpu = re.search(r'CPU Usage:\s*(\d+)%', description)
+    memory = re.search(r'Memory Usage:\s*(\d+)%', description)
+    return {'uptime_ticks': number(lines[1]), 'link_code': number(lines[3]),
+            'in_octets': number(lines[4]), 'out_octets': number(lines[5]),
+            'last_change': number(lines[6], True), 'discontinuity': number(lines[7], True),
+            'firmware': version.group(1).strip() if version else None,
+            'cpu_percent': int(cpu.group(1)) if cpu and int(cpu.group(1)) <= 100 else None,
+            'memory_percent': int(memory.group(1)) if memory and int(memory.group(1)) <= 100 else None,
+            'security': level}
+
+def _router_loop():
+    global ROUTER_PREVIOUS, ROUTER_ACTIVE
+    while True:
+        start = time.monotonic()
+        with ROUTER_LOCK:
+            if start - ROUTER_LAST_REQUEST > 120:
+                ROUTER_ACTIVE = False
+                ROUTER_PREVIOUS = None
+                return
+        stamp = datetime.now(timezone.utc).isoformat()
+        try:
+            reading = _router_read()
+            now = time.monotonic()
+            previous = ROUTER_PREVIOUS
+            down, up = _router_rates(previous[1] if previous else None, reading,
+                                      now - previous[0] if previous else 0)
+            ROUTER_PREVIOUS = (now, reading)
+            data = {'online': True, 'checked_at': stamp, 'ip': '10.0.0.1',
+                    'interface': 'WAN2', 'link_up': reading['link_code'] == 1,
+                    'download_mbps': down, 'upload_mbps': up,
+                    'uptime_seconds': reading['uptime_ticks'] / 100,
+                    'cpu_percent': reading['cpu_percent'], 'memory_percent': reading['memory_percent'],
+                    'firmware': reading['firmware'], 'security': reading['security'],
+                    'message': 'Live WAN2 traffic' if down is not None else 'Connected. Collecting the next traffic sample.'}
+        except Exception as exc:
+            ROUTER_PREVIOUS = None
+            message = str(exc) if isinstance(exc, RuntimeError) else 'Router reading unavailable.'
+            data = {'online': False, 'checked_at': stamp, 'message': message,
+                    'download_mbps': None, 'upload_mbps': None}
+        with ROUTER_LOCK:
+            history = ROUTER_STATE.get('history', [])[-59:]
+            history.append({'at': stamp, 'download': data['download_mbps'], 'upload': data['upload_mbps']})
+            ROUTER_STATE.clear()
+            ROUTER_STATE.update(data, history=history)
+        time.sleep(max(0.1, 5 - (time.monotonic() - start)))
+
+def configure_router_snmp():
+    """Prompt locally, test encrypted access, and save only working credentials."""
+    import getpass
+    import tempfile
+    from pathlib import Path
+    global ROUTER_SNMP_DIR
+    def quote(value):
+        if any(c in value for c in '\r\n\x00'):
+            raise ValueError('Use passphrases without line breaks.')
+        return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+    auth = getpass.getpass('Router SNMP Auth Password: ')
+    privacy = getpass.getpass('Router SNMP Privacy Password: ')
+    if not auth or not privacy:
+        raise ValueError('Both SNMP passwords are required.')
+    content = 'defAuthPassphrase ' + quote(auth) + '\n' + 'defPrivPassphrase ' + quote(privacy) + '\n'
+    target = Path(ROUTER_SNMP_DIR)
+    original = ROUTER_SNMP_DIR
+    with tempfile.TemporaryDirectory(prefix='eldoret-snmp-') as folder:
+        config = Path(folder) / 'snmp.conf'
+        config.touch(mode=0o600)
+        config.write_text(content)
+        try:
+            ROUTER_SNMP_DIR = folder
+            _router_read()
+        finally:
+            ROUTER_SNMP_DIR = original
+    target.mkdir(mode=0o700, parents=True, exist_ok=True)
+    os.chmod(target, 0o700)
+    fd, filename = tempfile.mkstemp(prefix='.snmp-', dir=str(target))
+    try:
+        with os.fdopen(fd, 'w') as f:
+            f.write(content)
+        os.replace(filename, target / 'snmp.conf')
+    finally:
+        if os.path.exists(filename):
+            os.unlink(filename)
+    print('Encrypted SNMP verified. Credentials saved locally with owner-only access.')
+    print('The Network dashboard will use them on its next reading; no restart needed.')
+
+def router_status():
+    global ROUTER_LAST_REQUEST, ROUTER_ACTIVE
+    with ROUTER_LOCK:
+        ROUTER_LAST_REQUEST = time.monotonic()
+        if not ROUTER_ACTIVE:
+            ROUTER_ACTIVE = True
+            ROUTER_STATE.update(online=False, message='Connecting to the router.', download_mbps=None, upload_mbps=None)
+            threading.Thread(target=_router_loop, daemon=True).start()
+        return dict(ROUTER_STATE)
+
 NETWORK_STATUS_CACHE = {"time":0,"data":None}
 
 def _probe_network_device(d):
@@ -1866,6 +2033,9 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_bytes(json.dumps({"registry":{},"error":str(e)}).encode())
             return
+        if path == "/api/router/status":
+            self.send_bytes(json.dumps(router_status()).encode())
+            return
         if path == "/api/network/status":
             try:
                 self.send_bytes(json.dumps(network_status()).encode())
@@ -2095,6 +2265,16 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
+if __name__ == '__main__':
+    import sys
+    if '--configure-router-snmp' in sys.argv:
+        try:
+            configure_router_snmp()
+        except (RuntimeError, ValueError, OSError) as exc:
+            print('SNMP setup not saved:', str(exc))
+            sys.exit(1)
+        sys.exit(0)
+
 threading.Thread(target=agent_loop, daemon=True).start()
 threading.Thread(target=device_registry_loop, daemon=True).start()
 threading.Thread(target=remote_state_loop, daemon=True).start()
@@ -2105,5 +2285,6 @@ print("Live state + scenes: ready")
 print(f"Sky Q now-playing target: {sky_q_host()}:{SKY_Q_JSON_PORT}")
 print("Open http://localhost:8765 in Chrome")
 ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
+
 
 
