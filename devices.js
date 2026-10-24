@@ -37,7 +37,7 @@ async function refreshDeviceStatus(){
 }
 if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshDeviceStatus,30000);
 let printerBusy=false;
-function renderInkLevels(ink){
+function renderInkLevels(ink,estimated=false){
  const grid=document.querySelector('#printerInkGrid');if(!grid)return;
  const colours=[['Black','#8091a4'],['Cyan','#14c6ee'],['Magenta','#f63c9b'],['Yellow','#f3cf36']];
  grid.replaceChildren(...colours.map(([name,colour])=>{
@@ -47,8 +47,8 @@ function renderInkLevels(ink){
   card.innerHTML='<div class="ink-card-head"><span class="ink-dot"></span><h3>'+name+'</h3><span class="ink-level-label"></span></div><div class="ink-tank" role="img"><div class="ink-fill"></div><div class="ink-tank-shine"></div></div><strong class="ink-percent"></strong><p></p>';
   card.querySelector('.ink-fill').style.height=known?value+'%':'0%';
   card.querySelector('.ink-percent').textContent=known?Math.round(value)+'%':'—';
-  card.querySelector('.ink-level-label').textContent=known?(value<=15?'LOW':'REPORTED'):'UNKNOWN';
-  card.querySelector('p').textContent=known?'Reported by printer':'Not reported';
+  card.querySelector('.ink-level-label').textContent=known?(value<=15?'LOW':estimated?'ESTIMATED':'REPORTED'):'UNKNOWN';
+  card.querySelector('p').textContent=known?(estimated?'Estimated from printer gauge':'Reported by printer'):'Not reported';
   card.querySelector('.ink-tank').setAttribute('aria-label',name+' ink: '+(known?value+' percent':'not reported'));
   return card;
  }));
@@ -69,11 +69,12 @@ async function refreshPrinterStatus(){
   identity.textContent=(p.model||'Epson ET-3850')+' · '+(p.ip||'10.0.0.3');
   live.textContent=p.online?(p.state||'Connected'):'No response';
   const ports=p.ports||[],bits=[];if(p.http||ports.includes(80))bits.push('Web');if(p.https||ports.includes(443))bits.push('HTTPS');if(p.ipp||ports.includes(631))bits.push('IPP');if(p.raw_print||ports.includes(9100))bits.push('Print service');
-  protocols.textContent=bits.join(' · ')||'No printer services detected';
-  const ink=p.online?(p.ink||[]):[];renderInkLevels(ink);
+  protocols.textContent=[p.connection,...bits].filter(Boolean).join(' · ')||'No printer services detected';
+  const webLink=document.querySelector('#printerWebLink');if(webLink&&/^10\.0\.0\.\d{1,3}$/.test(p.ip||''))webLink.href='https://'+p.ip+'/PRESENTATION/HTML/TOP/PRTINFO.HTML';
+  const ink=p.online?(p.ink||[]):[];renderInkLevels(ink,!!p.ink_estimated);
   const available=ink.filter(x=>typeof x.percent==='number'&&x.percent>=0&&x.percent<=100).length;
-  if(note)note.textContent=available?available+' colour'+(available===1?'':'s')+' reported':p.online?'Levels not supplied':'Printer unavailable';
-  detail.textContent=p.online?(available?'Your printer, status and ink in one place.':'Printer connected. Numeric ink levels are not currently being reported.'):'The printer did not answer. Check that it is switched on and connected.';
+  if(note)note.textContent=available?available+' colour'+(available===1?'':'s')+(p.ink_estimated?' · estimated':' reported'):p.online?'Levels not supplied':'Printer unavailable';
+  detail.textContent=p.online?(available?[(p.state||'Connected'),p.connection].filter(Boolean).join(' · '):'Printer connected. Numeric ink levels are not currently being reported.'):'The printer did not answer. Check that it is switched on and connected.';
   const stamp=p.checked_at?new Date(p.checked_at):new Date();
   if(checked)checked.textContent=Number.isNaN(stamp.getTime())?'—':stamp.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
  }catch(e){
@@ -118,5 +119,6 @@ async function refreshPlaystationStatus(){
 }
 refreshPlaystationStatus();
 if(location.protocol==="http:" || location.hostname.endsWith(".ts.net"))setInterval(refreshPlaystationStatus,15000);
+
 
 

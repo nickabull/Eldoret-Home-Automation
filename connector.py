@@ -345,7 +345,7 @@ def _ipp_ink(attributes):
 
 
 def _epson_web_status(markup):
-    """Read explicit percentage bars and status text from Epson WebConfig."""
+    """Read Epson percentage bars or ET-3850 image bars (verified 50px tanks)."""
     from html.parser import HTMLParser
     import re
 
@@ -386,10 +386,14 @@ def _epson_web_status(markup):
         return " ".join(" ".join(node["text"]).split())
     colours = {"BK":"Black", "BLACK":"Black", "C":"Cyan", "CYAN":"Cyan",
                "M":"Magenta", "MAGENTA":"Magenta", "Y":"Yellow", "YELLOW":"Yellow"}
-    ink, state = {}, None
+    ink, state, connection, estimated = {}, None, None, False
     for node in walk(page.root):
         if node["attrs"].get("id", "").upper() == "PRT_STATUS":
             state = re.sub(r"^printer\s+status\s*[:\-]?\s*", "", text_of(node), flags=re.I).strip()[:200] or None
+        if node["tag"] == "tr":
+            cells = [n for n in node["children"] if n["tag"] == "td"]
+            if len(cells) == 2 and text_of(cells[0]).rstrip(" :") == "Connection Status":
+                connection = text_of(cells[1])[:200]
         if node["tag"] != "li" or "tank" not in classes(node):
             continue
         descendants = list(walk(node))
@@ -397,6 +401,17 @@ def _epson_web_status(markup):
             continue
         label = next((colours.get(text_of(n).upper()) for n in descendants if "clrname" in classes(n)), None)
         if not label: continue
+        # This firmware renders CMYK as image heights inside 50px tanks.
+        # Match each image to its colour label; exclude the maintenance-box gauge.
+        code = {"Black":"K", "Cyan":"C", "Magenta":"M", "Yellow":"Y"}[label]
+        for image in descendants:
+            if image["tag"] != "img" or "color" not in classes(image): continue
+            src = urllib.parse.urlparse(image["attrs"].get("src") or "").path
+            if src.rsplit("/", 1)[-1].lower() != "ink_" + code.lower() + ".png": continue
+            height = image["attrs"].get("height") or ""
+            if re.fullmatch(r"\d+(?:\.\d+)?", height) and 0 <= float(height) <= 50:
+                ink[label] = round(float(height) * 2)
+                estimated = True
         for bar in descendants:
             if bar["tag"] != "div" or "tank" not in classes(bar): continue
             style = bar["attrs"].get("style") or ""
@@ -408,7 +423,8 @@ def _epson_web_status(markup):
             if len(boundary) == 2 and boundary[0] == boundary[1]:
                 value = boundary[0]
                 if 0 <= value <= 100: ink[label] = round(value)
-    return {"ink":[{"colour":c, "percent":ink[c]} for c in ("Black", "Cyan", "Magenta", "Yellow") if c in ink], "state":state}
+    return {"ink":[{"colour":c, "percent":ink[c]} for c in ("Black", "Cyan", "Magenta", "Yellow") if c in ink], "state":state,
+            "connection":connection, "ink_estimated":estimated}
 
 
 PRINTER_CACHE = {}
@@ -429,6 +445,7 @@ def _read_printer_status():
     host=_registry_ip("epson_et3850","10.0.0.3")
     result={"ip":host,"online":False,"model":"Epson ET-3850","state":None,
             "ink":[],"alerts":[],"ports":[],"sources":[],"detail":None}
+    result["web_url"] = "https://" + host + "/PRESENTATION/HTML/TOP/PRTINFO.HTML"
     ports=[p for p in (80,443,631,9100) if _tcp_open(host,p,timeout=0.22)]
     result["ports"]=ports
     result["online"]=bool(ports)
@@ -478,18 +495,25 @@ def _read_printer_status():
            "/cgi-bin/PrinterStatus.cgi","/cgi-bin/Status.cgi","/cgi-bin/InkLevel.cgi"]
     blobs=[]
     ctx=ssl._create_unverified_context()
-    for scheme in (() if result["ink"] else ("http","https")):
+    opener=urllib.request.build_opener(urllib.request.ProxyHandler({}), urllib.request.HTTPSHandler(context=ctx))
+    complete_web_read=False
+    for scheme in (() if result["ink"] else ("https","http")):
         if (scheme=="http" and 80 not in ports) or (scheme=="https" and 443 not in ports):
             continue
         for path in pages:
             try:
                 req=urllib.request.Request(scheme+"://"+host+path,headers={"User-Agent":"Mozilla/5.0 Eldoret"})
-                with urllib.request.urlopen(req,timeout=1.2,context=ctx if scheme=="https" else None) as response:
+                with opener.open(req,timeout=2) as response:
                     body=response.read(250000).decode("utf-8",errors="replace")
                 if body:
                     blobs.append((path,body))
+                    if len(_epson_web_status(body)["ink"]) == 4:
+                        complete_web_read=True
+                        break
             except Exception:
                 pass
+        if complete_web_read:
+            break
     colours={"black":"Black","cyan":"Cyan","magenta":"Magenta","yellow":"Yellow"}
     found={}
     for path,body in blobs:
@@ -497,10 +521,14 @@ def _read_printer_status():
         web_status = _epson_web_status(body)
         if web_status["state"] and not result["state"]:
             result["state"] = web_status["state"]
+        if web_status["connection"]:
+            result["connection"] = web_status["connection"]
+        if web_status["ink_estimated"]:
+            result["ink_estimated"] = True
         for item in web_status["ink"]:
             found[item["colour"]] = item["percent"]
         if web_status["ink"]:
-            result["sources"].append("Epson WebConfig percentage bars")
+            result["sources"].append("Epson WebConfig ink bars")
         if "epson" in low: result["sources"].append("Epson WebConfig")
         title=re.search(r"<title[^>]*>(.*?)</title>",body,re.I|re.S)
         if title:
@@ -2285,6 +2313,7 @@ print("Live state + scenes: ready")
 print(f"Sky Q now-playing target: {sky_q_host()}:{SKY_Q_JSON_PORT}")
 print("Open http://localhost:8765 in Chrome")
 ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
+
 
 
 
