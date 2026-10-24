@@ -1265,3 +1265,14 @@ body.eldoret-shell.sky-search-page{background-image:linear-gradient(90deg,rgba(6
 body.eldoret-shell.sky-search-page .eldoret-search-panel{background:linear-gradient(135deg,rgba(16,31,55,.68),rgba(7,12,22,.72))!important;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 body.eldoret-shell.sky-search-page .sport-now:not(.has-now-artwork):not(.has-app-banner){background:rgba(15,29,44,.78)!important}
 body.eldoret-shell.sky-search-page :is(.eldoret-search-copy,.eldoret-search-help,.eldoret-brand,.eldoret-clock){text-shadow:0 2px 8px #000}
+/* Shared glass treatment: 80% panel backgrounds, fully opaque content. */
+body.eldoret-shell :is(.hero,.lights-hero,.printer-panel,.ink-card,.epson-footer,.sensor-card,.device-card,.info-strip>div,.radio-now,.radio-transport,.radio-station,.now-watching:not(.has-now-artwork):not(.has-app-banner):not(.has-now-radio-artwork),.guide-channel,.guide-card,.sport-now-controls,.net-card,.net-traffic,.net-detail,.home-news){background:rgba(14,29,46,.80)!important;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+body.eldoret-shell .sport-channel:not(.has-programme-artwork):not(.has-radio-artwork):not(.skybrand):not([data-channel="313"]){background:rgba(14,29,46,.80)!important}
+body.eldoret-shell.sky-search-page .eldoret-search-panel{background:rgba(14,29,46,.80)!important}
+body.eldoret-shell .sport-now.has-now-artwork,body.eldoret-shell .sport-now.has-app-banner,body.eldoret-shell .sport-now.has-now-radio-artwork{background-color:rgba(14,29,46,.80)!important}
+@media(min-aspect-ratio:4/3) and (min-width:760px){
+ body.eldoret-shell.epson-page .epson-hero{width:43%!important;max-width:690px!important;min-width:0!important;grid-template-columns:48px minmax(0,1fr) auto!important;gap:14px!important;padding:16px 18px!important}
+ body.eldoret-shell.epson-page .epson-mark{width:48px!important;height:48px!important;border-radius:15px!important}
+ body.eldoret-shell.epson-page .epson-hero h2{font-size:24px!important}
+ body.eldoret-shell.epson-page .epson-hero p:last-child{font-size:11px!important;line-height:1.4!important}
+}
