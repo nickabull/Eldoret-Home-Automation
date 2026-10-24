@@ -7,7 +7,7 @@
  clock();setInterval(clock,1000);
  function overall(){
   const list=[...health.values()], good=list.filter(x=>x==='good').length, warn=list.filter(x=>x==='warning').length, missing=7-good-warn;
-  $('homeSummary').textContent=good?good+' of 7 areas reporting in. '+(warn?'A few things are worth a look.':'A little peace of mind, all in one place.'):'Your home’s live details, together in one place.';
+  $('homeSummary').textContent=(good+warn)?(good+warn)+' of 7 areas reporting in. '+(warn?'A few things are worth a look.':'A little peace of mind, all in one place.'):'Your home’s live details, together in one place.';
   $('homeHealthTitle').textContent=warn?warn+' thing'+(warn===1?'':'s')+' to look at':good===7?'Your world is OK.':good?'Home is checking in.':'Connecting the dots';
   $('homeHealthDetail').textContent=warn?'Amber cards have the details.':missing?missing+' area'+(missing===1?' is':'s are')+' waiting for a live reading or connection.':'All seven monitored areas are reporting normally.';
   $('homeHealthIcon').textContent=warn?'!':good===7?'✓':'⌁';
