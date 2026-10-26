@@ -871,6 +871,185 @@ def _probe_network_device(d):
         item["playstation"] = ps
     return item
 
+UNIFI_CONFIG_FILE = os.path.expanduser('~/eldoret-connector/unifi/config.json')
+UNIFI_LOCK = threading.Lock()
+UNIFI_CACHE = {}
+UNIFI_CLIENT = None
+UNIFI_LAST_GOOD = None
+
+
+def _unifi_config():
+    import stat
+    try:
+        info = os.stat(UNIFI_CONFIG_FILE)
+    except FileNotFoundError:
+        return None
+    if stat.S_IMODE(info.st_mode) & 0o077 or info.st_uid != os.getuid():
+        raise ValueError('UniFi configuration must be owned by you with mode 600.')
+    with open(UNIFI_CONFIG_FILE, encoding='utf-8') as file:
+        return json.load(file)
+
+
+def _unifi_address(url):
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password or parsed.path not in ('', '/') or parsed.query or parsed.fragment:
+        raise ValueError('Enter the HTTPS controller address only, including its port.')
+    return parsed.hostname, parsed.port or 443
+
+
+class _UniFiClient:
+    """Standalone Network Server API; pin TLS before transmitting credentials."""
+    def __init__(self, config):
+        self.config = config
+        self.host, self.port = _unifi_address(config['url'])
+        self.cookies = {}
+
+    def request(self, path, body=None):
+        import http.client
+        from http.cookies import SimpleCookie
+        connection = http.client.HTTPSConnection(self.host, self.port, timeout=5, context=ssl._create_unverified_context())
+        try:
+            connection.connect()
+            fingerprint = hashlib.sha256(connection.sock.getpeercert(binary_form=True)).hexdigest()
+            if not secrets.compare_digest(fingerprint, self.config['certificate_sha256']):
+                raise ValueError('UniFi certificate changed. Verify the controller and rerun local setup.')
+            headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+            if self.cookies:
+                headers['Cookie'] = '; '.join(key + '=' + value for key, value in self.cookies.items())
+            connection.request('POST' if body is not None else 'GET', path,
+                               json.dumps(body).encode() if body is not None else None, headers)
+            response = connection.getresponse()
+            for key, value in response.getheaders():
+                if key.lower() == 'set-cookie':
+                    cookie = SimpleCookie(); cookie.load(value)
+                    self.cookies.update({name: morsel.value for name, morsel in cookie.items()})
+            if response.status in (401, 403):
+                raise PermissionError('UniFi rejected the local login or view permissions.')
+            if response.status != 200:
+                raise RuntimeError('UniFi returned HTTP ' + str(response.status) + '.')
+            raw = response.read(4 * 1024 * 1024 + 1)
+            if len(raw) > 4 * 1024 * 1024:
+                raise RuntimeError('UniFi response is too large.')
+            payload = json.loads(raw)
+            if not isinstance(payload, dict):
+                raise RuntimeError('Unexpected UniFi response.')
+            if payload.get('meta', {}).get('rc') != 'ok':
+                if 'login' in str(payload.get('meta', {}).get('msg', '')).lower():
+                    raise PermissionError('UniFi session expired.')
+                raise RuntimeError('UniFi could not complete the read.')
+            return payload.get('data', [])
+        finally:
+            connection.close()
+
+    def devices(self):
+        site = urllib.parse.quote(self.config.get('site', 'default'), safe='')
+        path = '/api/s/' + site + '/stat/device'
+        if self.cookies:
+            try:
+                data = self.request(path)
+            except PermissionError:
+                self.cookies.clear()
+        if not self.cookies:
+            self.request('/api/login', {'username': self.config['username'], 'password': self.config['password'], 'remember': False})
+            data = self.request(path)
+        if not isinstance(data, list) or any(not isinstance(row, dict) for row in data):
+            raise RuntimeError('Unexpected UniFi device list.')
+        return data
+
+
+def _unifi_devices(rows):
+    import math
+    def number(value, maximum=None):
+        if isinstance(value, bool): return None
+        try:
+            result = float(value)
+        except (ValueError, TypeError):
+            return None
+        return result if math.isfinite(result) and result >= 0 and (maximum is None or result <= maximum) else None
+    devices = []
+    for row in rows:
+        if row.get('type') != 'uap': continue
+        stats = row.get('system-stats') or {}
+        online = row.get('state') == 1 and row.get('disabled') is not True
+        devices.append({
+            'name': row.get('name') or row.get('model') or 'Access point',
+            'model': row.get('model'), 'online': online,
+            'state': 'disabled' if row.get('disabled') else ('connected' if online else 'not_connected'),
+            'clients': number(row.get('num_sta')) if online else None,
+            'cpu_percent': number(stats.get('cpu'), 100) if online else None,
+            'memory_percent': number(stats.get('mem'), 100) if online else None,
+            'uptime_seconds': number(row.get('uptime', stats.get('uptime'))) if online else None,
+            'firmware': row.get('version') if online else None,
+        })
+    return sorted(devices, key=lambda row: str(row['name']).casefold())
+
+
+def unifi_status():
+    global UNIFI_CLIENT, UNIFI_LAST_GOOD
+    with UNIFI_LOCK:
+        now = time.monotonic()
+        if UNIFI_CACHE.get('expires', 0) > now:
+            return UNIFI_CACHE['data']
+        result = {'configured': False, 'controller_online': False, 'devices': [],
+                  'checked_at': datetime.now(timezone.utc).isoformat(), 'last_seen_at': None}
+        try:
+            config = _unifi_config()
+            if not config:
+                result['message'] = 'Run connector.py --configure-unifi locally to link UniFi.'
+            else:
+                result['configured'] = True
+                if UNIFI_CLIENT is None or UNIFI_CLIENT.config != config:
+                    UNIFI_CLIENT = _UniFiClient(config)
+                    UNIFI_LAST_GOOD = None
+                result['devices'] = _unifi_devices(UNIFI_CLIENT.devices())
+                result['controller_online'] = True
+                result['last_seen_at'] = datetime.now(timezone.utc).isoformat()
+                UNIFI_LAST_GOOD = {'devices': result['devices'], 'last_seen_at': result['last_seen_at']}
+                result['message'] = 'Live readings from UniFi Network Server.'
+        except PermissionError:
+            result['message'] = 'UniFi login or permissions rejected. Check the local view-only account.'
+        except ValueError:
+            result['message'] = 'UniFi local configuration or certificate needs checking. Rerun local setup.'
+        except Exception:
+            result['message'] = 'UniFi controller unavailable. Check that its host is awake and Network Server is running. Wi-Fi may still be working.'
+        if not result['controller_online'] and result['configured'] and UNIFI_LAST_GOOD:
+            result.update(UNIFI_LAST_GOOD)
+        UNIFI_CACHE.update(data=result, expires=time.monotonic() + (30 if result['controller_online'] else 10))
+        return result
+
+
+def configure_unifi():
+    import getpass
+    import tempfile
+    from pathlib import Path
+    url = input('UniFi controller HTTPS address (including port): ').strip().rstrip('/')
+    host, port = _unifi_address(url)
+    username = input('UniFi local username [eldoret]: ').strip() or 'eldoret'
+    site = input('UniFi site [default]: ').strip() or 'default'
+    with socket.create_connection((host, port), timeout=5) as sock:
+        with ssl._create_unverified_context().wrap_socket(sock, server_hostname=host) as tls:
+            fingerprint = hashlib.sha256(tls.getpeercert(binary_form=True)).hexdigest()
+    print('Controller certificate SHA-256:', fingerprint)
+    if input('Trust this local controller certificate? Type yes: ').strip().lower() != 'yes':
+        raise ValueError('Controller certificate was not trusted; nothing saved.')
+    config = {'url': url, 'username': username, 'site': site, 'certificate_sha256': fingerprint,
+              'password': getpass.getpass('UniFi view-only password: ')}
+    devices = _unifi_devices(_UniFiClient(config).devices())
+    folder = Path(UNIFI_CONFIG_FILE).parent
+    folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+    folder.chmod(0o700)
+    fd, name = tempfile.mkstemp(prefix='.config-', dir=str(folder))
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as file:
+            os.fchmod(file.fileno(), 0o600)
+            json.dump(config, file)
+        os.replace(name, UNIFI_CONFIG_FILE)
+    finally:
+        if os.path.exists(name): os.unlink(name)
+    print('UniFi read verified:', len(devices), 'access points. Credentials saved locally with owner-only access.')
+    print('The Network page will pick these up on its next reading; no router reboot needed.')
+
+
 def network_status():
     now=time.time()
     cached=NETWORK_STATUS_CACHE.get("data")
@@ -2149,6 +2328,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/router/status":
             self.send_bytes(json.dumps(router_status()).encode())
             return
+        if path == "/api/unifi/status":
+            self.send_bytes(json.dumps(unifi_status()).encode())
+            return
         if path == "/api/network/status":
             try:
                 self.send_bytes(json.dumps(network_status()).encode())
@@ -2380,6 +2562,13 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     import sys
+    if '--configure-unifi' in sys.argv:
+        try:
+            configure_unifi()
+        except Exception:
+            print('UniFi setup not saved. Check the controller is awake, address, local login, site and view permissions.')
+            sys.exit(1)
+        sys.exit(0)
     if '--configure-router-snmp' in sys.argv:
         try:
             configure_router_snmp()
@@ -2398,6 +2587,7 @@ print("Live state + scenes: ready")
 print(f"Sky Q now-playing target: {sky_q_host()}:{SKY_Q_JSON_PORT}")
 print("Open http://localhost:8765 in Chrome")
 ThreadingHTTPServer(("0.0.0.0", 8765), Handler).serve_forever()
+
 
 
 

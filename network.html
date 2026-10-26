@@ -22,7 +22,34 @@ body.eldoret-dashboard{background:#080f1b;color:#edf4ff}body.eldoret-dashboard:b
 <dl class="net-detail"><div><dt>WAN2 link</dt><dd id="routerLink">—</dd></div><div><dt>Router uptime</dt><dd id="routerUptime">—</dd></div><div><dt>Firmware</dt><dd id="routerFirmware">—</dd></div><div><dt>Last checked</dt><dd id="routerChecked">—</dd></div></dl>
 <p class="net-note">Live interface traffic, rather than a speed test. Readings refresh every five seconds while this page is open. <span id="routerSecurity"></span></p>
 <section class="net-devices"><div class="net-heading"><div><p class="eyebrow">BEHIND THE SCENES</p><h2>Your devices</h2><p>Local service reachability</p></div></div><div class="device-grid" id="deviceGrid"></div></section>
+<section class="net-devices" aria-labelledby="unifiTitle"><div class="net-heading"><div><p class="eyebrow">WI-FI · UNIFI</p><h2 id="unifiTitle">Your access points</h2><p id="unifiSummary" role="status">Connecting to UniFi…</p></div><button class="net-refresh" id="unifiRefresh">Refresh Wi-Fi</button></div><div class="net-metrics" id="unifiGrid"></div><p class="net-note" id="unifiNote">Controller readings refresh every 30 seconds.</p></section>
 </main>
+<script>
+(()=>{const get=id=>document.getElementById(id);let busy=false;
+const numeric=(v,suffix='')=>typeof v==='number'&&Number.isFinite(v)?Math.round(v)+suffix:'Not reported';
+function render(p){const grid=get('unifiGrid');grid.replaceChildren();
+ const age=Date.now()-Date.parse(p.checked_at);const live=p.controller_online===true&&Number.isFinite(age)&&age>=-5000&&age<60000;
+ const historical=!live&&p.last_seen_at&&Array.isArray(p.devices);
+ if(!live&&!historical){get('unifiSummary').textContent=p.message||'Waiting for the first UniFi reading.';get('unifiNote').textContent='No previous access-point reading is available yet.';return;}
+ const devices=Array.isArray(p.devices)?p.devices:[];const up=devices.filter(d=>d.online===true).length;
+ get('unifiSummary').textContent=devices.length?up+' of '+devices.length+' access points connected':'Controller connected · no access points reported for this site';
+ get('unifiNote').textContent='Reported by UniFi · checked '+new Date(p.checked_at).toLocaleTimeString()+' · refreshes every 30 seconds.';
+ if(historical){get('unifiSummary').textContent='Last seen '+new Date(p.last_seen_at).toLocaleString()+' · '+up+' of '+devices.length+' access points were connected';get('unifiNote').textContent='Showing last recorded statistics · awaiting a fresh controller reading. '+(p.message||'');}
+ for(const d of devices){const card=document.createElement('article');card.className='net-card';
+ const add=(tag,text)=>{const el=document.createElement(tag);el.textContent=text;card.append(el);return el;};
+ const heading=add('h3',d.name||'Access point');heading.style.overflowWrap='anywhere';
+ add('p',historical?(d.online===true?'Last reported: connected':'Last reported: '+(d.state==='disabled'?'disabled':'not connected')):(d.online===true?'● Connected':d.state==='disabled'?'Disabled':'Not connected')).style.color=historical?'#b9c6d7':d.online===true?'#91e2ca':'#ffc783';
+ if(d.online===true){add('strong',numeric(d.clients)).className='net-value';add('p',historical?'Clients at last reading':'Connected clients');
+ add('small','CPU '+numeric(d.cpu_percent,'%')+' · Memory '+numeric(d.memory_percent,'%'));
+ const s=d.uptime_seconds;add('small','Uptime '+(typeof s==='number'?Math.floor(s/86400)+'d '+Math.floor(s%86400/3600)+'h':'not reported'));
+ add('small','Firmware '+(d.firmware||'not reported'));}grid.append(card);}
+}
+async function refresh(){if(busy)return;busy=true;get('unifiRefresh').disabled=true;const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),20000);
+ try{const response=await fetch('/api/unifi/status',{cache:'no-store',signal:abort.signal});if(!response.ok)throw Error();const p=await response.json();if(typeof p.controller_online!=='boolean')throw Error();render(p);}
+ catch(_){render({message:'UniFi readings unavailable. Check the connector and that the controller host is awake.'});}
+ finally{clearTimeout(timer);busy=false;get('unifiRefresh').disabled=false;}}
+get('unifiRefresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});setInterval(()=>{if(!document.hidden)refresh();},30000);refresh();})();
+</script>
 <script src="remote.js?v=1"></script><script src="devices.js?v=14"></script><script>renderDevices('network');</script>
 <script>
 (()=>{const get=id=>document.getElementById(id);let busy=false,lastReading=null;
@@ -39,3 +66,4 @@ function render(p){const age=p.checked_at?(Date.now()-new Date(p.checked_at).get
 async function refresh(){if(busy)return;busy=true;get('routerRefresh').disabled=true;const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),10000);try{const r=await fetch('/api/router/status',{cache:'no-store',signal:abort.signal});if(!r.ok)throw Error();const p=await r.json();if(typeof p.online!=='boolean')throw Error();lastReading=p;render(p);}catch(e){render({online:false,message:'Router readings could not be reached. Try Refresh.',history:lastReading?.history||[]});}finally{clearTimeout(timer);busy=false;get('routerRefresh').disabled=false;}}
 get('routerRefresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});setInterval(()=>{if(!document.hidden)refresh();},5000);refresh();})();
 </script><script src="kiosk.js?v=2"></script><script src="mobile.js?v=3"></script></body></html>
+
