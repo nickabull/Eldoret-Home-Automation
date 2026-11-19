@@ -36,7 +36,7 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
 <div class="header-right"><span id="overall">Checking 16 systems…</span><time id="clock">--:--</time></div></header>
 <main id="grid" aria-label="Home automation system heartbeats"></main>
-<footer><span id="updated" aria-live="polite">Connecting to Bulldog…</span><div style="display:flex;align-items:center;gap:10px"><button id="refresh">Refresh</button><a href="bulldog.html">System stats</a><a href="index.html">Eldoret</a></div></footer>
+<footer><span id="updated" aria-live="polite">Connecting to Bulldog…</span><div style="display:flex;align-items:center;gap:10px"><button id="fullscreen">Full screen</button><button id="refresh">Refresh</button><a href="bulldog.html">System stats</a><a href="index.html">Eldoret</a></div></footer>
 </div>
 <script>
 (()=>{
@@ -138,6 +138,7 @@ async function refresh(){if(running)return;running=true;document.getElementById(
  await Promise.all(jobs.map(check));document.getElementById('refresh').disabled=false;running=false;}
 function clock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
 document.getElementById('refresh').addEventListener('click',refresh);
+document.getElementById('fullscreen').addEventListener('click',()=>{if(!document.fullscreenElement){document.documentElement.requestFullscreen?.().catch(()=>{});}else{document.exitFullscreen?.().catch(()=>{});}});
 for(const job of jobs)setInterval(()=>{if(!document.hidden)check(job);},job.period);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
 setInterval(clock,15000);clock();refresh();
