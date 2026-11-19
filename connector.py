@@ -1228,6 +1228,64 @@ def bulldog_status():
         result["boot_id"] = ""
     return result
 
+# Bounded 24-hour sampling continues even when nobody has the dashboard open.
+BULLDOG_HISTORY_FILE = os.path.expanduser("~/eldoret-connector/bulldog-health-history.json")
+BULLDOG_HISTORY_LOCK = threading.Lock()
+BULLDOG_HISTORY = []
+def _bulldog_history_load():
+    global BULLDOG_HISTORY
+    try:
+        with open(BULLDOG_HISTORY_FILE, encoding="utf-8") as stream:
+            data = json.load(stream)
+        if isinstance(data, list):
+            BULLDOG_HISTORY = [row for row in data[-1440:] if isinstance(row, dict)]
+    except (OSError, ValueError):
+        BULLDOG_HISTORY = []
+
+def _bulldog_history_loop():
+    _bulldog_history_load()
+    while True:
+        try:
+            snapshot = bulldog_status()
+            row = {k: snapshot.get(k) for k in ("checked_at", "cpu_percent",
+                "temperature_c", "memory_percent", "disk_percent", "load_1m")}
+            with BULLDOG_HISTORY_LOCK:
+                BULLDOG_HISTORY.append(row)
+                del BULLDOG_HISTORY[:-1440]
+                if len(BULLDOG_HISTORY) % 5 == 0:
+                    new = BULLDOG_HISTORY_FILE + ".new"
+                    with open(new, "w", encoding="utf-8") as stream:
+                        os.fchmod(stream.fileno(), 0o600)
+                        json.dump(BULLDOG_HISTORY, stream, separators=(",", ":"))
+                    os.replace(new, BULLDOG_HISTORY_FILE)
+        except Exception:
+            pass
+        time.sleep(60)
+
+def bulldog_health():
+    status = bulldog_status()
+    concerns = []
+    temp = status.get("temperature_c")
+    mem = status.get("memory_percent")
+    disk = status.get("disk_percent")
+    if isinstance(temp, (int, float)) and temp >= 80:
+        concerns.append("CPU temperature high")
+    elif isinstance(temp, (int, float)) and temp >= 70:
+        concerns.append("CPU running warm")
+    if isinstance(mem, (int, float)) and mem >= 90:
+        concerns.append("Memory almost full")
+    elif isinstance(mem, (int, float)) and mem >= 80:
+        concerns.append("Memory use elevated")
+    if isinstance(disk, (int, float)) and disk >= 90:
+        concerns.append("Storage almost full")
+    elif isinstance(disk, (int, float)) and disk >= 80:
+        concerns.append("Storage use elevated")
+    status["health"] = "warning" if concerns else "good"
+    status["health_messages"] = concerns
+    with BULLDOG_HISTORY_LOCK:
+        status["history"] = list(BULLDOG_HISTORY[-1440:])
+    return status
+
 def unifi_status():
     if _unifi_snmp_enabled():
         return _unifi_snmp_status()
@@ -2577,7 +2635,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/bulldog/status":
             try:
-                self.send_bytes(json.dumps(bulldog_status()).encode())
+                self.send_bytes(json.dumps(bulldog_health()).encode())
             except Exception:
                 self.send_bytes(json.dumps({"error":"Bulldog health temporarily unavailable"}).encode())
             return
@@ -2832,6 +2890,7 @@ if __name__ == '__main__':
 
 threading.Thread(target=agent_loop, daemon=True).start()
 threading.Thread(target=device_registry_loop, daemon=True).start()
+threading.Thread(target=_bulldog_history_loop, daemon=True).start()
 threading.Thread(target=remote_state_loop, daemon=True).start()
 print("Eldoret live connector running")
 print("House Hue bridge: ready")
