@@ -13,7 +13,7 @@ header{display:flex;justify-content:space-between;align-items:center;flex-shrink
 #clock{font-size:22px;font-weight:800;letter-spacing:-.03em}
 #overall{font-size:11px;color:var(--mint);font-weight:700}
 #grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:7px}
-.tile{border:1px solid var(--border);border-radius:13px;background:linear-gradient(130deg,rgba(25,56,74,.96),rgba(10,28,46,.96));min-height:0;min-width:0;padding:8px 10px 7px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
+.tile{cursor:pointer;touch-action:manipulation;border:1px solid var(--border);border-radius:13px;background:linear-gradient(130deg,rgba(25,56,74,.96),rgba(10,28,46,.96));min-height:0;min-width:0;padding:8px 10px 7px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
 .tile.good{border-color:#326f68}.tile.warn{border-color:#806d4d}.tile.bad{border-color:#884a5b}
 .top{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .category{font-size:9px;font-weight:850;color:#99b8c8;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -31,6 +31,21 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 @media(max-width:650px){#app{padding:6px;gap:4px}#grid{gap:4px}.tile{padding:5px 6px;border-radius:8px}.name{font-size:clamp(10px,2.4vw,14px)}.category{font-size:7px}.detail{font-size:9px}.heart{font-size:16px}.title{font-size:15px}#overall{display:none}#clock{font-size:16px}footer{font-size:9px}}
 @media(max-height:400px){#app{padding:4px 8px;gap:3px}header{min-height:27px}.name{font-size:12px}.detail{font-size:9px}.tile{padding:3px 8px}.heart{font-size:16px}.category{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.tile.good .heart{animation:none}}
+
+.tile:focus-visible{outline:3px solid #a5f8db;outline-offset:-3px}
+#detailOverlay{position:fixed;inset:0;z-index:20;background:rgba(1,9,18,.87);display:grid;place-items:center;padding:10px}
+#detailOverlay[hidden]{display:none}
+.detail-card{width:min(640px,100%);max-height:calc(100dvh - 20px);overflow:auto;background:linear-gradient(135deg,#19394b,#0b2031);border:1px solid #77b7ad;border-radius:19px;padding:17px;box-shadow:0 20px 60px #000b}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.detail-top h2{font-size:clamp(22px,3.8vw,32px);margin:3px 0}.detail-top small{color:#93e6d1;letter-spacing:.12em;font-size:11px}
+.detail-close{background:#28495a;border:1px solid #7195a8;border-radius:11px;color:#fff;min-width:46px;min-height:44px;font-size:23px;cursor:pointer}
+.detail-status{font-size:19px;font-weight:850;margin:12px 0 7px}.detail-desc{font-size:12px;line-height:1.4;color:#b8d3df;margin:6px 0}
+.detail-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}.detail-actions a{border:1px solid #6fbeac;background:#22584e;color:#fff;text-decoration:none;padding:11px 16px;border-radius:11px;font-weight:800;font-size:13px}
+.sky-remote{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-top:13px}
+.sky-remote button{min-height:45px;border:1px solid #52748a;background:#214054;color:#f4fcff;border-radius:10px;font-size:14px;font-weight:750;cursor:pointer;touch-action:manipulation}
+.sky-remote button:active{background:#438a7e}
+.sky-remote button:disabled{opacity:.4}
+#remoteFeedback{font-size:11px;color:#a9e7d4;margin:7px 0;min-height:15px}
+@media(max-height:520px){.detail-card{padding:10px 14px}.detail-status{margin:6px 0}.sky-remote button{min-height:37px}.sky-remote{gap:5px;margin-top:8px}}
 </style></head><body>
 <div id="app">
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
@@ -38,6 +53,14 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 <main id="grid" aria-label="Home automation system heartbeats"></main>
 <footer><span id="updated" aria-live="polite">Connecting to Bulldog…</span><div style="display:flex;align-items:center;gap:10px"><button id="fullscreen">Full screen</button><button id="refresh">Refresh</button><a href="bulldog.html">System stats</a><a href="index.html">Eldoret</a></div></footer>
 </div>
+<div id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailName" hidden>
+<section class="detail-card">
+<div class="detail-top"><div><small id="detailCategory">DEVICE DETAILS</small><h2 id="detailName">Device</h2></div><button class="detail-close" id="detailClose" aria-label="Close">×</button></div>
+<div class="detail-status" id="detailState">Checking…</div>
+<p class="detail-desc" id="detailExplanation"></p>
+<div id="skyRemote" hidden><div class="sky-remote" id="skyButtons"></div><p id="remoteFeedback" aria-live="polite">Touch a button to control Sky Q.</p></div>
+<div class="detail-actions"><a id="detailOpen" href="index.html">Open full details →</a></div>
+</section></div>
 <script>
 (()=>{
 const definitions=[
@@ -67,9 +90,62 @@ for(const x of definitions){
  const beat=document.createElement('span');beat.className='heart';beat.textContent='♥';beat.setAttribute('aria-hidden','true');top.append(cat,beat);
  const name=document.createElement('div');name.className='name';name.textContent=x.name;
  const info=document.createElement('div');info.className='detail';info.textContent='Waiting for data';
- card.append(top,name,info);grid.append(card);items.set(x.id,{card,info,name:x.name});
+ card.append(top,name,info);card.tabIndex=0;card.setAttribute('role','button');
+ card.addEventListener('click',()=>openTile(x));
+ card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTile(x);}});
+ grid.append(card);items.set(x.id,{card,info,name:x.name});
 }
 function set(id,state,detail){const x=items.get(id);if(!x)return;x.card.className='tile '+state;x.info.textContent=detail;x.card.setAttribute('aria-label',x.name+', '+detail);}
+
+const overlay=document.getElementById('detailOverlay');
+const detailName=document.getElementById('detailName');
+const detailState=document.getElementById('detailState');
+const detailCategory=document.getElementById('detailCategory');
+const detailExplanation=document.getElementById('detailExplanation');
+const detailOpen=document.getElementById('detailOpen');
+const remote=document.getElementById('skyRemote');
+const feedback=document.getElementById('remoteFeedback');
+let lastFocused=null, selected=null,remoteBusy=false;
+const detailLinks={bulldog:'bulldog.html',router:'network.html',house:'lights.html',utility:'lights.html',
+ ap6:'network.html',ap7:'network.html',ap8:'network.html',ap9:'network.html',
+ sky:'sky.html',ps5:'av.html'};
+const skyButtons=[
+ ['Power','power'],['CH +','channelup'],['CH −','channeldown'],['Home','home'],['Back','backup'],['Select','select'],
+ ['↑','up'],['↓','down'],['←','left'],['→','right'],['Play','play'],['Pause','pause'],
+ ['Rewind','rewind'],['Forward','fastforward'],['Record','record'],['Red','red'],['Green','green'],['Blue','blue']
+];
+const skyGrid=document.getElementById('skyButtons');
+for(const [label,key] of skyButtons){const b=document.createElement('button');b.type='button';b.textContent=label;
+ b.addEventListener('click',async()=>{
+  if(remoteBusy)return;
+  remoteBusy=true;b.disabled=true;feedback.textContent='Sending '+label+'…';
+  try{const res=await fetch('/api/sky/key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+   if(!res.ok)throw Error('Command was not accepted');
+   feedback.textContent='Sent '+label+' to Sky Q';
+  }catch(_){feedback.textContent='Unable to send '+label+' — open full Sky Q controls to investigate';}
+  finally{remoteBusy=false;b.disabled=false;}
+ });skyGrid.append(b);
+}
+function openTile(def){
+ lastFocused=document.activeElement;selected=def;
+ const tile=items.get(def.id);
+ detailName.textContent=def.name;detailCategory.textContent=def.category;
+ detailState.textContent=tile?.info.textContent||'Checking status';
+ const appliance=['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood'].includes(def.id);
+ detailExplanation.textContent=def.id==='sky'?'Live Sky Q controls, using Eldoret’s existing local remote.':
+  appliance?'Detailed programme and operating information is in Appliances. Remote oven and hob operation is disabled.':
+  def.id==='ps5'?'Jesse’s PlayStation status and activity are read-only. The running game appears only if Sony reports it.':
+  'Tap below for the complete Eldoret monitoring and controls for this system.';
+ detailOpen.href=appliance?'appliances.html':detailLinks[def.id]||'index.html';
+ detailOpen.textContent=appliance?'Open appliance details →':def.id==='sky'?'Full Sky Q interface →':'Open full details →';
+ remote.hidden=def.id!=='sky';feedback.textContent='Touch a button to control Sky Q.';
+ overlay.hidden=false;document.getElementById('detailClose').focus();
+}
+function closeTile(){overlay.hidden=true;selected=null;if(lastFocused&&lastFocused.focus)lastFocused.focus();}
+document.getElementById('detailClose').addEventListener('click',closeTile);
+overlay.addEventListener('click',e=>{if(e.target===overlay)closeTile();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden)closeTile();});
+
 const fmt=v=>typeof v==='string'?v.split('.').pop():String(v);
 const elapsed=t=>{const n=Date.parse(t||'');return Number.isFinite(n)?(Date.now()-n)/1000:Infinity;};
 const numeric=v=>typeof v==='number'&&Number.isFinite(v);
