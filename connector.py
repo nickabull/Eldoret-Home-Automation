@@ -1295,6 +1295,12 @@ HOME_CONNECT_TOKENS = os.path.expanduser("~/.config/home-connect-tokens.json")
 HOME_CONNECT_ACCEPT = "application/vnd.bsh.sdk.v1+json"
 HOME_CONNECT_BASE = "https://api.home-connect.com/api"
 HOME_CONNECT_TOKEN_URL = "https://api.home-connect.com/security/oauth/token"
+HOME_CONNECT_DETAILS_CACHE = {}
+HOME_CONNECT_DEVICE_IDS = {}
+HOME_CONNECT_EVENTS_FILE = os.path.expanduser("~/eldoret-connector/home-connect-activity.json")
+HOME_CONNECT_EVENTS = []
+HOME_CONNECT_LAST_STATES = {}
+
 
 def _hc_read_private(path):
     import stat
@@ -1389,14 +1395,103 @@ def home_connect_status():
                         "value":v.get("value"),"unit":v.get("unit")}
                         for v in active.get("options",[]) if isinstance(v,dict)]
                 return item
+            HOME_CONNECT_DEVICE_IDS.clear()
+            HOME_CONNECT_DEVICE_IDS.update({str(ap.get("name")): str(ap.get("haId")) for ap in all_devices
+                                            if ap.get("name") and ap.get("haId")})
             with ThreadPoolExecutor(max_workers=3) as pool:
                 result["devices"]=list(pool.map(probe,all_devices[:16]))
             result["online_count"]=sum(bool(d["connected"]) for d in result["devices"])
+            _hc_record_activity(result["devices"])
         except (OSError,ValueError,KeyError,RuntimeError,urllib.error.URLError) as exc:
             # Never return raw server responses or token values to the web browser.
             result["error"]=("Home Connect needs reauthorisation" if "authorisation" in str(exc).lower()
                              else "Home Connect temporarily unavailable")
         HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+60)
+        return result
+
+
+def _hc_record_activity(devices):
+    """Store meaningful state transitions; no credentials, identifiers or continuous spam."""
+    global HOME_CONNECT_EVENTS
+    if not HOME_CONNECT_EVENTS:
+        try:
+            with open(HOME_CONNECT_EVENTS_FILE,encoding="utf-8") as stream:
+                saved=json.load(stream)
+            if isinstance(saved,list):
+                HOME_CONNECT_EVENTS=[r for r in saved[-300:] if isinstance(r,dict)]
+        except (OSError,ValueError):
+            pass
+    now=datetime.now(timezone.utc).isoformat()
+    changed=False
+    for d in devices:
+        name=str(d.get("name",""))[:90]
+        if not name:
+            continue
+        status=d.get("status") or {}
+        current={"connected":bool(d.get("connected")),
+                 "operation":str(status.get("OperationState","")).split(".")[-1],
+                 "door":str(status.get("DoorState","")).split(".")[-1],
+                 "program":str(d.get("active_program") or "").split(".")[-1]}
+        old=HOME_CONNECT_LAST_STATES.get(name)
+        if old is not None:
+            for field,label in (("connected","Connectivity"),("operation","Operation"),
+                                ("door","Door"),("program","Programme")):
+                if current[field]!=old.get(field):
+                    value=str(current[field])[:100] or "None"
+                    HOME_CONNECT_EVENTS.append({"at":now,"name":name,
+                        "event":label,"value":value})
+                    changed=True
+        HOME_CONNECT_LAST_STATES[name]=current
+    if changed:
+        HOME_CONNECT_EVENTS=HOME_CONNECT_EVENTS[-300:]
+        try:
+            target=HOME_CONNECT_EVENTS_FILE+".new"
+            fd=os.open(target,os.O_WRONLY | os.O_CREAT | os.O_TRUNC,0o600)
+            with os.fdopen(fd,"w",encoding="utf-8") as stream:
+                json.dump(HOME_CONNECT_EVENTS,stream,separators=(",",":"))
+            os.replace(target,HOME_CONNECT_EVENTS_FILE)
+        except OSError:
+            pass
+
+def home_connect_details(name):
+    # Per-appliance read-only on-demand details; cached to limit cloud requests.
+    if not isinstance(name,str) or len(name)>120:
+        return {"error":"Invalid appliance"}
+    with HOME_CONNECT_LOCK:
+        now=time.monotonic()
+        hit=HOME_CONNECT_DETAILS_CACHE.get(name)
+        if hit and hit["expires"]>now:
+            return hit["data"]
+        aid=HOME_CONNECT_DEVICE_IDS.get(name)
+        if not aid:
+            return {"error":"Open the Appliances page first, then select a device."}
+        result={"name":name,"settings":[],"available_programs":[],
+                "selected_program":None,"selected_options":[],
+                "read_only":True,"checked_at":datetime.now(timezone.utc).isoformat()}
+        try:
+            token=_hc_token()
+            root="/homeappliances/"+urllib.parse.quote(aid,safe="")
+            selected,serr=_hc_get(token,root+"/programs/selected")
+            if not serr:
+                p=selected.get("program")
+                if isinstance(p,dict):
+                    result["selected_program"]=p.get("key")
+                    result["selected_options"]=[{"name":str(v.get("key","")).split(".")[-1],
+                        "value":v.get("value"),"unit":v.get("unit")}
+                        for v in p.get("options",[])[:35] if isinstance(v,dict)]
+            available,aerr=_hc_get(token,root+"/programs/available")
+            if not aerr:
+                result["available_programs"]=[{"name":str(p.get("key","")).split(".")[-1]}
+                    for p in available.get("programs",[])[:45] if isinstance(p,dict)]
+            settings,terr=_hc_get(token,root+"/settings")
+            if not terr:
+                result["settings"]=[{"name":str(v.get("key","")).split(".")[-1],
+                    "value":v.get("value"),"unit":v.get("unit")}
+                    for v in settings.get("settings",[])[:35] if isinstance(v,dict)]
+            result["availability"]={"selected":serr,"programs":aerr,"settings":terr}
+        except (OSError,ValueError,KeyError,RuntimeError,urllib.error.URLError):
+            result["error"]="Home Connect detail information temporarily unavailable"
+        HOME_CONNECT_DETAILS_CACHE[name]={"expires":time.monotonic()+600,"data":result}
         return result
 
 def unifi_status():
@@ -2745,6 +2840,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/router/status":
             self.send_bytes(json.dumps(router_status()).encode())
+            return
+        if path == "/api/home-connect/details":
+            name=(query.get("name") or [""])[0]
+            self.send_bytes(json.dumps(home_connect_details(name)).encode())
             return
         if path == "/api/home-connect/status":
             self.send_bytes(json.dumps(home_connect_status()).encode())
