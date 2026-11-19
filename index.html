@@ -90,7 +90,7 @@ body.eldoret-dashboard.home-page{width:100%;height:auto;min-height:100dvh;displa
   const aps=(p.devices||[]).filter(x=>/^UniFi\b/i.test(x.name||''));
   if(aps.length!==4)throw Error('Missing access point readings');
   const count=aps.filter(x=>x.online===true).length;
-  card('wifi',count===4?'good':'unknown',count===4?'REACHABLE':'CHECKING',count===4?'Four access points, all reachable.':count+' / 4 access points reachable','Network replies only · detailed UniFi health comes with the controller.');
+  card('wifi',count===4?'good':'unknown',count===4?'REACHABLE':'CHECKING',count===4?'Four access points, all reachable.':count+' / 4 access points reachable','Network replies · detailed direct UniFi monitoring is available on the Network tab.');
   $('homeAps').replaceChildren(...aps.map(ap=>{const span=document.createElement('span');span.className='ap-pill'+(ap.online?' reachable':'');span.textContent=(ap.name||'').replace(/^UniFi\s*/i,'');span.title=ap.name+': '+(ap.online?'responding':'no service reply');return span;}));
  }
  card('car','unknown','NOT LINKED','One for another day.','Battery level, charging and range once connected.');
