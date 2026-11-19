@@ -29,6 +29,18 @@ body.eldoret-dashboard.bulldog-page{background:#081220;color:#e9f4ff}
 @media(max-width:1000px){.bulldog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.bulldog-page main{padding:10px}.bulldog-hero{grid-template-columns:1fr;padding:20px}.bulldog-dog{height:180px}.bulldog-grid{gap:10px}.bulldog-card{padding:15px}.bulldog-extra{grid-template-columns:1fr}.bulldog-value{font-size:27px}}
 @media(prefers-reduced-motion:reduce){.bulldog-dot{animation:none}}
+
+.bulldog-health-warning{background:#68421f!important;border-color:#d4a36a!important;color:#ffe1b0!important}
+.bulldog-history{margin:18px 0;padding:22px;border-radius:22px;border:1px solid #34566a;background:linear-gradient(145deg,#122b3c,#0b1b2d)}
+.bulldog-history-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.bulldog-history-head h2{margin:0 0 6px}
+.bulldog-history-head p{margin:0;color:#aac9d5;font-size:12px}
+.bulldog-history-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#b8cfdc}
+.bulldog-history-legend span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;background:var(--dot)}
+.bulldog-graph{display:block;width:100%;height:auto;max-height:270px;margin:16px 0 4px;overflow:visible}
+.bulldog-graph .guide{stroke:#4b6376;stroke-width:.7;opacity:.42}
+.bulldog-graph .axis{fill:#a9becd;font-size:11px}
+.bulldog-graph .trace{fill:none;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
 </style></head>
 <body class="eldoret-dashboard eldoret-shell bulldog-page">
 <header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div></header>
@@ -45,6 +57,11 @@ body.eldoret-dashboard.bulldog-page{background:#081220;color:#e9f4ff}
 <article class="bulldog-card"><p class="bulldog-label">Swap usage</p><div class="bulldog-value" id="swap">—</div><p class="bulldog-detail" id="swapDetail">—</p></article>
 <article class="bulldog-card"><p class="bulldog-label">Eldoret connector</p><div class="bulldog-value" id="connector">—</div><p class="bulldog-detail">This page is served by the running Eldoret process</p></article>
 </div>
+<section class="bulldog-history" aria-label="Bulldog system history">
+<div class="bulldog-history-head"><div><h2>Bulldog's last 24 hours</h2><p id="historyDescription">Collecting live readings once a minute, even when this page is closed.</p></div><div class="bulldog-history-legend"><span style="--dot:#7de2c6">CPU %</span><span style="--dot:#efb56f">Temperature °C</span><span style="--dot:#91b9ff">Memory %</span></div></div>
+<svg id="bulldogHistoryPlot" class="bulldog-graph" viewBox="0 0 1000 260" role="img" aria-label="System history graph of CPU, memory and temperature"></svg>
+<p class="bulldog-detail">Temperature and percentage series share a 0–100 scale. History begins when monitoring is activated.</p>
+</section>
 <section class="bulldog-extra">
 <article class="bulldog-card"><h2>Hardware & software</h2><div class="bulldog-list" id="hardware"></div></article>
 <article class="bulldog-card"><h2>Network & connections</h2><div class="bulldog-list" id="connections"></div></article>
@@ -59,9 +76,31 @@ const bytes=n=>typeof n==='number'?(n/1073741824>=1?(n/1073741824).toFixed(1)+' 
 const uptime=n=>typeof n==='number'?Math.floor(n/86400)+'d '+Math.floor((n%86400)/3600)+'h '+Math.floor((n%3600)/60)+'m':'—';
 function meter(id,n){const e=$(id);e.style.width=(typeof n==='number'?Math.min(100,Math.max(0,n)):0)+'%';e.classList.toggle('hot',typeof n==='number'&&n>80);}
 function lines(id,pairs){const parent=$(id);parent.replaceChildren();for(const [a,b] of pairs){const row=document.createElement('div');row.className='bulldog-line';const label=document.createElement('span'),value=document.createElement('strong');label.textContent=a;value.textContent=b==null?'—':String(b);row.append(label,value);parent.append(row);}}
+function plotHistory(data){
+ const svg=$('bulldogHistoryPlot'),ns='http://www.w3.org/2000/svg';svg.replaceChildren();
+ const add=(tag,attrs,text)=>{const el=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(text!==undefined)el.textContent=text;svg.append(el);return el;};
+ const rows=(Array.isArray(data)?data:[]).filter(x=>x&&Date.parse(x.checked_at)>Date.now()-86400000);
+ const left=44,right=985,top=15,bottom=220;
+ for(const y of [0,25,50,75,100]){const yy=bottom-(bottom-top)*y/100;add('line',{x1:left,x2:right,y1:yy,y2:yy,class:'guide'});add('text',{x:8,y:yy+4,class:'axis'},String(y));}
+ if(!rows.length){add('text',{x:300,y:120,class:'axis'},'History is collecting — the first samples will appear shortly.');$('historyDescription').textContent='Collecting the first samples on Bulldog.';return;}
+ const first=Date.now()-86400000,end=Date.now(),x=t=>left+(right-left)*Math.max(0,Math.min(1,(t-first)/(end-first)));
+ const traces=[['cpu_percent','#7de2c6'],['temperature_c','#efb56f'],['memory_percent','#91b9ff']];
+ for(const [key,color] of traces){let segments=[],current=[];
+  for(const row of rows){const value=row[key],date=Date.parse(row.checked_at);if(typeof value==='number'&&Number.isFinite(value)&&Number.isFinite(date)){current.push(x(date).toFixed(1)+','+(bottom-(bottom-top)*Math.max(0,Math.min(100,value))/100).toFixed(1));}
+   else if(current.length){segments.push(current);current=[];}}
+  if(current.length)segments.push(current);
+  for(const points of segments){if(points.length>1)add('polyline',{points:points.join(' '),class:'trace',stroke:color});else{const [cx,cy]=points[0].split(',');add('circle',{cx,cy,r:3,fill:color});}}
+ }
+ const count=rows.length;const start=rows[0].checked_at;
+ $('historyDescription').textContent=count+' stored readings · first '+new Date(start).toLocaleString('en-GB')+' · sampling every minute';
+ const tickTimes=[0,6,12,18,24];for(const hours of tickTimes){const t=first+hours*3600000;add('text',{x:x(t),y:245,class:'axis','text-anchor':hours===0?'start':hours===24?'end':'middle'},new Date(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));}
+}
 function draw(p){
- $('healthText').textContent='ELDORET ONLINE · BULLDOG REPORTING';
- $('lastChecked').textContent='Last checked '+new Date(p.checked_at).toLocaleTimeString('en-GB');
+ $('healthText').textContent=p.health==='warning'?'BULLDOG NEEDS ATTENTION':'ELDORET ONLINE · BULLDOG REPORTING';
+ $('healthBadge').classList.toggle('bulldog-health-warning',p.health==='warning');
+ $('lastChecked').title=(p.health_messages||[]).join('; ');
+ plotHistory(p.history);
+ $('lastChecked').textContent='Last checked '+new Date(p.checked_at).toLocaleTimeString('en-GB')+((p.health_messages||[]).length?' · '+p.health_messages.join(' · '):'');
  $('cpu').textContent=pct(p.cpu_percent);meter('cpuBar',p.cpu_percent);
  $('load').textContent='1-minute load '+num(p.load_1m,2)+' · '+(p.logical_cpus||'—')+' CPU cores';
  $('temp').textContent=typeof p.temperature_c==='number'?num(p.temperature_c)+'°C':'—';meter('tempBar',p.temperature_c);
