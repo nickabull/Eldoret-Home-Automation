@@ -69,6 +69,25 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 .sky-numpad button{min-height:37px;border:1px solid #567e8e;background:#24485a;border-radius:9px;color:white;font-size:19px;font-weight:800;cursor:pointer;touch-action:manipulation}
 .sky-numpad button.go{background:#226b56;border-color:#8ce3c7;font-size:15px}
 .sky-numpad button.clear{font-size:13px;background:#503740}
+
+/* Mission Control editorial tiles: dimmed imagery, clear status and one useful headline */
+.tile{isolation:isolate;background-color:#10283b;background-size:cover;background-position:center}
+.tile::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgba(3,13,25,.94) 0%,rgba(5,20,33,.81) 57%,rgba(5,17,28,.39) 100%)}
+.tile::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(0deg,rgba(3,11,22,.6),transparent 55%)}
+.tile[data-art="network"]{background-image:url('/network-patchbay-background.webp')}
+.tile[data-art="home"]{background-image:url('/eldoret-house-night.webp')}
+.tile[data-art="dusk"]{background-image:url('/eldoret-home-dusk.webp')}
+.tile[data-art="sky"]{background-image:url('/sky-streaming-background.png')}
+.tile[data-art="epson"]{background-image:url('/epson-et3850-background.webp')}
+.tile.good{border-color:#456d70}.tile.bad{border-color:#915966}.tile.warn{border-color:#957d52}
+.tile .category{font-size:8px;opacity:.94}
+.tile .name{font-size:11px;color:#b4d6df;font-weight:750;line-height:1.05}
+.tile .headline{font-size:13px;line-height:1.12;font-weight:850;color:#fff;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;text-wrap:balance;text-shadow:0 1px 4px #000c}
+.tile .detail{font-size:9px;line-height:1.1;font-weight:650;color:#d1e6ea;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.tile .top{flex-shrink:0}.tile .heart{font-size:19px}
+.tile .story{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:0;flex:1}
+.tile .name,.tile .headline,.tile .detail{position:relative;z-index:1}
+@media(max-width:650px){.tile .headline{font-size:10px}.tile .name{font-size:9px}.tile .detail{font-size:8px}.tile .heart{font-size:16px}}
 </style></head><body>
 <div id="app">
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
@@ -112,13 +131,39 @@ for(const x of definitions){
  const cat=document.createElement('span');cat.className='category';cat.textContent=x.category;
  const beat=document.createElement('span');beat.className='heart';beat.textContent='♥';beat.setAttribute('aria-hidden','true');top.append(cat,beat);
  const name=document.createElement('div');name.className='name';name.textContent=x.name;
- const info=document.createElement('div');info.className='detail';info.textContent='Waiting for data';
- card.append(top,name,info);card.tabIndex=0;card.setAttribute('role','button');
+ const headline=document.createElement('div');headline.className='headline';headline.textContent='Checking '+x.name+'…';
+ const info=document.createElement('div');info.className='detail';info.textContent='Waiting for live status';
+ const story=document.createElement('div');story.className='story';story.append(name,headline,info);
+ const group=x.id==='bulldog'||x.id==='ps5'?'dusk':x.id==='sky'?'sky':
+   x.id==='house'||x.id==='utility'?'home':x.id==='router'||/^ap[6789]$/.test(x.id)?'network':'home';
+ card.dataset.art=group;
+ card.append(top,story);card.tabIndex=0;card.setAttribute('role','button');
  card.addEventListener('click',()=>openTile(x));
  card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTile(x);}});
- grid.append(card);items.set(x.id,{card,info,name:x.name});
+ grid.append(card);items.set(x.id,{card,info,headline,name:x.name});
 }
-function set(id,state,detail){const x=items.get(id);if(!x)return;x.card.className='tile '+state;x.info.textContent=detail;x.card.setAttribute('aria-label',x.name+', '+detail);}
+function set(id,state,detail,headline){
+ const x=items.get(id);if(!x)return;
+ x.card.className='tile '+state;
+ x.info.textContent=detail;
+ x.headline.textContent=headline||detail;
+ x.card.setAttribute('aria-label',x.name+', '+x.headline.textContent+', '+detail);
+}
+function skyArt(p){
+ const item=items.get('sky');if(!item)return;
+ // Programme UUID comes from the existing Sky EPG readback. Never guess imagery.
+ const uuid=String(p.programmeuuid||'');
+ if(!p.live||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(uuid)){
+  item.card.style.backgroundImage='';return;
+ }
+ const img='https://images.metadata.sky.com/pd-image/'+uuid+'/16-9';
+ if(item.card.dataset.skyArt===img)return;
+ item.card.dataset.skyArt=img;
+ const test=new Image();
+ test.onload=()=>{if(item.card.dataset.skyArt===img)item.card.style.backgroundImage='url("'+img+'")';};
+ test.onerror=()=>{if(item.card.dataset.skyArt===img)item.card.style.backgroundImage='';};
+ test.src=img;
+}
 
 const overlay=document.getElementById('detailOverlay');
 const detailName=document.getElementById('detailName');
