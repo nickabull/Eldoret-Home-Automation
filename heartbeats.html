@@ -354,7 +354,7 @@ const jobs=[
    set('sky','good',(p.channel||'Sky Q')+(p.channelno?' · '+p.channelno:''),p.live?'Watching '+String(title).slice(0,70):p.playback==='recording'?'Playing a recording':'Sky Q is active');skyArt(p);
  }},
  {id:'ps5',url:'/api/playstation/status',ids:['ps5'],period:30000,read:p=>{
-  set('ps5',p.online?'good':'warn',p.online?'PS5 responding':'Resting / no reply',p.online?(p.running_app_name?'Playing '+p.running_app_name:'PlayStation is available'):'PlayStation is resting');
+  set('ps5',p.online?'good':'warn',p.online?'PS5 responding':'Resting / no reply',p.online?(p.running_app_name?'Playing '+p.running_app_name:'Jesse’s PlayStation is online'):'PlayStation not responding');
  }}
 ];
 function hue(id,p){if(!p||!Array.isArray(p.lights)&&typeof p.state!=='object'){set(id,'warn','Bridge not reporting');return}
