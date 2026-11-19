@@ -1498,8 +1498,9 @@ def home_connect_details(name):
 # daily REST allowance. Reconnect with backoff, never loop aggressively.
 HOME_CONNECT_SSE_CONNECTED = False
 HOME_CONNECT_LAST_EVENT_AT = None
+HOME_CONNECT_EVENTS_LAST_SAVE = 0
 def _hc_sse_event(kind, payload, appliance_id):
-    global HOME_CONNECT_LAST_EVENT_AT
+    global HOME_CONNECT_LAST_EVENT_AT, HOME_CONNECT_EVENTS_LAST_SAVE
     if kind in ("KEEP-ALIVE", ""):
         return
     if kind not in ("STATUS", "NOTIFY", "EVENT", "CONNECTED", "DISCONNECTED",
@@ -1558,6 +1559,16 @@ def _hc_sse_event(kind, payload, appliance_id):
             del HOME_CONNECT_EVENTS[:-300]
             cache["events"]=HOME_CONNECT_EVENTS[-60:]
             cache["online_count"]=sum(bool(d.get("connected")) for d in cache.get("devices",[]))
+            if time.monotonic()-HOME_CONNECT_EVENTS_LAST_SAVE>120:
+                try:
+                    path=HOME_CONNECT_EVENTS_FILE+".new"
+                    fd=os.open(path,os.O_WRONLY | os.O_CREAT | os.O_TRUNC,0o600)
+                    with os.fdopen(fd,"w",encoding="utf-8") as stream:
+                        json.dump(HOME_CONNECT_EVENTS[-300:],stream,separators=(",",":"))
+                    os.replace(path,HOME_CONNECT_EVENTS_FILE)
+                    HOME_CONNECT_EVENTS_LAST_SAVE=time.monotonic()
+                except OSError:
+                    pass
         HOME_CONNECT_LAST_EVENT_AT=now
 
 def _hc_event_loop():
