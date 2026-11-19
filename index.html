@@ -87,11 +87,28 @@ body.eldoret-dashboard.home-page{width:100%;height:auto;min-height:100dvh;displa
   else card('jesse','unknown','NO REPLY','No word from the PlayStation.','It may be off or resting · no game is being reported.');
  }
  function devices(p){
-  const aps=(p.devices||[]).filter(x=>/^UniFi\b/i.test(x.name||''));
-  if(aps.length!==4)throw Error('Missing access point readings');
+  const aps=(p.devices||[]).filter(x=>x&&x.ip&&['10.0.0.6','10.0.0.7','10.0.0.8','10.0.0.9'].includes(x.ip));
+  if(aps.length!==4)throw Error('Waiting for four UniFi access point readings');
   const count=aps.filter(x=>x.online===true).length;
-  card('wifi',count===4?'good':'unknown',count===4?'REACHABLE':'CHECKING',count===4?'Four access points, all reachable.':count+' / 4 access points reachable','Network replies · detailed direct UniFi monitoring is available on the Network tab.');
-  $('homeAps').replaceChildren(...aps.map(ap=>{const span=document.createElement('span');span.className='ap-pill'+(ap.online?' reachable':'');span.textContent=(ap.name||'').replace(/^UniFi\s*/i,'');span.title=ap.name+': '+(ap.online?'responding':'no service reply');return span;}));
+  const direct=p.source==='direct_snmp';
+  const snmp=aps.filter(x=>x.snmp_online===true).length;
+  const total=aps.reduce((sum,ap)=>sum+(typeof ap.rx_mbps==='number'?ap.rx_mbps:0),0);
+  const detail=direct
+   ?(snmp===4?'Four encrypted UniFi SNMPv3 heartbeats reporting.':snmp+' of 4 encrypted SNMPv3 probes responding.')
+   :'UniFi controller readings. Configure direct SNMPv3 for independent monitoring.';
+  const note=direct&&snmp===4?'Direct from Bulldog · '+total.toFixed(2)+' Mbps received across AP Ethernet ports.':detail;
+  card('wifi',count===4&&(!direct||snmp===4)?'good':count>0?'warning':'unknown',
+    count===4?'ALL FOUR LIVE':count+' / 4 LIVE',
+    count===4?'Four access points, all responding.':count+' of 4 access points responding.',
+    note);
+  $('homeAps').replaceChildren(...aps.map(ap=>{
+   const span=document.createElement('span');
+   span.className='ap-pill'+(ap.online?' reachable':'');
+   span.textContent=String(ap.name||ap.device_name||ap.ip).replace(/^UniFi\s*/i,'');
+   span.title=(ap.name||ap.ip)+' · '+(ap.snmp_online?'secure SNMPv3':ap.online?'network reachable':'not responding')
+     +(typeof ap.latency_ms==='number'?' · '+ap.latency_ms.toFixed(1)+' ms':'');
+   return span;
+  }));
  }
  card('car','unknown','NOT LINKED','One for another day.','Battery level, charging and range once connected.');
  card('dishwasher','unknown','NOT LINKED','Dishwasher, waiting to connect.','Wash cycle and time remaining are not connected yet.');
@@ -101,7 +118,7 @@ body.eldoret-dashboard.home-page{width:100%;height:auto;min-height:100dvh;displa
   const colours=[['Black','#000'],['Cyan','#14c6ee'],['Magenta','#f63c9b'],['Yellow','#f3cf36']];
   $('homeInks').replaceChildren(...colours.map(([name,colour])=>{const v=p.online?ink.find(x=>x.colour===name)?.percent:null,known=number(v);const el=document.createElement('div');el.className='mini-ink';el.style.setProperty('--colour',colour);el.title=name+': '+(known?v+'%':'not reported');const label=document.createElement('span');label.textContent=(name==='Black'?'BK':name[0])+' '+(known?v+'%':'—');const track=document.createElement('div'),fill=document.createElement('i');fill.style.width=(known?v:0)+'%';track.append(fill);el.append(label,track);return el;}));
  }
- const jobs=[{key:'router',url:'/api/router/status',period:5000,render:router,ids:['router']},{key:'lights',url:'/api/hue/group',period:20000,render:lights,ids:['lights']},{key:'sky',url:'/api/sky/now',period:20000,render:sky,ids:['sky']},{key:'jesse',url:'/api/playstation/status',period:20000,render:jesse,ids:['jesse']},{key:'devices',url:'/api/network/status',period:30000,render:devices,ids:['wifi']},{key:'printer',url:'/api/printer/status',period:30000,render:printer,ids:['printer']}];
+ const jobs=[{key:'router',url:'/api/router/status',period:5000,render:router,ids:['router']},{key:'lights',url:'/api/hue/group',period:20000,render:lights,ids:['lights']},{key:'sky',url:'/api/sky/now',period:20000,render:sky,ids:['sky']},{key:'jesse',url:'/api/playstation/status',period:20000,render:jesse,ids:['jesse']},{key:'devices',url:'/api/unifi/status',period:30000,render:devices,ids:['wifi']},{key:'printer',url:'/api/printer/status',period:30000,render:printer,ids:['printer']}];
  async function refresh(job){if(busy.has(job.key)||document.hidden)return;busy.add(job.key);const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),20000);try{let p; if(job.key==='lights'){const bridges=await Promise.all(['house','utility'].map(async bridge=>{try{const r=await fetch('/api/hue/group?bridge='+bridge+'&group=0',{cache:'no-store',signal:abort.signal});if(!r.ok)throw Error();const g=await r.json();if(!g.state||!Array.isArray(g.lights))throw Error();return {online:true,total:g.lights.length};}catch(e){return {online:false};}}));p={bridges};}else{const r=await fetch(job.url,{cache:'no-store',signal:abort.signal});if(!r.ok)throw Error('No reading');p=await r.json();}job.render(p);checks.set(job.key,Date.now());$('homeChecked').textContent='Live checks · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(e){for(const id of job.ids){const el=$('vital-'+id);card(id,'unknown','NO READING','Waiting for a fresh reading.', 'Tap to open the detailed view.');if(id==='router'){setSpeed('homeDown',null);setSpeed('homeUp',null);plot([]);}if(id==='printer')$('homeInks').replaceChildren();if(id==='wifi')$('homeAps').replaceChildren();const meta=el.querySelector('.vital-bottom');if(meta&&id!=='jesse')meta.textContent='Live status is unavailable.';}}finally{clearTimeout(timer);busy.delete(job.key);}}
  jobs.forEach(job=>{refresh(job);setInterval(()=>refresh(job),job.period);});
  $('homeRefresh').addEventListener('click',async()=>{const button=$('homeRefresh');button.disabled=true;await Promise.allSettled(jobs.map(refresh));button.disabled=false;});
