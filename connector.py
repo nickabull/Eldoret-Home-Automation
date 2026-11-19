@@ -1468,6 +1468,7 @@ def home_connect_status():
                 if not err and isinstance(program.get("program"),dict):
                     active=program["program"]
                     item["active_program"]=active.get("key")
+                    item["remaining_updated_at"]=datetime.now(timezone.utc).isoformat()
                     item["program_options"]=[{"key":str(v.get("key","")).split(".")[-1],
                         "value":v.get("value"),"unit":v.get("unit")}
                         for v in active.get("options",[]) if isinstance(v,dict)]
@@ -1620,6 +1621,8 @@ def _hc_sse_event(kind, payload, appliance_id):
                 if key in ("RemainingProgramTime","ElapsedProgramTime",
                            "ProgramProgress","EstimatedTotalProgramTime",
                            "RemainingProgramTimeIsEstimated"):
+                    if key=="RemainingProgramTime":
+                        device["remaining_updated_at"]=now
                     options=device.setdefault("program_options",[])
                     found=next((v for v in options if v.get("key")==key),None)
                     if found is None:
