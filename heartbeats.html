@@ -114,7 +114,7 @@ const jobs=[
  }},
  {id:'sky',url:'/api/sky/now',ids:['sky'],period:20000,read:p=>{
    if(p.available===false||p.error){set('sky','warn','No Sky Q reading');return}
-   const title=p.title||p.programme?.title||p.program?.title||p.channel_name||p.channel?.name||'Connected';
+   const title=p.title||p.programme?.title||p.program?.title||p.channel_name||(typeof p.channel==='string'?p.channel:p.channel?.name)||p.playback||'Connected';
    set('sky','good',String(title).slice(0,60));
  }},
  {id:'ps5',url:'/api/playstation/status',ids:['ps5'],period:30000,read:p=>{
@@ -122,8 +122,10 @@ const jobs=[
  }}
 ];
 function hue(id,p){if(!p||!Array.isArray(p.lights)&&typeof p.state!=='object'){set(id,'warn','Bridge not reporting');return}
- const list=Array.isArray(p.lights)?p.lights:[],on=list.filter(v=>v.state?.on===true).length;
- set(id,'good',list.length?on+' of '+list.length+' lights on':'Bridge responding');
+ const list=Array.isArray(p.lights)?p.lights:[];
+ const state=p.state||{};
+ const label=state.any_on===true?'Lights on':state.any_on===false?'All lights off':'Bridge responding';
+ set(id,'good',list.length?label+' · '+list.length+' linked':label);
 }
 async function check(job){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),6500);
  try{const r=await fetch(job.url,{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);job.read(await r.json());sources.set(job.id,Date.now());}
