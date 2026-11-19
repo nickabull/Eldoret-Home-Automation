@@ -300,17 +300,17 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden)clo
 const fmt=v=>typeof v==='string'?v.split('.').pop():String(v);
 const elapsed=t=>{const n=Date.parse(t||'');return Number.isFinite(n)?(Date.now()-n)/1000:Infinity;};
 const numeric=v=>typeof v==='number'&&Number.isFinite(v);
-function markFailed(ids){for(const id of ids)set(id,'warn','No fresh reading');}
+function markFailed(ids){for(const id of ids)set(id,'warn','No fresh reading','Waiting for fresh data');}
 const jobs=[
  {id:'bulldog',url:'/api/bulldog/status',ids:['bulldog'],period:10000,read:p=>{
   const fresh=elapsed(p.checked_at)<45&&!!p.hostname;
   if(!fresh)return markFailed(['bulldog']);
   const severity=p.health==='warning'?'warn':'good',cpu=numeric(p.cpu_percent)?p.cpu_percent.toFixed(0)+'% CPU':'CPU checking';
-  set('bulldog',severity,(numeric(p.temperature_c)?p.temperature_c.toFixed(1)+'°C · ':'')+cpu);
+  set('bulldog',severity,(numeric(p.temperature_c)?p.temperature_c.toFixed(1)+'°C · ':'')+cpu, severity==='good'?'Bulldog is running smoothly':'Bulldog needs a look');
  }},
  {id:'router',url:'/api/router/status',ids:['router'],period:10000,read:p=>{
-  if(p.online===true)set('router','good',numeric(p.download_mbps)?p.download_mbps.toFixed(1)+' Mbps WAN':'Connected');
-  else set('router','bad','No router response');
+  if(p.online===true)set('router','good',numeric(p.download_mbps)?p.download_mbps.toFixed(1)+' Mbps down · '+(numeric(p.upload_mbps)?p.upload_mbps.toFixed(2)+' up':'WAN connected'):'WAN connected','Internet is connected');
+  else set('router','bad','No router response','Internet needs attention');
  }},
  {id:'house',url:'/api/hue/group?bridge=house&group=0',ids:['house'],period:20000,read:p=>hue('house',p)},
  {id:'utility',url:'/api/hue/group?bridge=utility&group=0',ids:['utility'],period:20000,read:p=>hue('utility',p)},
@@ -318,11 +318,11 @@ const jobs=[
   const recent=elapsed(p.checked_at)<120;
   for(const [ip,id] of [['10.0.0.6','ap6'],['10.0.0.7','ap7'],['10.0.0.8','ap8'],['10.0.0.9','ap9']]){
    const d=(p.devices||[]).find(v=>v.ip===ip);
-   if(!recent||!d){set(id,'warn','Stale monitoring');continue}
+   if(!recent||!d){set(id,'warn','Stale monitoring','Checking the access point');continue}
    if(d.snmp_online===true||d.online===true){
     const rate=numeric(d.rx_mbps)?d.rx_mbps.toFixed(1)+' Mbps':null;
-    set(id,'good',(numeric(d.latency_ms)?d.latency_ms.toFixed(0)+' ms':'Responding')+(rate?' · '+rate:''));
-   }else set(id,'bad','No AP response');
+    set(id,'good',(numeric(d.latency_ms)?d.latency_ms.toFixed(0)+' ms':'Responding')+(rate?' · '+rate:''),'Wi-Fi is responding');
+   }else set(id,'bad','No AP response','Wi-Fi needs attention');
   }
  }},
  {id:'hc',url:'/api/home-connect/status',ids:['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood'],period:30000,read:p=>{
@@ -330,29 +330,30 @@ const jobs=[
    const eventFresh=p.sse_connected===true&&elapsed(p.last_event_at)<600;
    for(const id of ['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood']){
     const d=(p.devices||[]).find(v=>v.name===id);
-    if(!current&&!eventFresh){set(id,'warn','Snapshot out of date');continue;}
-    if(!d){set(id,'warn','Not reported');continue;}
-    if(!d.connected){set(id,'bad','Appliance offline');continue;}
+    if(!current&&!eventFresh){set(id,'warn','Snapshot out of date','Waiting for an appliance update');continue;}
+    if(!d){set(id,'warn','Not reported','Appliance not reporting');continue;}
+    if(!d.connected){set(id,'bad','Appliance offline','Appliance is disconnected');continue;}
     const state=fmt(d.status?.OperationState||'Connected');
     const progress=(d.program_options||[]).find(o=>/RemainingProgramTime/.test(o.key));
     const eta=progress&&numeric(progress.value)?Math.ceil(progress.value/60)+'m left':null;
-    set(id,'good',(state==='Run'?'Running':state)+(eta?' · '+eta:''));
+    const caption=state==='Run'?'Programme running':state==='Ready'?'Ready for the next cycle':state==='Inactive'?'Not currently running':state==='Finished'?'Programme finished':state==='DelayedStart'?'Programme scheduled':state==='Pause'?'Programme paused':state==='Error'?'Appliance needs attention':'Appliance is '+state.toLowerCase();
+    set(id,'good',state+(eta?' · '+eta:''),caption);
    }
  }},
  {id:'sky',url:'/api/sky/now',ids:['sky'],period:20000,read:p=>{
-   if(p.available===false||p.error){set('sky','warn','No Sky Q reading');return}
+   if(p.available===false||p.error){set('sky','warn','No Sky Q reading','Sky Q is not reporting');skyArt({});return}
    const title=p.title||p.programme?.title||p.program?.title||p.channel_name||(typeof p.channel==='string'?p.channel:p.channel?.name)||p.playback||'Connected';
-   set('sky','good',String(title).slice(0,60));
+   set('sky','good',(p.channel||'Sky Q')+(p.channelno?' · '+p.channelno:''),p.live?'Watching '+String(title).slice(0,70):p.playback==='recording'?'Playing a recording':'Sky Q is active');skyArt(p);
  }},
  {id:'ps5',url:'/api/playstation/status',ids:['ps5'],period:30000,read:p=>{
-  set('ps5',p.online?'good':'warn',p.online?(p.running_app_name||'Console responding'):'Resting / no reply');
+  set('ps5',p.online?'good':'warn',p.online?'PS5 responding':'Resting / no reply',p.online?(p.running_app_name?'Playing '+p.running_app_name:'PlayStation is available'):'PlayStation is resting');
  }}
 ];
 function hue(id,p){if(!p||!Array.isArray(p.lights)&&typeof p.state!=='object'){set(id,'warn','Bridge not reporting');return}
  const list=Array.isArray(p.lights)?p.lights:[];
  const state=p.state||{};
  const label=state.any_on===true?'Lights on':state.any_on===false?'All lights off':'Bridge responding';
- set(id,'good',list.length?label+' · '+list.length+' linked':label);
+ set(id,'good',list.length?label+' · '+list.length+' linked':label,state.any_on===true?'Lights are on':state.any_on===false?'Lights are switched off':'Lighting bridge is online');
 }
 async function check(job){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),6500);
  try{const r=await fetch(job.url,{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();latest.set(job.id,data);job.read(data);sources.set(job.id,Date.now());if(selected&&job.ids.includes(selected.id))drawDetails();}
