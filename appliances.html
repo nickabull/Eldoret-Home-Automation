@@ -39,13 +39,12 @@ function summary(c,d){const s=d.status||{},state=fmt(s.OperationState||'Unknown'
  if(s.DoorState!==undefined)add(detail,'div','Door · '+fmt(s.DoorState));
  if(s.CurrentCavityTemperature!==undefined)add(detail,'div','Cavity · '+s.CurrentCavityTemperature+'°C');
  if(s.InteriorIlluminationActive!==undefined)add(detail,'div','Interior light · '+(s.InteriorIlluminationActive?'On':'Off'));
- if(d.active_program){
-   add(detail,'div','Programme · '+fmt(d.active_program));
-   for(const option of d.program_options||[]){
-    if(/remainingprogramtime|remainingtime/i.test(option.key))add(detail,'div','Time remaining · '+mins(option.value));
-    else if(/programprogress/i.test(option.key))add(detail,'div','Progress · '+option.value+'%');
-   }
- }else add(detail,'div','No active programme reported');
+ if(d.active_program)add(detail,'div','Programme · '+fmt(d.active_program));
+ else add(detail,'div','No active programme reported');
+ for(const option of d.program_options||[]){
+  if(/remainingprogramtime|remainingtime/i.test(option.key))add(detail,'div','Time remaining · '+mins(option.value));
+  else if(/programprogress/i.test(option.key))add(detail,'div','Progress · '+option.value+'%');
+ }
  const open=add(c,'button','View details & options','hc-open');open.type='button';open.addEventListener('click',()=>show(d.name));
 }
 function render(result){
@@ -54,7 +53,7 @@ function render(result){
  if(!devices.length){$('hcSummary').textContent=result.error||'No live appliance information available yet.';return;}
  latest=devices;events=Array.isArray(result.events)?result.events:[];
  $('hcSummary').textContent=(result.online_count||0)+' of '+devices.length+' reporting · refreshed '+new Date(result.checked_at).toLocaleTimeString('en-GB');
- $('hcNote').textContent='Home Connect cloud · monitoring only · refreshed every 60 seconds · supported data differs by appliance.';
+ $('hcNote').textContent=result.sse_connected?'Live Home Connect event stream connected · page updates every 60 seconds · no control permissions.':'Home Connect cloud snapshot · event stream connecting or unavailable · monitoring only.';
  const priority=['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood'];
  devices.sort((a,b)=>priority.indexOf(a.name)-priority.indexOf(b.name));
  for(const d of devices)summary(add(grid,'article','','hc-card'),d);
@@ -115,7 +114,7 @@ function drawDetail(){if(!current)return;const d=current,s=d.status||{},out=$('h
  if(currentTab==='settings'){
   add(out,'h3','Reported settings');
   const settings=currentDetail.settings||[];
-  if(!settings.length)add(out,'p','No settings exposed by the current API permissions or appliance state.');
+  if(!settings.length)add(out,'p','Settings are not exposed under current monitoring-only permissions. Additional authorisation would be required.');
   else {const grid=add(out,'dl','','hc-pairs');for(const entry of settings)pair(grid,label(entry.name),entry.value);}
   add(out,'p','Settings are read-only. Some information is available only when the appliance is powered on or running.','hc-notice');
  }
