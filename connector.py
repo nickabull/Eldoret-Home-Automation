@@ -1144,6 +1144,90 @@ def _unifi_snmp_status():
         UNIFI_SNMP_CACHE.update(data=payload, expires=time.monotonic() + 20)
         return payload
 
+
+# Lightweight on-device health snapshot for Bulldog. No secrets or remote execution.
+BULLDOG_LOCK = threading.Lock()
+BULLDOG_CPU_PREVIOUS = None
+def bulldog_status():
+    global BULLDOG_CPU_PREVIOUS
+    import shutil
+    import re
+    from pathlib import Path
+    from datetime import datetime, timezone
+    result = {"name": "Bulldog", "checked_at": datetime.now(timezone.utc).isoformat()}
+    def read(path):
+        try:
+            return Path(path).read_text(encoding="utf-8").strip()
+        except OSError:
+            return ""
+    result["hostname"] = socket.gethostname()
+    result["python"] = platform.python_version()
+    result["kernel"] = platform.release()
+    result["architecture"] = platform.machine()
+    result["os"] = "Raspberry Pi OS"
+    model = read("/proc/device-tree/model").replace("\x00", "")
+    result["model"] = model or "Raspberry Pi"
+    try:
+        result["uptime_seconds"] = int(float(read("/proc/uptime").split()[0]))
+    except (ValueError, IndexError):
+        result["uptime_seconds"] = None
+    try:
+        result["load_1m"], result["load_5m"], result["load_15m"] = [round(x, 2) for x in os.getloadavg()]
+    except OSError:
+        result["load_1m"] = result["load_5m"] = result["load_15m"] = None
+    result["logical_cpus"] = os.cpu_count()
+    try:
+        with open("/proc/stat", encoding="ascii") as fp:
+            parts = [int(x) for x in fp.readline().split()[1:]]
+        total, idle = sum(parts), parts[3] + (parts[4] if len(parts) > 4 else 0)
+        with BULLDOG_LOCK:
+            previous = BULLDOG_CPU_PREVIOUS
+            BULLDOG_CPU_PREVIOUS = (total, idle)
+        if previous is not None and total > previous[0]:
+            result["cpu_percent"] = round(100 * max(0, min(1, 1 - (idle - previous[1]) / (total - previous[0]))), 1)
+        else:
+            result["cpu_percent"] = None
+    except (OSError, ValueError, IndexError, ZeroDivisionError):
+        result["cpu_percent"] = None
+    mem = {}
+    for line in read("/proc/meminfo").splitlines():
+        if ":" in line:
+            key, val = line.split(":", 1)
+            try:
+                mem[key] = int(val.strip().split()[0]) * 1024
+            except (ValueError, IndexError):
+                pass
+    total = mem.get("MemTotal", 0)
+    available = mem.get("MemAvailable", 0)
+    result["memory_total_bytes"] = total or None
+    result["memory_used_bytes"] = max(0, total - available) if total else None
+    result["memory_percent"] = round(100 * (total - available) / total, 1) if total else None
+    result["swap_used_bytes"] = max(0, mem.get("SwapTotal", 0) - mem.get("SwapFree", 0))
+    result["swap_total_bytes"] = mem.get("SwapTotal", 0)
+    try:
+        disk = shutil.disk_usage("/")
+        result["disk_total_bytes"] = disk.total
+        result["disk_used_bytes"] = disk.used
+        result["disk_percent"] = round(100 * disk.used / disk.total, 1)
+    except OSError:
+        result["disk_total_bytes"] = result["disk_used_bytes"] = result["disk_percent"] = None
+    try:
+        result["temperature_c"] = round(int(read("/sys/class/thermal/thermal_zone0/temp")) / 1000, 1)
+    except ValueError:
+        result["temperature_c"] = None
+    result["wifi_connected"] = Path("/sys/class/net/wlan0/carrier").exists() and read("/sys/class/net/wlan0/carrier") == "1"
+    result["ethernet_connected"] = read("/sys/class/net/eth0/carrier") == "1"
+    try:
+        result["ip_addresses"] = [a for a in socket.gethostbyname_ex(socket.gethostname())[2] if a.startswith("10.") or a.startswith("192.168.") or a.startswith("172.")]
+    except OSError:
+        result["ip_addresses"] = []
+    result["eldoret_running"] = True  # The API response itself is proof the connector process is alive.
+    try:
+        result["boot_id"] = read("/proc/sys/kernel/random/boot_id")[:8]
+    except OSError:
+        result["boot_id"] = ""
+    return result
+
 def unifi_status():
     if _unifi_snmp_enabled():
         return _unifi_snmp_status()
@@ -2419,6 +2503,7 @@ class Handler(BaseHTTPRequestHandler):
             "/sport.js": ("sport.js", "application/javascript; charset=utf-8"),
             "/devices.js": ("devices.js", "application/javascript; charset=utf-8"),
             "/network.html": ("network.html", "text/html; charset=utf-8"),
+            "/bulldog.html": ("bulldog.html", "text/html; charset=utf-8"),
             "/av.html": ("av.html", "text/html; charset=utf-8"),
             "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
             "/office.html": ("office.html", "text/html; charset=utf-8"),
@@ -2489,6 +2574,12 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/router/status":
             self.send_bytes(json.dumps(router_status()).encode())
+            return
+        if path == "/api/bulldog/status":
+            try:
+                self.send_bytes(json.dumps(bulldog_status()).encode())
+            except Exception:
+                self.send_bytes(json.dumps({"error":"Bulldog health temporarily unavailable"}).encode())
             return
         if path == "/api/unifi/status":
             self.send_bytes(json.dumps(unifi_status()).encode())
