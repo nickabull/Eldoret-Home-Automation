@@ -984,7 +984,169 @@ def _unifi_devices(rows):
     return sorted(devices, key=lambda row: str(row['name']).casefold())
 
 
+
+# Lightweight direct access-point monitoring. Credentials remain ONLY in Bulldog's
+# owner-readable unifi/snmp.conf; the public GitHub repository never stores them.
+UNIFI_SNMP_APS = (
+    ("10.0.0.6", "Office / Kitchen"),
+    ("10.0.0.7", "Utility"),
+    ("10.0.0.8", "Garden"),
+    ("10.0.0.9", "Landing"),
+)
+UNIFI_SNMP_PRIVATE = os.path.expanduser("~/eldoret-connector/unifi/snmp.conf")
+UNIFI_SNMP_HISTORY = os.path.expanduser("~/eldoret-connector/unifi/direct-history.json")
+UNIFI_SNMP_CACHE = {"expires": 0, "data": None, "previous": {}, "last_save": 0}
+UNIFI_SNMP_LOCK = threading.Lock()
+UNIFI_SNMP_OIDS = (
+    "1.3.6.1.2.1.1.1.0",          # sysDescr
+    "1.3.6.1.2.1.1.5.0",          # sysName
+    "1.3.6.1.2.1.1.3.0",          # sysUpTime
+    "1.3.6.1.2.1.31.1.1.1.1.2",  # ifName.2; verify it really is eth0
+    "1.3.6.1.2.1.31.1.1.1.6.2",  # ifHCInOctets.2
+    "1.3.6.1.2.1.31.1.1.1.10.2", # ifHCOutOctets.2
+)
+
+def _unifi_snmp_enabled():
+    import stat
+    try:
+        s = os.stat(UNIFI_SNMP_PRIVATE)
+        parent = os.stat(os.path.dirname(UNIFI_SNMP_PRIVATE))
+        return (s.st_uid == os.getuid() and stat.S_ISREG(s.st_mode)
+                and stat.S_IMODE(s.st_mode) & 0o077 == 0
+                and parent.st_uid == os.getuid()
+                and stat.S_IMODE(parent.st_mode) & 0o077 == 0)
+    except OSError:
+        return False
+
+def _unifi_snmp_probe(ap):
+    ip, label = ap
+    item = {"ip": ip, "name": label, "model": None, "firmware": None,
+            "online": False, "snmp_online": False, "latency_ms": None,
+            "uptime_seconds": None, "rx_mbps": None, "tx_mbps": None,
+            "clients": None, "source": "snmpv3"}
+    # Keep credentials out of process arguments, command output and repository.
+    env = dict(os.environ)
+    env["SNMPCONFPATH"] = os.path.dirname(UNIFI_SNMP_PRIVATE)
+    try:
+        proc = subprocess.run(
+            ["snmpget", "-v3", "-l", "authPriv", "-u", "eldoret-monitor",
+             "-a", "SHA", "-x", "AES", "-On", "-t", "2", "-r", "0", ip,
+             *UNIFI_SNMP_OIDS],
+            capture_output=True, text=True, timeout=5, env=env, check=False)
+        if proc.returncode == 0:
+            values = {}
+            for line in proc.stdout.splitlines():
+                if " = " in line:
+                    oid, value = line.split(" = ", 1)
+                    values[oid.lstrip(".")] = value.strip()
+            def read(oid):
+                return values.get(oid, "")
+            def digits(value, token):
+                import re
+                match = re.search(r"\b" + token + r":\s*(\d+)", value)
+                return int(match.group(1)) if match else None
+            descr = read(UNIFI_SNMP_OIDS[0])
+            name = read(UNIFI_SNMP_OIDS[1])
+            up = read(UNIFI_SNMP_OIDS[2])
+            iface = read(UNIFI_SNMP_OIDS[3])
+            if up.startswith("Timeticks:"):
+                import re
+                match = re.search(r"\((\d+)\)", up)
+                item["uptime_seconds"] = int(match.group(1)) / 100 if match else None
+            if descr.startswith("STRING:"):
+                raw = descr.split(":", 1)[1].strip().strip('"')
+                bits = raw.rsplit(" ", 1)
+                item["model"] = bits[0][:80]
+                item["firmware"] = (bits[1] if len(bits) > 1 else None)
+            if name.startswith("STRING:"):
+                item["device_name"] = name.split(":", 1)[1].strip().strip('"')[:80]
+            item["online"] = item["snmp_online"] = True
+            if iface.strip().strip('"') == 'STRING: "eth0"' or iface.strip() == 'STRING: eth0':
+                item["rx_octets"] = digits(read(UNIFI_SNMP_OIDS[4]), "Counter64")
+                item["tx_octets"] = digits(read(UNIFI_SNMP_OIDS[5]), "Counter64")
+                item["traffic_interface"] = "eth0"
+            else:
+                item["traffic_note"] = "Ethernet interface index differs; traffic not reported."
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        pass
+    try:
+        ping = subprocess.run(["ping", "-n", "-c", "1", "-W", "1", ip],
+                              capture_output=True, text=True, timeout=3, check=False)
+        if ping.returncode == 0:
+            import re
+            match = re.search(r"\btime=([\d.]+)\s*ms", ping.stdout)
+            item["latency_ms"] = round(float(match.group(1)), 1) if match else None
+            item["online"] = True
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        pass
+    return item
+
+def _unifi_snmp_status():
+    with UNIFI_SNMP_LOCK:
+        now = time.monotonic()
+        if UNIFI_SNMP_CACHE["data"] is not None and now < UNIFI_SNMP_CACHE["expires"]:
+            return UNIFI_SNMP_CACHE["data"]
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            devices = list(pool.map(_unifi_snmp_probe, UNIFI_SNMP_APS))
+        checked = datetime.now(timezone.utc).isoformat()
+        previous = UNIFI_SNMP_CACHE["previous"]
+        for device in devices:
+            prior = previous.get(device["ip"])
+            rx, tx = device.pop("rx_octets", None), device.pop("tx_octets", None)
+            if (prior and rx is not None and tx is not None
+                and prior["rx"] is not None and prior["tx"] is not None
+                and rx >= prior["rx"] and tx >= prior["tx"]
+                and 0 < now - prior["at"] < 180):
+                elapsed = now - prior["at"]
+                device["rx_mbps"] = round((rx - prior["rx"]) * 8 / elapsed / 1000000, 2)
+                device["tx_mbps"] = round((tx - prior["tx"]) * 8 / elapsed / 1000000, 2)
+            if rx is not None and tx is not None:
+                previous[device["ip"]] = {"rx": rx, "tx": tx, "at": now}
+            elif not device["snmp_online"]:
+                previous.pop(device["ip"], None)
+        # Persist a bounded 7-day, five-minute history, plus immediate state changes.
+        history = {"samples": [], "events": []}
+        try:
+            with open(UNIFI_SNMP_HISTORY, encoding="utf-8") as stream:
+                saved = json.load(stream)
+            if isinstance(saved, dict):
+                history = {"samples": saved.get("samples", [])[-2016:],
+                           "events": saved.get("events", [])[-200:]}
+        except (OSError, ValueError, TypeError):
+            pass
+        states = {d["ip"]: d["online"] for d in devices}
+        old_states = history["samples"][-1]["states"] if history["samples"] else {}
+        changes = [d for d in devices if d["ip"] in old_states
+                   and bool(old_states[d["ip"]]) != d["online"]]
+        should_save = bool(changes) or now - UNIFI_SNMP_CACHE["last_save"] > 300 or not history["samples"]
+        if should_save:
+            for d in changes:
+                history["events"].append({"at": checked, "ip": d["ip"], "name": d["name"],
+                                          "state": "restored" if d["online"] else "unreachable"})
+            history["events"] = history["events"][-200:]
+            history["samples"].append({"at": checked, "states": states,
+                "rates": {d["ip"]: {"rx": d["rx_mbps"], "tx": d["tx_mbps"]} for d in devices}})
+            history["samples"] = history["samples"][-2016:]
+            try:
+                path = UNIFI_SNMP_HISTORY + ".new"
+                with open(path, "w", encoding="utf-8") as stream:
+                    os.fchmod(stream.fileno(), 0o600)
+                    json.dump(history, stream, separators=(",", ":"))
+                os.replace(path, UNIFI_SNMP_HISTORY)
+                UNIFI_SNMP_CACHE["last_save"] = now
+            except OSError:
+                pass
+        payload = {"configured": True, "source": "direct_snmp",
+                   "controller_online": False, "direct_online": any(d["snmp_online"] for d in devices),
+                   "devices": devices, "checked_at": checked, "last_seen_at": checked,
+                   "events": history["events"][-12:],
+                   "message": "Direct encrypted monitoring from Bulldog; UniFi server not required."}
+        UNIFI_SNMP_CACHE.update(data=payload, expires=time.monotonic() + 20)
+        return payload
+
 def unifi_status():
+    if _unifi_snmp_enabled():
+        return _unifi_snmp_status()
     global UNIFI_CLIENT, UNIFI_LAST_GOOD
     with UNIFI_LOCK:
         now = time.monotonic()
