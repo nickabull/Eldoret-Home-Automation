@@ -364,6 +364,26 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden)clo
 const fmt=v=>typeof v==='string'?v.split('.').pop():String(v);
 const elapsed=t=>{const n=Date.parse(t||'');return Number.isFinite(n)?(Date.now()-n)/1000:Infinity;};
 const numeric=v=>typeof v==='number'&&Number.isFinite(v);
+function applianceCycle(key){
+ if(typeof key!=='string'||!key)return null;
+ const k=key.split('.').pop();
+ const names={Eco50:'Eco 50°C',Auto45_65:'Auto 45–65°C',Intensiv70:'Intensive 70°C',Intensive70:'Intensive 70°C',Quick45:'Quick 45°C',Quick65:'Quick 65°C',Glass40:'Glass 40°C',NightWash:'Night wash',MachineCare:'Machine care',PreRinse:'Pre-rinse'};
+ return names[k]||k.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/_/g,'–');
+}
+function applianceRemaining(d){
+ const opt=(d.program_options||[]).find(o=>/RemainingProgramTime$/.test(o.key||''));
+ if(!opt||!numeric(opt.value)||opt.value<0)return null;
+ const age=elapsed(d.remaining_updated_at||'');
+ if(!Number.isFinite(age)||age < -60||age>2700)return null;
+ return Math.max(0,Math.ceil((opt.value-Math.max(0,age))/60));
+}
+function renderDishwasher(d){
+ const state=fmt(d.status?.OperationState||'Connected');
+ const eta=applianceRemaining(d), cycle=applianceCycle(d.active_program);
+ const headline=state==='Run'?(cycle||'Programme running'):state==='Ready'?'Ready for the next cycle':state==='Finished'?'Programme finished':state==='Pause'?'Programme paused':state==='Inactive'?'Not currently running':'Appliance is '+state.toLowerCase();
+ const detail=state==='Run'?(eta===null?'Running · remaining time unavailable':eta+' min remaining'+(!cycle?' · cycle not reported':'')):state;
+ set(d.name,'good',detail,headline);
+}
 function markFailed(ids){for(const id of ids)set(id,'warn','No fresh reading','Waiting for fresh data');}
 const jobs=[
  {id:'bulldog',url:'/api/bulldog/status',ids:['bulldog'],period:10000,read:p=>{
@@ -397,11 +417,10 @@ const jobs=[
     if(!current&&!eventFresh){set(id,'warn','Snapshot out of date','Waiting for an appliance update');continue;}
     if(!d){set(id,'warn','Not reported','Appliance not reporting');continue;}
     if(!d.connected){set(id,'bad','Appliance offline','Appliance is disconnected');continue;}
+    if(id.includes('Dishwasher')){renderDishwasher(d);continue;}
     const state=fmt(d.status?.OperationState||'Connected');
-    const progress=(d.program_options||[]).find(o=>/RemainingProgramTime/.test(o.key));
-    const eta=progress&&numeric(progress.value)?Math.ceil(progress.value/60)+'m left':null;
     const caption=state==='Run'?'Programme running':state==='Ready'?'Ready for the next cycle':state==='Inactive'?'Not currently running':state==='Finished'?'Programme finished':state==='DelayedStart'?'Programme scheduled':state==='Pause'?'Programme paused':state==='Error'?'Appliance needs attention':'Appliance is '+state.toLowerCase();
-    set(id,'good',state+(eta?' · '+eta:''),caption);
+    set(id,'good',state,caption);
    }
  }},
  {id:'sky',url:'/api/sky/now',ids:['sky'],period:20000,read:p=>{
@@ -433,6 +452,14 @@ document.getElementById('refresh').addEventListener('click',refresh);
 document.getElementById('fullscreen').addEventListener('click',()=>{if(!document.fullscreenElement){document.documentElement.requestFullscreen?.().catch(()=>{});}else{document.exitFullscreen?.().catch(()=>{});}});
 for(const job of jobs)setInterval(()=>{if(!document.hidden)check(job);},job.period);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+// Local countdown repaint only. No additional Home Connect cloud traffic.
+setInterval(()=>{
+ const p=latest.get('hc');if(!p||(!(elapsed(p.checked_at)<2700)&&!(p.sse_connected===true&&elapsed(p.last_event_at)<600)))return;
+ for(const id of ['Main Kitchen Dishwasher','Back Kitchen Dishwasher']){
+  const d=(p.devices||[]).find(v=>v.name===id);
+  if(d&&d.connected&&fmt(d.status?.OperationState)==='Run')renderDishwasher(d);
+ }
+},15000);
 setInterval(clock,15000);clock();refresh();
 })();
 </script></body></html>
