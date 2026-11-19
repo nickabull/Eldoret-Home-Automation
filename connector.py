@@ -1286,6 +1286,119 @@ def bulldog_health():
         status["history"] = list(BULLDOG_HISTORY[-1440:])
     return status
 
+
+# Home Connect: read-only, bounded API; credentials and tokens remain on Bulldog.
+HOME_CONNECT_LOCK = threading.Lock()
+HOME_CONNECT_CACHE = {"expires":0,"data":None}
+HOME_CONNECT_CONFIG = os.path.expanduser("~/.config/home-connect.json")
+HOME_CONNECT_TOKENS = os.path.expanduser("~/.config/home-connect-tokens.json")
+HOME_CONNECT_ACCEPT = "application/vnd.bsh.sdk.v1+json"
+HOME_CONNECT_BASE = "https://api.home-connect.com/api"
+HOME_CONNECT_TOKEN_URL = "https://api.home-connect.com/security/oauth/token"
+
+def _hc_read_private(path):
+    import stat
+    st=os.stat(path)
+    if st.st_uid != os.getuid() or (stat.S_IMODE(st.st_mode) & 0o077):
+        raise PermissionError("Private Home Connect configuration permissions are unsafe")
+    with open(path, encoding="utf-8") as stream:
+        return json.load(stream)
+
+def _hc_write_private(path, value):
+    target=path+".new"
+    fd=os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd,"w",encoding="utf-8") as stream:
+        json.dump(value, stream)
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(target,path)
+    os.chmod(path,0o600)
+
+def _hc_token():
+    config=_hc_read_private(HOME_CONNECT_CONFIG)
+    tokens=_hc_read_private(HOME_CONNECT_TOKENS)
+    expires=int(tokens.get("obtained_at",0))+int(tokens.get("expires_in",0))
+    if tokens.get("access_token") and time.time() < expires-300:
+        return tokens["access_token"]
+    refresh=tokens.get("refresh_token")
+    if not refresh:
+        raise RuntimeError("Home Connect authorisation has expired; refresh token missing")
+    payload=urllib.parse.urlencode({
+        "grant_type":"refresh_token", "refresh_token":refresh,
+        "client_id":config["client_id"],"client_secret":config["client_secret"]
+    }).encode()
+    req=urllib.request.Request(HOME_CONNECT_TOKEN_URL,data=payload,
+        headers={"Content-Type":"application/x-www-form-urlencoded","Accept":"application/json"},
+        method="POST")
+    with urllib.request.urlopen(req,timeout=15) as response:
+        new=json.load(response)
+    if not new.get("access_token"):
+        raise RuntimeError("Home Connect did not return an access token")
+    # Some refresh responses omit refresh_token; preserve the previous one.
+    if not new.get("refresh_token"):
+        new["refresh_token"]=refresh
+    new["obtained_at"]=int(time.time())
+    _hc_write_private(HOME_CONNECT_TOKENS,new)
+    return new["access_token"]
+
+def _hc_get(token, endpoint):
+    from urllib.error import HTTPError
+    req=urllib.request.Request(HOME_CONNECT_BASE+endpoint,headers={
+        "Authorization":"Bearer "+token, "Accept":HOME_CONNECT_ACCEPT})
+    try:
+        with urllib.request.urlopen(req,timeout=12) as response:
+            return json.load(response).get("data",{}),None
+    except HTTPError as exc:
+        # 404 is normal when no active programme is available.
+        return {},exc.code
+
+def home_connect_status():
+    with HOME_CONNECT_LOCK:
+        now=time.monotonic()
+        if HOME_CONNECT_CACHE["data"] is not None and now<HOME_CONNECT_CACHE["expires"]:
+            return HOME_CONNECT_CACHE["data"]
+        result={"configured":False,"source":"Home Connect cloud","devices":[],
+                "checked_at":datetime.now(timezone.utc).isoformat()}
+        try:
+            token=_hc_token()
+            result["configured"]=True
+            listing,error=_hc_get(token,"/homeappliances")
+            if error:
+                raise RuntimeError("Home Connect appliance list HTTP "+str(error))
+            all_devices=listing.get("homeappliances",[])
+            if not isinstance(all_devices,list):
+                raise RuntimeError("Unexpected Home Connect response")
+            def probe(ap):
+                aid=ap.get("haId","")
+                item={"name":ap.get("name","Appliance"),"brand":ap.get("brand"),
+                      "model":ap.get("vib"),"type":ap.get("type"),
+                      "connected":ap.get("connected",False),"status":{},
+                      "active_program":None,"program_options":[]}
+                if not aid or not item["connected"]:
+                    return item
+                endpoint="/homeappliances/"+urllib.parse.quote(aid,safe="")
+                details,err=_hc_get(token,endpoint+"/status")
+                if not err and isinstance(details.get("status"),list):
+                    item["status"]={v["key"].split(".")[-1]:v.get("value")
+                                    for v in details["status"] if isinstance(v,dict) and v.get("key")}
+                program,err=_hc_get(token,endpoint+"/programs/active")
+                if not err and isinstance(program.get("program"),dict):
+                    active=program["program"]
+                    item["active_program"]=active.get("key")
+                    item["program_options"]=[{"key":str(v.get("key","")).split(".")[-1],
+                        "value":v.get("value"),"unit":v.get("unit")}
+                        for v in active.get("options",[]) if isinstance(v,dict)]
+                return item
+            with ThreadPoolExecutor(max_workers=3) as pool:
+                result["devices"]=list(pool.map(probe,all_devices[:16]))
+            result["online_count"]=sum(bool(d["connected"]) for d in result["devices"])
+        except (OSError,ValueError,KeyError,RuntimeError,urllib.error.URLError) as exc:
+            # Never return raw server responses or token values to the web browser.
+            result["error"]=("Home Connect needs reauthorisation" if "authorisation" in str(exc).lower()
+                             else "Home Connect temporarily unavailable")
+        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+60)
+        return result
+
 def unifi_status():
     if _unifi_snmp_enabled():
         return _unifi_snmp_status()
@@ -2632,6 +2745,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/router/status":
             self.send_bytes(json.dumps(router_status()).encode())
+            return
+        if path == "/api/home-connect/status":
+            self.send_bytes(json.dumps(home_connect_status()).encode())
             return
         if path == "/api/bulldog/status":
             try:
