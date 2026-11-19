@@ -2996,6 +2996,8 @@ class Handler(BaseHTTPRequestHandler):
             "/sky-streaming-background.png": ("sky-streaming-background.png", "image/png"),
             "/Apps Banner.png": ("Apps Banner.png", "image/png"),
             "/eldoret-house-night.webp": ("eldoret-house-night.webp", "image/webp"),
+            "/eldoret-home-dusk.webp": ("eldoret-home-dusk.webp", "image/webp"),
+            "/network-patchbay-background.webp": ("network-patchbay-background.webp", "image/webp"),
             "/epson-et3850-background.webp": ("epson-et3850-background.webp", "image/webp"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "application/javascript; charset=utf-8"),
