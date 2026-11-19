@@ -46,20 +46,35 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 .sky-remote button:disabled{opacity:.4}
 #remoteFeedback{font-size:11px;color:#a9e7d4;margin:7px 0;min-height:15px}
 @media(max-height:520px){.detail-card{padding:10px 14px}.detail-status{margin:6px 0}.sky-remote button{min-height:37px}.sky-remote{gap:5px;margin-top:8px}}
+
+.detail-actions button{border:1px solid #6fbeac;background:#22584e;color:#fff;padding:12px 18px;border-radius:11px;font-weight:800;font-size:14px;min-height:44px;cursor:pointer}
+.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:9px 0}
+.detail-metric{background:#0e2c3d;border:1px solid #375e70;border-radius:10px;padding:9px;min-width:0}
+.detail-metric dt{font-size:10px;color:#a5c5d1}.detail-metric dd{margin:4px 0 0;font-size:14px;font-weight:750;overflow-wrap:anywhere}
+.detail-summary{max-height:156px;overflow:auto;overscroll-behavior:contain}
+.detail-desc{max-width:85ch}
+.detail-card{display:flex;flex-direction:column;max-height:calc(100dvh - 12px);padding:11px 14px}
+.detail-card .detail-actions{margin-top:7px;flex-shrink:0}
+.detail-card .detail-top{flex-shrink:0}
+.detail-card #skyRemote{overflow:auto;min-height:0}
+.detail-card .detail-status{margin:6px 0}
+.sky-remote{grid-template-columns:repeat(6,minmax(0,1fr));margin-top:7px;gap:5px}
+.sky-remote button{min-height:40px}
+@media(max-height:500px){.detail-card{width:min(750px,100%)}.detail-summary{max-height:130px}.sky-remote button{min-height:38px}.detail-grid{gap:5px}}
 </style></head><body>
 <div id="app">
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
 <div class="header-right"><span id="overall">Checking 16 systems…</span><time id="clock">--:--</time></div></header>
 <main id="grid" aria-label="Home automation system heartbeats"></main>
-<footer><span id="updated" aria-live="polite">Connecting to Bulldog…</span><div style="display:flex;align-items:center;gap:10px"><button id="fullscreen">Full screen</button><button id="refresh">Refresh</button><a href="bulldog.html">System stats</a><a href="index.html">Eldoret</a></div></footer>
+<footer><span id="updated" aria-live="polite">Connecting to Bulldog…</span><div style="display:flex;align-items:center;gap:10px"><button id="fullscreen">Full screen</button><button id="refresh">Refresh</button></div></footer>
 </div>
 <div id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailName" hidden>
 <section class="detail-card">
 <div class="detail-top"><div><small id="detailCategory">DEVICE DETAILS</small><h2 id="detailName">Device</h2></div><button class="detail-close" id="detailClose" aria-label="Close">×</button></div>
 <div class="detail-status" id="detailState">Checking…</div>
-<p class="detail-desc" id="detailExplanation"></p>
+<p class="detail-desc" id="detailExplanation"></p><div class="detail-summary" id="detailFacts" aria-live="polite"></div>
 <div id="skyRemote" hidden><div class="sky-remote" id="skyButtons"></div><p id="remoteFeedback" aria-live="polite">Touch a button to control Sky Q.</p></div>
-<div class="detail-actions"><a id="detailOpen" href="index.html">Open full details →</a></div>
+<div class="detail-actions"><button type="button" id="detailReturn">← Back to heartbeats</button></div>
 </section></div>
 <script>
 (()=>{
@@ -81,7 +96,7 @@ const definitions=[
  {id:'sky',category:'MEDIA',name:'Sky Q'},
  {id:'ps5',category:'MEDIA',name:'Jesse’s PS5'}
 ];
-const items=new Map(),sources=new Map();
+const items=new Map(),sources=new Map(),latest=new Map();
 const grid=document.getElementById('grid'),updated=document.getElementById('updated'),overall=document.getElementById('overall');
 for(const x of definitions){
  const card=document.createElement('article');card.className='tile pending';card.setAttribute('aria-label',x.name+', waiting for data');
@@ -102,13 +117,10 @@ const detailName=document.getElementById('detailName');
 const detailState=document.getElementById('detailState');
 const detailCategory=document.getElementById('detailCategory');
 const detailExplanation=document.getElementById('detailExplanation');
-const detailOpen=document.getElementById('detailOpen');
+const detailReturn=document.getElementById('detailReturn');
 const remote=document.getElementById('skyRemote');
 const feedback=document.getElementById('remoteFeedback');
 let lastFocused=null, selected=null,remoteBusy=false;
-const detailLinks={bulldog:'bulldog.html',router:'network.html',house:'lights.html',utility:'lights.html',
- ap6:'network.html',ap7:'network.html',ap8:'network.html',ap9:'network.html',
- sky:'sky.html',ps5:'av.html'};
 const skyButtons=[
  ['Power','power'],['CH +','channelup'],['CH −','channeldown'],['Home','home'],['Back','backup'],['Select','select'],
  ['↑','up'],['↓','down'],['←','left'],['→','right'],['Play','play'],['Pause','pause'],
@@ -126,23 +138,74 @@ for(const [label,key] of skyButtons){const b=document.createElement('button');b.
   finally{remoteBusy=false;b.disabled=false;}
  });skyGrid.append(b);
 }
+
+function metrics(parent, pairs){
+ const dl=document.createElement('dl');dl.className='detail-grid';
+ let count=0;
+ for(const [k,v] of pairs){
+  if(v===null||v===undefined||v==='')continue;
+  const box=document.createElement('div');box.className='detail-metric';
+  const dt=document.createElement('dt');dt.textContent=k;
+  const dd=document.createElement('dd');dd.textContent=typeof v==='boolean'?(v?'Yes':'No'):String(v);
+  box.append(dt,dd);dl.append(box);count++;
+ }
+ if(count)parent.append(dl);
+}
+const short=s=>typeof s==='string'?s.split('.').pop():s;
+const number=(v,suffix='')=>typeof v==='number'&&Number.isFinite(v)?(Math.round(v*10)/10)+suffix:null;
+function currentSource(id){
+ if(id==='bulldog')return latest.get('bulldog');
+ if(id==='router')return latest.get('router');
+ if(id==='house'||id==='utility')return latest.get(id);
+ if(/^ap[6789]$/.test(id))return (latest.get('unifi')?.devices||[]).find(d=>d.ip==='10.0.0.'+id.slice(2));
+ if(['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood'].includes(id))
+   return (latest.get('hc')?.devices||[]).find(d=>d.name===id);
+ if(id==='sky')return latest.get('sky');
+ if(id==='ps5')return latest.get('ps5');
+ return null;
+}
+function drawDetails(){
+ if(!selected)return;
+ const def=selected,tile=items.get(def.id),source=currentSource(def.id);
+ detailState.textContent=tile?.info.textContent||'Checking status';
+ const wrapper=document.getElementById('detailFacts');
+ wrapper.replaceChildren();
+ if(!source){const p=document.createElement('p');p.className='detail-desc';p.textContent='Awaiting an updated reading from Bulldog.';wrapper.append(p);return;}
+ const id=def.id;
+ if(id==='bulldog'){
+  metrics(wrapper,[['CPU temperature',number(source.temperature_c,'°C')],['CPU usage',number(source.cpu_percent,'%')],['Memory',number(source.memory_percent,'%')],['Storage',number(source.disk_percent,'%')],['Uptime',source.uptime_human||source.uptime],['Health',source.health||'Unknown']]);
+ }else if(id==='router'){
+  metrics(wrapper,[['Connection',source.online?'Connected':'Not responding'],['Download',number(source.download_mbps,' Mbps')],['Upload',number(source.upload_mbps,' Mbps')],['WAN',source.wan||source.wan_name]]);
+ }else if(id==='house'||id==='utility'){
+  metrics(wrapper,[['Bridge','Responding'],['Any lights on',source.state?.any_on],['All lights on',source.state?.all_on],['Group',source.name||'Whole bridge']]);
+ }else if(/^ap[6789]$/.test(id)){
+  metrics(wrapper,[['Access point',source.name],['IP address',source.ip],['Ping',number(source.latency_ms,' ms')],['Ethernet incoming',number(source.rx_mbps,' Mbps')],['Ethernet outgoing',number(source.tx_mbps,' Mbps')],['Firmware',source.firmware],['Uptime',source.uptime]]);
+ }else if(id==='sky'){
+  metrics(wrapper,[['Programme',source.programme||source.title],['Channel',source.channel],['Channel number',source.channelno],['Playback',source.live?'Live TV':source.playback||'Unknown'],['Starts',source.start],['Ends',source.end]]);
+ }else if(id==='ps5'){
+  metrics(wrapper,[['Console',source.host_type],['Name',source.host_name],['IP address',source.ip],['System version',source.system_version],['Game',source.running_app_name||'Not reported by Sony'],['Game ID',source.running_app_titleid]]);
+ }else{
+  const st=source.status||{},opts=source.program_options||[];
+  const p=[['Brand',source.brand],['Model',source.model],['Connected',source.connected],['Operating state',short(st.OperationState)],['Door',short(st.DoorState)],['Cavity temperature',number(st.CurrentCavityTemperature,'°C')],['Interior light',st.InteriorIlluminationActive],['Active programme',short(source.active_program)||'None reported']];
+  for(const option of opts.slice(0,10))p.push([String(option.key).replace(/([a-z])([A-Z])/g,'$1 $2'),option.value]);
+  metrics(wrapper,p);
+ }
+}
 function openTile(def){
  lastFocused=document.activeElement;selected=def;
- const tile=items.get(def.id);
  detailName.textContent=def.name;detailCategory.textContent=def.category;
- detailState.textContent=tile?.info.textContent||'Checking status';
  const appliance=['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood'].includes(def.id);
- detailExplanation.textContent=def.id==='sky'?'Live Sky Q controls, using Eldoret’s existing local remote.':
-  appliance?'Detailed programme and operating information is in Appliances. Remote oven and hob operation is disabled.':
-  def.id==='ps5'?'Jesse’s PlayStation status and activity are read-only. The running game appears only if Sony reports it.':
-  'Tap below for the complete Eldoret monitoring and controls for this system.';
- detailOpen.href=appliance?'appliances.html':detailLinks[def.id]||'index.html';
- detailOpen.textContent=appliance?'Open appliance details →':def.id==='sky'?'Full Sky Q interface →':'Open full details →';
- remote.hidden=def.id!=='sky';feedback.textContent='Touch a button to control Sky Q.';
- overlay.hidden=false;document.getElementById('detailClose').focus();
+ detailExplanation.textContent=def.id==='sky'?'Touch the buttons below to control Sky Q.':
+  appliance?'Live Home Connect read-only details; remote cooking controls are not enabled.':
+  def.id==='ps5'?'Local PS5 discovery. Game details appear only if the console supplies them.':
+  'Latest readings from Bulldog, updated automatically.';
+ remote.hidden=def.id!=='sky';
+ feedback.textContent='Touch a button to control Sky Q.';
+ overlay.hidden=false;drawDetails();document.getElementById('detailClose').focus();
 }
 function closeTile(){overlay.hidden=true;selected=null;if(lastFocused&&lastFocused.focus)lastFocused.focus();}
 document.getElementById('detailClose').addEventListener('click',closeTile);
+detailReturn.addEventListener('click',closeTile);
 overlay.addEventListener('click',e=>{if(e.target===overlay)closeTile();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden)closeTile();});
 
@@ -204,7 +267,7 @@ function hue(id,p){if(!p||!Array.isArray(p.lights)&&typeof p.state!=='object'){s
  set(id,'good',list.length?label+' · '+list.length+' linked':label);
 }
 async function check(job){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),6500);
- try{const r=await fetch(job.url,{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);job.read(await r.json());sources.set(job.id,Date.now());}
+ try{const r=await fetch(job.url,{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();latest.set(job.id,data);job.read(data);sources.set(job.id,Date.now());if(selected&&job.ids.includes(selected.id))drawDetails();}
  catch(_){markFailed(job.ids);}finally{clearTimeout(timer);renderOverall();}}
 function renderOverall(){let good=0,warn=0,bad=0;for(const x of items.values()){if(x.card.classList.contains('good'))good++;else if(x.card.classList.contains('bad'))bad++;else warn++;}
  overall.textContent=good+' healthy · '+warn+' checking'+(bad?' · '+bad+' down':'');
