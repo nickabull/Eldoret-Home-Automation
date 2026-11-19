@@ -287,6 +287,83 @@ def playstation_status(ip=None):
             sock.close()
     return result
 
+
+# Private, local PS5 availability / app telemetry. Never uses PSN credentials.
+PS5_ACTIVITY_FILE = os.path.expanduser("~/eldoret-connector/playstation-activity.json")
+PS5_ACTIVITY_LOCK = threading.Lock()
+PS5_ACTIVITY = {"last":None, "events":[], "sessions":[], "last_checked":None}
+def _ps5_load():
+    try:
+        with open(PS5_ACTIVITY_FILE,encoding="utf-8") as stream:
+            data=json.load(stream)
+        if isinstance(data,dict):
+            for k in ("last","events","sessions","last_checked"):
+                if k in data:
+                    PS5_ACTIVITY[k]=data[k]
+    except (OSError,ValueError,TypeError):
+        pass
+
+def _ps5_save():
+    try:
+        target=PS5_ACTIVITY_FILE+".new"
+        fd=os.open(target,os.O_WRONLY | os.O_CREAT | os.O_TRUNC,0o600)
+        with os.fdopen(fd,"w",encoding="utf-8") as stream:
+            json.dump(PS5_ACTIVITY,stream,separators=(",",":"))
+        os.replace(target,PS5_ACTIVITY_FILE)
+    except OSError:
+        pass
+
+def _ps5_record(sample):
+    # Store observed transitions, not every check or inferred 'gameplay'.
+    now=datetime.now(timezone.utc).isoformat()
+    state={"online":bool(sample.get("online")),
+           "game":sample.get("running_app_name") or None,
+           "titleid":sample.get("running_app_titleid") or None}
+    with PS5_ACTIVITY_LOCK:
+        old=PS5_ACTIVITY.get("last")
+        changed=old is None or old!=state
+        if changed:
+            if old is not None:
+                if old.get("online")!=state["online"]:
+                    PS5_ACTIVITY["events"].append({"at":now,"kind":"console",
+                        "detail":"Responding" if state["online"] else "No discovery reply"})
+                if old.get("game")!=state["game"] or old.get("titleid")!=state["titleid"]:
+                    if old.get("game") or old.get("titleid"):
+                        sessions=PS5_ACTIVITY["sessions"]
+                        if sessions and not sessions[-1].get("ended_at"):
+                            sessions[-1]["ended_at"]=now
+                    if state["game"] or state["titleid"]:
+                        PS5_ACTIVITY["sessions"].append({"started_at":now,"ended_at":None,
+                            "game":str(state["game"] or "Unknown game")[:130],
+                            "titleid":str(state["titleid"] or "")[:40]})
+                        PS5_ACTIVITY["events"].append({"at":now,"kind":"game",
+                            "detail":str(state["game"] or "Game ID reported")[:130]})
+            PS5_ACTIVITY["last"]=state
+            PS5_ACTIVITY["events"]=PS5_ACTIVITY["events"][-150:]
+            PS5_ACTIVITY["sessions"]=PS5_ACTIVITY["sessions"][-100:]
+            _ps5_save()
+        PS5_ACTIVITY["last_checked"]=now
+
+def _ps5_collector_loop():
+    _ps5_load()
+    while True:
+        try:
+            _ps5_record(playstation_status())
+        except Exception:
+            pass
+        time.sleep(60)
+
+def playstation_activity_status():
+    live=playstation_status()
+    with PS5_ACTIVITY_LOCK:
+        events=list(PS5_ACTIVITY.get("events",[])[-60:])
+        sessions=list(PS5_ACTIVITY.get("sessions",[])[-30:])
+        last=PS5_ACTIVITY.get("last_checked")
+    return {"live":live,"observed_at":datetime.now(timezone.utc).isoformat(),
+            "history_started":last,"events":events,"sessions":sessions,
+            "game_source":"PS5 local discovery only; PSN account not connected",
+            "game_available":bool(live.get("running_app_name") or live.get("running_app_titleid"))}
+
 def _ipp_attributes(raw):
     """Decode IPP scalar attributes, including repeated values (RFC 8010)."""
     import struct
@@ -3025,6 +3102,9 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_bytes(json.dumps({"targets": [], "error": str(e)}).encode())
             return
+        if path == "/api/playstation/activity":
+            self.send_bytes(json.dumps(playstation_activity_status()).encode())
+            return
         if path == "/api/playstation/status":
             try:
                 self.send_bytes(json.dumps(playstation_status()).encode())
@@ -3232,6 +3312,7 @@ if __name__ == '__main__':
 threading.Thread(target=agent_loop, daemon=True).start()
 threading.Thread(target=device_registry_loop, daemon=True).start()
 threading.Thread(target=_bulldog_history_loop, daemon=True).start()
+threading.Thread(target=_ps5_collector_loop, daemon=True).start()
 threading.Thread(target=_hc_event_loop, daemon=True).start()
 threading.Thread(target=remote_state_loop, daemon=True).start()
 print("Eldoret live connector running")
