@@ -1158,6 +1158,47 @@ def _unifi_snmp_probe(ap):
         pass
     return item
 
+
+def unifi_client_count_pilot():
+    """Read-only, one-AP test of UniFi vAP client counts; no controller or Mac required."""
+    import re
+    result = {"ap": "Office / Kitchen", "ip": "10.0.0.6",
+              "source": "direct_snmpv3", "clients": None,
+              "status": "unavailable",
+              "checked_at": datetime.now(timezone.utc).isoformat()}
+    if not _unifi_snmp_enabled():
+        result["reason"] = "Bulldog direct SNMP credentials are not configured"
+        return result
+    if not shutil.which("snmpwalk"):
+        result["reason"] = "snmpwalk is not installed on Bulldog"
+        return result
+    env = dict(os.environ)
+    env["SNMPCONFPATH"] = os.path.dirname(UNIFI_SNMP_PRIVATE)
+    base = "1.3.6.1.4.1.41112.1.6.1.2.1.8"
+    try:
+        proc = subprocess.run(
+            ["snmpwalk", "-m", "", "-v3", "-l", "authPriv",
+             "-u", "eldoret-monitor", "-a", "SHA", "-x", "AES",
+             "-On", "-t", "2", "-r", "0", "10.0.0.6", base],
+            capture_output=True, text=True, timeout=6, env=env, check=False)
+        if proc.returncode != 0:
+            result["reason"] = "SNMP vAP walk returned no successful response"
+            return result
+        readings = []
+        for line in proc.stdout.splitlines():
+            match = re.match(r"^\\.?" + re.escape(base) +
+                             r"\\.\\d+\\s+=\\s+INTEGER:\\s+(\\d+)\\s*$", line.strip())
+            if match:
+                readings.append(int(match.group(1)))
+        if not readings:
+            result["reason"] = "This AP did not expose vAP station counts"
+            return result
+        result.update(status="ok", clients=sum(readings),
+                      virtual_ap_count=len(readings))
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        result["reason"] = "SNMP client-count probe timed out or failed"
+    return result
+
 def _unifi_snmp_status():
     with UNIFI_SNMP_LOCK:
         now = time.monotonic()
@@ -3062,6 +3103,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(bulldog_health()).encode())
             except Exception:
                 self.send_bytes(json.dumps({"error":"Bulldog health temporarily unavailable"}).encode())
+            return
+        if path == "/api/unifi/client-count-pilot":
+            self.send_bytes(json.dumps(unifi_client_count_pilot()).encode())
             return
         if path == "/api/unifi/status":
             self.send_bytes(json.dumps(unifi_status()).encode())
