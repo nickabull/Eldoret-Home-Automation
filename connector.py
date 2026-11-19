@@ -1162,6 +1162,7 @@ def _unifi_snmp_probe(ap):
 def unifi_client_count_pilot():
     """Read-only, one-AP test of UniFi vAP client counts; no controller or Mac required."""
     import re
+    import shutil
     result = {"ap": "Office / Kitchen", "ip": "10.0.0.6",
               "source": "direct_snmpv3", "clients": None,
               "status": "unavailable",
