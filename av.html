@@ -1,2 +1,57 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>AV · Eldoret</title><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="manifest.webmanifest"></head><body class="eldoret-dashboard eldoret-shell"><header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div><div class="shell-legacy-status" hidden><div class="status"><span></span>Device inventory</div></div></header><nav class="tabs dashboard-tabs eldoret-primary" aria-label="Primary navigation"><a href="index.html">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="av.html" class="active" aria-current="page">Jesse / AV</a><a href="network.html">Network</a><a href="bulldog.html">Bulldog</a><a href="office.html">Epson</a><a href="appliances.html">Appliances</a><a href="radio.html">Radio</a></nav><main><section class="hero"><div><h2>AV</h2><p>TVs, Sky Q and media devices.</p></div></section><section class="info-strip"><div><b>Sky Q</b><p><a href="sky.html">Open Sky Q ↗</a></p></div><div><b>LG TVs</b><p>webOS device at 10.0.0.33 is the first control target.</p></div><div><b>PlayStation</b><p>Live read-only discovery at 10.0.0.48.</p></div></section>
-<section class="now-watching" id="playstationPanel"><div class="sky-logo-wrap sky-live-icon">🎮</div><div class="sky-copy"><p class="sky-kicker">JESSE'S PLAYSTATION</p><h2 id="playstationTitle">Checking console…</h2><p class="sky-meta" id="playstationMeta">Reading live PlayStation discovery.</p><p class="sky-synopsis" id="playstationDetail"></p></div><span class="sky-state" id="playstationBadge">CHECKING</span></section><div class="dashboard-section-head"><p class="eyebrow">ELDORET</p><h2>Your devices</h2><p>Connection status from the home network</p></div><section class="device-grid" id="deviceGrid"></section></main><script src="remote.js?v=1"></script><script src="devices.js?v=14"></script><script>renderDevices("av")</script><script src="kiosk.js?v=2"></script><script src="mobile.js?v=3"></script></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>AV · Eldoret</title><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="manifest.webmanifest"><style>
+.ps-panel{margin:20px 0;padding:22px;border:1px solid #3a5269;background:linear-gradient(145deg,#13293d,#0a1829);border-radius:24px}
+.ps-row{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.ps-kicker{font-size:12px;color:#8be3d0;letter-spacing:.15em;font-weight:800}
+.ps-game-title{font-size:clamp(26px,3.2vw,45px);font-weight:800;margin:8px 0}
+.ps-dim{color:#acc6d6;font-size:13px;line-height:1.5}
+.ps-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 12px}
+.ps-tabs button{border:1px solid #3e6279;border-radius:13px;background:#153447;color:#c6dbe5;padding:12px 18px;cursor:pointer;min-height:44px}
+.ps-tabs button[aria-selected=true]{background:#285951;border-color:#83d7bf;color:#fff}
+.ps-content{min-height:165px}
+.ps-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ps-stat{padding:15px;background:#183249;border:1px solid #3d5d72;border-radius:15px}
+.ps-stat small{display:block;color:#a5bbcd;margin-bottom:7px}
+.ps-stat strong{font-size:20px;overflow-wrap:anywhere}
+.ps-history{display:grid;gap:8px}
+.ps-event{display:flex;justify-content:space-between;gap:15px;border:1px solid #355168;background:#193146;border-radius:12px;padding:12px;font-size:13px}
+.ps-event time{white-space:nowrap;color:#a6bfce}
+.ps-note{border-left:3px solid #80c9b8;background:#173342;padding:12px;margin:12px 0;color:#c6dbe5;font-size:13px}
+.ps-refresh{padding:12px 19px;background:#1a4a4c;border:1px solid #5a978c;border-radius:12px;color:white;cursor:pointer}
+@media(max-width:680px){.ps-stats{grid-template-columns:1fr}.ps-event{flex-direction:column;gap:5px}}
+</style></head><body class="eldoret-dashboard eldoret-shell"><header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div><div class="shell-legacy-status" hidden><div class="status"><span></span>Device inventory</div></div></header><nav class="tabs dashboard-tabs eldoret-primary" aria-label="Primary navigation"><a href="index.html">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="av.html" class="active" aria-current="page">Jesse / AV</a><a href="network.html">Network</a><a href="bulldog.html">Bulldog</a><a href="office.html">Epson</a><a href="appliances.html">Appliances</a><a href="radio.html">Radio</a></nav><main><section class="hero"><div><h2>AV</h2><p>TVs, Sky Q and media devices.</p></div></section><section class="info-strip"><div><b>Sky Q</b><p><a href="sky.html">Open Sky Q ↗</a></p></div><div><b>LG TVs</b><p>webOS device at 10.0.0.33 is the first control target.</p></div><div><b>PlayStation</b><p>Live read-only discovery at 10.0.0.48.</p></div></section>
+<section id="ps5Panel" class="ps-panel" aria-labelledby="ps5Title"><div class="ps-row"><div><p class="ps-kicker">JESSE / AV · PLAYSTATION</p><h2 id="ps5Title" class="ps-game-title">Jesse's PlayStation 5</h2><p id="ps5Status" class="ps-dim">Checking console…</p></div><button id="ps5Refresh" class="ps-refresh">Refresh PS5</button></div><nav class="ps-tabs" aria-label="PlayStation details"><button type="button" data-ps-tab="now" aria-selected="true">Now playing</button><button type="button" data-ps-tab="history" aria-selected="false">Activity</button><button type="button" data-ps-tab="console" aria-selected="false">Console</button></nav><div class="ps-content" id="ps5Content" aria-live="polite"></div><p class="ps-dim" id="ps5Checked">Bulldog checks locally once a minute. Game tracking begins only if the console reports a game.</p></section><div class="dashboard-section-head"><p class="eyebrow">ELDORET</p><h2>Your devices</h2><p>Connection status from the home network</p></div><section class="device-grid" id="deviceGrid"></section></main><script>
+(()=>{const el=id=>document.getElementById(id);let tab='now',last=null,busy=false;
+const make=(p,t,text,cls)=>{const e=document.createElement(t);e.textContent=text;if(cls)e.className=cls;p.append(e);return e};
+const when=s=>s?new Date(s).toLocaleString('en-GB'):'—';
+const age=s=>{if(!s)return '—';const mins=Math.max(0,Math.floor((Date.now()-Date.parse(s))/60000));return mins<60?mins+'m':Math.floor(mins/60)+'h '+mins%60+'m';};
+const stat=(p,a,b)=>{const d=make(p,'div','','ps-stat');make(d,'small',a);make(d,'strong',b||'—');};
+function draw(){if(!last)return;const p=last.live||{},o=el('ps5Content');o.replaceChildren();
+el('ps5Status').textContent=p.online?'● Console responding · '+(p.host_name||'PS5'):'● No discovery response — may be resting or offline';
+el('ps5Checked').textContent='Last checked '+new Date(last.observed_at).toLocaleTimeString('en-GB')+' · read-only local discovery · no PSN account linked';
+document.querySelectorAll('[data-ps-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.psTab===tab?'true':'false'));
+if(tab==='now'){
+ const game=p.running_app_name||null;
+ make(o,'h3',game||'No game reported by the console','ps-game-title');
+ make(o,'p',game?'Currently reported over the PS5 local discovery protocol.':'The PS5 is responding but its local discovery data does not currently include an active game. This does not prove no game is running.','ps-note');
+ const g=make(o,'div','','ps-stats');stat(g,'Availability',p.online?'Responding':'No reply');stat(g,'Game title ID',p.running_app_titleid||'Not reported');stat(g,'Source','Local PS5');
+}else if(tab==='history'){
+ make(o,'p','Events and game sessions observed by Bulldog from this point onward. Historical PlayStation App activity is not imported.','ps-note');
+ const sessions=(last.sessions||[]).slice().reverse(),events=(last.events||[]).slice().reverse();
+ make(o,'h3','Observed game sessions ('+sessions.length+')');
+ if(!sessions.length)make(o,'p','No game sessions detected yet. We will test this while a game is running.');
+ const rows=make(o,'div','','ps-history');for(const v of sessions.slice(0,20)){const line=make(rows,'div','','ps-event');make(line,'span',v.game+(v.ended_at?' · Ended':' · Last observed active'));make(line,'time',when(v.started_at)+(v.ended_at?' – '+when(v.ended_at):' · '+age(v.started_at)));}
+ make(o,'h3','Console activity');
+ if(!events.length)make(o,'p','No availability or game changes recorded yet.');
+ const history=make(o,'div','','ps-history');for(const v of events.slice(0,25)){const row=make(history,'div','','ps-event');make(row,'span',v.detail);make(row,'time',when(v.at));}
+}else{
+ const grid=make(o,'div','','ps-stats');stat(grid,'Console',p.host_type||'—');stat(grid,'Console name',p.host_name||'—');stat(grid,'System version',p.system_version||'—');stat(grid,'Local IP',p.ip||'—');stat(grid,'Discovery',p.status_code===200?'Responding':'No reply');stat(grid,'Game data',last.game_available?'Provided':'Unavailable');
+ make(o,'p','No PlayStation Network sign-in or account permissions are used. Trophy statistics and recently-played lists are not provided by this local connection.','ps-note');
+}
+}
+async function refresh(){if(busy)return;busy=true;el('ps5Refresh').disabled=true;const c=new AbortController(),timer=setTimeout(()=>c.abort(),8000);
+try{const response=await fetch('/api/playstation/activity',{cache:'no-store',signal:c.signal});if(!response.ok)throw Error();last=await response.json();draw();}
+catch(_){el('ps5Status').textContent='Unable to read PlayStation status';}
+finally{clearTimeout(timer);busy=false;el('ps5Refresh').disabled=false;}}
+document.querySelectorAll('[data-ps-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.psTab;draw();}));el('ps5Refresh').addEventListener('click',refresh);setInterval(()=>{if(!document.hidden)refresh();},30000);refresh();
+})();
+</script><script src="remote.js?v=1"></script><script src="devices.js?v=14"></script><script>renderDevices("av")</script><script src="kiosk.js?v=2"></script><script src="mobile.js?v=3"></script></body></html>
