@@ -88,6 +88,13 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 .tile .story{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:0;flex:1}
 .tile .name,.tile .headline,.tile .detail{position:relative;z-index:1}
 @media(max-width:650px){.tile .headline{font-size:10px}.tile .name{font-size:9px}.tile .detail{font-size:8px}.tile .heart{font-size:16px}}
+
+.tile[data-art="network"]{background-position:65% 45%}
+.tile[data-art="home"]{background-position:68% 55%}
+.tile[data-art="dusk"]{background-position:42% 48%}
+.tile[data-art="sky"]{background-position:60% 40%}
+.tile[data-art="home"][data-id="Left Oven"],.tile[data-art="home"][data-id="Right Oven"]{background-position:85% 35%}
+.tile[data-art="home"][data-id="Hob"],.tile[data-art="home"][data-id="Hood"]{background-position:20% 40%}
 </style></head><body>
 <div id="app">
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
@@ -137,6 +144,7 @@ for(const x of definitions){
  const group=x.id==='bulldog'||x.id==='ps5'?'dusk':x.id==='sky'?'sky':
    x.id==='house'||x.id==='utility'?'home':x.id==='router'||/^ap[6789]$/.test(x.id)?'network':'home';
  card.dataset.art=group;
+ card.dataset.id=x.id;
  card.append(top,story);card.tabIndex=0;card.setAttribute('role','button');
  card.addEventListener('click',()=>openTile(x));
  card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTile(x);}});
@@ -154,7 +162,7 @@ function skyArt(p){
  // Programme UUID comes from the existing Sky EPG readback. Never guess imagery.
  const uuid=String(p.programmeuuid||'');
  if(!p.live||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(uuid)){
-  item.card.style.backgroundImage='';return;
+  item.card.style.backgroundImage='';item.card.dataset.skyArt='';return;
  }
  const img='https://images.metadata.sky.com/pd-image/'+uuid+'/16-9';
  if(item.card.dataset.skyArt===img)return;
@@ -342,7 +350,7 @@ const jobs=[
  }},
  {id:'sky',url:'/api/sky/now',ids:['sky'],period:20000,read:p=>{
    if(p.available===false||p.error){set('sky','warn','No Sky Q reading','Sky Q is not reporting');skyArt({});return}
-   const title=p.title||p.programme?.title||p.program?.title||p.channel_name||(typeof p.channel==='string'?p.channel:p.channel?.name)||p.playback||'Connected';
+   const title=p.title||(typeof p.programme==='string'?p.programme:p.programme?.title)||p.program?.title||p.channel_name||(typeof p.channel==='string'?p.channel:p.channel?.name)||p.playback||'Connected';
    set('sky','good',(p.channel||'Sky Q')+(p.channelno?' · '+p.channelno:''),p.live?'Watching '+String(title).slice(0,70):p.playback==='recording'?'Playing a recording':'Sky Q is active');skyArt(p);
  }},
  {id:'ps5',url:'/api/playstation/status',ids:['ps5'],period:30000,read:p=>{
