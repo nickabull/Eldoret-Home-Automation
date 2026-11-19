@@ -1407,7 +1407,7 @@ def home_connect_status():
             # Never return raw server responses or token values to the web browser.
             result["error"]=("Home Connect needs reauthorisation" if "authorisation" in str(exc).lower()
                              else "Home Connect temporarily unavailable")
-        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+1800)
+        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+(1800 if result.get("devices") else 120))
         return result
 
 
@@ -1484,12 +1484,10 @@ def home_connect_details(name):
             if not aerr:
                 result["available_programs"]=[{"name":str(p.get("key","")).split(".")[-1]}
                     for p in available.get("programs",[])[:45] if isinstance(p,dict)]
-            settings,terr=_hc_get(token,root+"/settings")
-            if not terr:
-                result["settings"]=[{"name":str(v.get("key","")).split(".")[-1],
-                    "value":v.get("value"),"unit":v.get("unit")}
-                    for v in settings.get("settings",[])[:35] if isinstance(v,dict)]
-            result["availability"]={"selected":serr,"programs":aerr,"settings":terr}
+            # The current OAuth token has IdentifyAppliance + Monitor only.
+            # Do not query /settings without Settings scope: repeated 403s can
+            # trigger Home Connect error-rate blocking.
+            result["availability"]={"selected":serr,"programs":aerr,"settings":"scope_not_granted"}
         except (OSError,ValueError,KeyError,RuntimeError,urllib.error.URLError):
             result["error"]="Home Connect detail information temporarily unavailable"
         HOME_CONNECT_DETAILS_CACHE[name]={"expires":time.monotonic()+600,"data":result}
@@ -2960,7 +2958,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_bytes(json.dumps(home_connect_details(name)).encode())
             return
         if path == "/api/home-connect/status":
-            self.send_bytes(json.dumps(home_connect_status()).encode())
+            health=home_connect_status()
+            health["sse_connected"]=HOME_CONNECT_SSE_CONNECTED
+            health["last_event_at"]=HOME_CONNECT_LAST_EVENT_AT
+            self.send_bytes(json.dumps(health).encode())
             return
         if path == "/api/bulldog/status":
             try:
