@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bulldog · Heartbeats</title><meta name="theme-color" content="#071423">
+<style>
+:root{color-scheme:dark;--bg:#071321;--card:#11263a;--border:#31516b;--mint:#8cf4cf;--amber:#ffcc80;--red:#ff8d94;--muted:#a4c0d2}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#f2f9ff}
+body{background:radial-gradient(ellipse at 50% 15%,#15384b,#071321 77%)}
+#app{width:100%;height:100%;height:100dvh;padding:9px 12px 8px;display:flex;flex-direction:column;gap:7px;overflow:hidden}
+header{display:flex;justify-content:space-between;align-items:center;flex-shrink:0;min-height:37px;gap:12px}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}.dog{font-size:28px;line-height:1}.title{font-size:19px;font-weight:900;letter-spacing:.07em;white-space:nowrap}.subtitle{font-size:9px;letter-spacing:.15em;font-weight:800;color:var(--mint)}
+.header-right{display:flex;align-items:center;gap:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#clock{font-size:22px;font-weight:800;letter-spacing:-.03em}
+#overall{font-size:11px;color:var(--mint);font-weight:700}
+#grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:7px}
+.tile{border:1px solid var(--border);border-radius:13px;background:linear-gradient(130deg,rgba(25,56,74,.96),rgba(10,28,46,.96));min-height:0;min-width:0;padding:8px 10px 7px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
+.tile.good{border-color:#326f68}.tile.warn{border-color:#806d4d}.tile.bad{border-color:#884a5b}
+.top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.category{font-size:9px;font-weight:850;color:#99b8c8;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heart{font-size:21px;line-height:1;transform-origin:center;color:var(--mint);filter:drop-shadow(0 0 5px #4af2b044)}
+.tile.good .heart{animation:beat 1.7s ease-in-out infinite}.tile.warn .heart{color:var(--amber);animation:none}.tile.bad .heart{color:var(--red);animation:none}.tile.pending .heart{color:#7d97a7;animation:none}
+@keyframes beat{0%,100%{transform:scale(1)}13%{transform:scale(1.18)}25%{transform:scale(1)}40%{transform:scale(1.13)}54%{transform:scale(1)}}
+.name{font-size:15px;line-height:1.12;font-weight:830;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;letter-spacing:-.025em}
+.detail{font-size:11px;font-weight:700;color:#b5d1e0;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.tile.good .detail{color:#a6edd9}.tile.warn .detail{color:#f1ce93}.tile.bad .detail{color:#ffb6bb}
+footer{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:20px;flex-shrink:0;font-size:10px;color:#a9bdcd;white-space:nowrap}
+footer a{color:#a5eada;text-decoration:none;font-weight:800}
+footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:5px 11px;border-radius:8px;min-height:26px;cursor:pointer;font-size:10px}
+#updated{min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media(min-width:1200px) and (min-height:700px){#app{padding:18px 22px;gap:13px}.tile{padding:15px 18px;border-radius:20px}.name{font-size:clamp(16px,1.7vw,25px)}.detail{font-size:clamp(12px,1vw,17px)}.category{font-size:11px}.heart{font-size:30px}.title{font-size:25px}}
+@media(max-width:650px){#app{padding:6px;gap:4px}#grid{gap:4px}.tile{padding:5px 6px;border-radius:8px}.name{font-size:clamp(10px,2.4vw,14px)}.category{font-size:7px}.detail{font-size:9px}.heart{font-size:16px}.title{font-size:15px}#overall{display:none}#clock{font-size:16px}footer{font-size:9px}}
+@media(max-height:400px){#app{padding:4px 8px;gap:3px}header{min-height:27px}.name{font-size:12px}.detail{font-size:9px}.tile{padding:3px 8px}.heart{font-size:16px}.category{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.tile.good .heart{animation:none}}
+</style></head><body>
+<div id="app">
+<header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
+<div class="header-right"><span id="overall">Checking 16 systems…</span><time id="clock">--:--</time></div></header>
+<main id="grid" aria-label="Home automation system heartbeats"></main>
+<footer><span id="updated" aria-live="polite">Connecting to Bulldog…</span><div style="display:flex;align-items:center;gap:10px"><button id="refresh">Refresh</button><a href="bulldog.html">System stats</a><a href="index.html">Eldoret</a></div></footer>
+</div>
+<script>
+(()=>{
+const definitions=[
+ {id:'bulldog',category:'ENGINE ROOM',name:'Bulldog'},
+ {id:'router',category:'INTERNET',name:'DrayTek router'},
+ {id:'house',category:'LIGHTING',name:'House Hue'},
+ {id:'utility',category:'LIGHTING',name:'Utility Hue'},
+ {id:'ap6',category:'UNIFI',name:'Office / Kitchen'},
+ {id:'ap7',category:'UNIFI',name:'Utility AP'},
+ {id:'ap8',category:'UNIFI',name:'Garden AP'},
+ {id:'ap9',category:'UNIFI',name:'Landing AP'},
+ {id:'Main Kitchen Dishwasher',category:'HOME CONNECT',name:'Main dishwasher'},
+ {id:'Back Kitchen Dishwasher',category:'HOME CONNECT',name:'Back dishwasher'},
+ {id:'Left Oven',category:'HOME CONNECT',name:'Left oven'},
+ {id:'Right Oven',category:'HOME CONNECT',name:'Right oven'},
+ {id:'Hob',category:'HOME CONNECT',name:'Hob'},
+ {id:'Hood',category:'HOME CONNECT',name:'Extractor'},
+ {id:'sky',category:'MEDIA',name:'Sky Q'},
+ {id:'ps5',category:'MEDIA',name:'Jesse’s PS5'}
+];
+const items=new Map(),sources=new Map();
+const grid=document.getElementById('grid'),updated=document.getElementById('updated'),overall=document.getElementById('overall');
+for(const x of definitions){
+ const card=document.createElement('article');card.className='tile pending';card.setAttribute('aria-label',x.name+', waiting for data');
+ const top=document.createElement('div');top.className='top';
+ const cat=document.createElement('span');cat.className='category';cat.textContent=x.category;
+ const beat=document.createElement('span');beat.className='heart';beat.textContent='♥';beat.setAttribute('aria-hidden','true');top.append(cat,beat);
+ const name=document.createElement('div');name.className='name';name.textContent=x.name;
+ const info=document.createElement('div');info.className='detail';info.textContent='Waiting for data';
+ card.append(top,name,info);grid.append(card);items.set(x.id,{card,info,name:x.name});
+}
+function set(id,state,detail){const x=items.get(id);if(!x)return;x.card.className='tile '+state;x.info.textContent=detail;x.card.setAttribute('aria-label',x.name+', '+detail);}
+const fmt=v=>typeof v==='string'?v.split('.').pop():String(v);
+const elapsed=t=>{const n=Date.parse(t||'');return Number.isFinite(n)?(Date.now()-n)/1000:Infinity;};
+const numeric=v=>typeof v==='number'&&Number.isFinite(v);
+function markFailed(ids){for(const id of ids)set(id,'warn','No fresh reading');}
+const jobs=[
+ {id:'bulldog',url:'/api/bulldog/status',ids:['bulldog'],period:10000,read:p=>{
+  const fresh=elapsed(p.checked_at)<45&&!!p.hostname;
+  if(!fresh)return markFailed(['bulldog']);
+  const severity=p.health==='warning'?'warn':'good',cpu=numeric(p.cpu_percent)?p.cpu_percent.toFixed(0)+'% CPU':'CPU checking';
+  set('bulldog',severity,(numeric(p.temperature_c)?p.temperature_c.toFixed(1)+'°C · ':'')+cpu);
+ }},
+ {id:'router',url:'/api/router/status',ids:['router'],period:10000,read:p=>{
+  if(p.online===true)set('router','good',numeric(p.download_mbps)?p.download_mbps.toFixed(1)+' Mbps WAN':'Connected');
+  else set('router','bad','No router response');
+ }},
+ {id:'house',url:'/api/hue/group?bridge=house&group=0',ids:['house'],period:20000,read:p=>hue('house',p)},
+ {id:'utility',url:'/api/hue/group?bridge=utility&group=0',ids:['utility'],period:20000,read:p=>hue('utility',p)},
+ {id:'unifi',url:'/api/unifi/status',ids:['ap6','ap7','ap8','ap9'],period:30000,read:p=>{
+  const recent=elapsed(p.checked_at)<120;
+  for(const [ip,id] of [['10.0.0.6','ap6'],['10.0.0.7','ap7'],['10.0.0.8','ap8'],['10.0.0.9','ap9']]){
+   const d=(p.devices||[]).find(v=>v.ip===ip);
+   if(!recent||!d){set(id,'warn','Stale monitoring');continue}
+   if(d.snmp_online===true||d.online===true){
+    const rate=numeric(d.rx_mbps)?d.rx_mbps.toFixed(1)+' Mbps':null;
+    set(id,'good',(numeric(d.latency_ms)?d.latency_ms.toFixed(0)+' ms':'Responding')+(rate?' · '+rate:''));
+   }else set(id,'bad','No AP response');
+  }
+ }},
+ {id:'hc',url:'/api/home-connect/status',ids:['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood'],period:30000,read:p=>{
+   const current=elapsed(p.checked_at)<2700;
+   const eventFresh=p.sse_connected===true&&elapsed(p.last_event_at)<600;
+   for(const id of ['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood']){
+    const d=(p.devices||[]).find(v=>v.name===id);
+    if(!current&&!eventFresh){set(id,'warn','Snapshot out of date');continue;}
+    if(!d){set(id,'warn','Not reported');continue;}
+    if(!d.connected){set(id,'bad','Appliance offline');continue;}
+    const state=fmt(d.status?.OperationState||'Connected');
+    const progress=(d.program_options||[]).find(o=>/RemainingProgramTime/.test(o.key));
+    const eta=progress&&numeric(progress.value)?Math.ceil(progress.value/60)+'m left':null;
+    set(id,'good',(state==='Run'?'Running':state)+(eta?' · '+eta:''));
+   }
+ }},
+ {id:'sky',url:'/api/sky/now',ids:['sky'],period:20000,read:p=>{
+   if(p.available===false||p.error){set('sky','warn','No Sky Q reading');return}
+   const title=p.title||p.programme?.title||p.program?.title||p.channel_name||p.channel?.name||'Connected';
+   set('sky','good',String(title).slice(0,60));
+ }},
+ {id:'ps5',url:'/api/playstation/status',ids:['ps5'],period:30000,read:p=>{
+  set('ps5',p.online?'good':'warn',p.online?(p.running_app_name||'Console responding'):'Resting / no reply');
+ }}
+];
+function hue(id,p){if(!p||!Array.isArray(p.lights)&&typeof p.state!=='object'){set(id,'warn','Bridge not reporting');return}
+ const list=Array.isArray(p.lights)?p.lights:[],on=list.filter(v=>v.state?.on===true).length;
+ set(id,'good',list.length?on+' of '+list.length+' lights on':'Bridge responding');
+}
+async function check(job){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),6500);
+ try{const r=await fetch(job.url,{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);job.read(await r.json());sources.set(job.id,Date.now());}
+ catch(_){markFailed(job.ids);}finally{clearTimeout(timer);renderOverall();}}
+function renderOverall(){let good=0,warn=0,bad=0;for(const x of items.values()){if(x.card.classList.contains('good'))good++;else if(x.card.classList.contains('bad'))bad++;else warn++;}
+ overall.textContent=good+' healthy · '+warn+' checking'+(bad?' · '+bad+' down':'');
+ updated.textContent='Latest checks '+new Date().toLocaleTimeString('en-GB')+' · amber = stale/unknown · red = no response';}
+let running=false;
+async function refresh(){if(running)return;running=true;document.getElementById('refresh').disabled=true;
+ await Promise.all(jobs.map(check));document.getElementById('refresh').disabled=false;running=false;}
+function clock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
+document.getElementById('refresh').addEventListener('click',refresh);
+for(const job of jobs)setInterval(()=>{if(!document.hidden)check(job);},job.period);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+setInterval(clock,15000);clock();refresh();
+})();
+</script></body></html>
