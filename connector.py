@@ -1029,7 +1029,7 @@ def _unifi_snmp_probe(ap):
     env["SNMPCONFPATH"] = os.path.dirname(UNIFI_SNMP_PRIVATE)
     try:
         proc = subprocess.run(
-            ["snmpget", "-v3", "-l", "authPriv", "-u", "eldoret-monitor",
+            ["snmpget", "-m", "", "-v3", "-l", "authPriv", "-u", "eldoret-monitor",
              "-a", "SHA", "-x", "AES", "-On", "-t", "2", "-r", "0", ip,
              *UNIFI_SNMP_OIDS],
             capture_output=True, text=True, timeout=5, env=env, check=False)
