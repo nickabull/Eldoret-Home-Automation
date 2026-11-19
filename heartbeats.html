@@ -96,12 +96,6 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 .tile[data-art="home"][data-id="Left Oven"],.tile[data-art="home"][data-id="Right Oven"]{background-position:85% 35%}
 .tile[data-art="home"][data-id="Hob"],.tile[data-art="home"][data-id="Hood"]{background-position:20% 40%}
 
-.tile[data-id="bulldog"]{background-image:url('/eldoret-house-night.webp');background-position:48% 45%}
-.tile[data-id="house"],.tile[data-id="utility"]{background-position:53% 50%}
-.tile[data-id="ap6"],.tile[data-id="ap7"],.tile[data-id="ap8"],.tile[data-id="ap9"]{background-position:56% 47%}
-.tile[data-id="Main Kitchen Dishwasher"],.tile[data-id="Back Kitchen Dishwasher"]{background-position:58% 52%}
-.tile[data-id="Left Oven"],.tile[data-id="Right Oven"]{background-position:63% 49%}
-.tile[data-id="Hob"],.tile[data-id="Hood"]{background-position:55% 48%}
 </style></head><body>
 <div id="app">
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
@@ -113,7 +107,7 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 <section class="detail-card">
 <div class="detail-top"><div><small id="detailCategory">DEVICE DETAILS</small><h2 id="detailName">Device</h2></div><button class="detail-close" id="detailClose" aria-label="Close">×</button></div>
 <div class="detail-status" id="detailState">Checking…</div>
-<p class="detail-desc" id="detailExplanation"></p><div class="detail-summary" id="detailFacts" aria-live="polite"></div><p id="detailPhotoCredit" class="detail-desc" style="font-size:10px;opacity:.72;margin-top:5px" hidden></p>
+<p class="detail-desc" id="detailExplanation"></p><div class="detail-summary" id="detailFacts" aria-live="polite"></div>
 <div id="skyRemote" hidden><div class="sky-modes"><button type="button" class="active" id="skyModeRemote">Remote</button><button type="button" id="skyModeNumbers">Channel number</button></div><div id="skyRemotePanel"><div class="sky-remote" id="skyButtons"></div></div><div id="skyNumberPanel" hidden><div class="sky-number-display" id="skyChannelDigits" aria-live="polite">Enter channel number</div><div class="sky-numpad" id="skyNumpad"></div></div><p id="remoteFeedback" aria-live="polite">Touch a button to control Sky Q.</p></div>
 <div class="detail-actions"><button type="button" id="detailReturn">← Back to heartbeats</button></div>
 </section></div>
@@ -139,46 +133,6 @@ const definitions=[
 ];
 const items=new Map(),sources=new Map(),latest=new Map();
 
-/*
- * Optional photographic artwork. Sky Q retains its live programme image service.
- * Wikimedia Commons photo credits are listed in the tile details under Image credit.
- * On failure, the existing locally hosted background remains fully functional.
- */
-const IMAGE_CREDITS={
- 'ap':'L3u / Wikimedia Commons (Ubiquiti Unifi AP.jpg, CC BY-SA 4.0)',
- 'dishwasher':'Nenad Stojković / Wikimedia Commons (Dishwasher in a modern kitchen..., CC BY 2.0)',
- 'oven':'Nenad Stojković / Wikimedia Commons (Hands open oven door..., CC BY)',
- 'hob':'Willtron / Wikimedia Commons (Gaggenau.jpg, CC BY-SA)',
- 'hood':'Tomwsulcer / Wikimedia Commons (Kitchen design at a store in NJ 1.jpg)',
- 'hue':'Philips Hue lighting lifestyle imagery (product marketing)'
-};
-const tilePhoto={
- house:'https://bilder.obi.at/70bce927-b1e9-4592-8f9b-86175a699a69/prZZK/image.jpeg',
- utility:'https://bilder.obi.at/70bce927-b1e9-4592-8f9b-86175a699a69/prZZK/image.jpeg',
- ap6:'https://commons.wikimedia.org/wiki/Special:FilePath/Ubiquiti_Unifi_AP.jpg?width=640',
- ap7:'https://commons.wikimedia.org/wiki/Special:FilePath/Ubiquiti_Unifi_AP.jpg?width=640',
- ap8:'https://commons.wikimedia.org/wiki/Special:FilePath/Ubiquiti_Unifi_AP.jpg?width=640',
- ap9:'https://commons.wikimedia.org/wiki/Special:FilePath/Ubiquiti_Unifi_AP.jpg?width=640',
- 'Main Kitchen Dishwasher':'https://commons.wikimedia.org/wiki/Special:FilePath/Dishwasher_is_in_operation_with_clean_dishes_inside_a_kitchen_setting.jpg?width=640',
- 'Back Kitchen Dishwasher':'https://commons.wikimedia.org/wiki/Special:FilePath/Dishwasher_is_in_operation_with_clean_dishes_inside_a_kitchen_setting.jpg?width=640',
- 'Left Oven':'https://commons.wikimedia.org/wiki/Special:FilePath/Hands_open_oven_door_to_take_out_baked_food_from_inside_in_a_modern_kitchen.jpg?width=640',
- 'Right Oven':'https://commons.wikimedia.org/wiki/Special:FilePath/Hands_open_oven_door_to_take_out_baked_food_from_inside_in_a_modern_kitchen.jpg?width=640',
- Hob:'https://commons.wikimedia.org/wiki/Special:FilePath/Gaggenau.jpg?width=640',
- Hood:'https://commons.wikimedia.org/wiki/Special:FilePath/Kitchen_design_at_a_store_in_NJ_1.jpg?width=640'
-};
-const photoCache=new Map();
-function usePhoto(id,url){
- const tile=items.get(id)?.card;
- if(!tile||!url)return;
- let image=photoCache.get(url);
- if(!image){image=new Image();photoCache.set(url,image);image.src=url;}
- const apply=()=>{if(image.naturalWidth>0&&tile.dataset.artStatus==='fallback'){
-   tile.style.backgroundImage='url("'+url+'")';tile.dataset.artStatus='photo';
- }};
- if(image.complete)apply();
- else image.addEventListener('load',apply,{once:true});
-}
-
 const grid=document.getElementById('grid'),updated=document.getElementById('updated'),overall=document.getElementById('overall');
 for(const x of definitions){
  const card=document.createElement('article');card.className='tile pending';card.setAttribute('aria-label',x.name+', waiting for data');
@@ -193,12 +147,10 @@ for(const x of definitions){
    x.id==='house'||x.id==='utility'?'home':x.id==='router'||/^ap[6789]$/.test(x.id)?'network':'home';
  card.dataset.art=group;
  card.dataset.id=x.id;
- card.dataset.artStatus='fallback';
  card.append(top,story);card.tabIndex=0;card.setAttribute('role','button');
  card.addEventListener('click',()=>openTile(x));
  card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTile(x);}});
  grid.append(card);items.set(x.id,{card,info,headline,name:x.name});
- if(tilePhoto[x.id])usePhoto(x.id,tilePhoto[x.id]);
 }
 function set(id,state,detail,headline){
  const x=items.get(id);if(!x)return;
@@ -340,12 +292,6 @@ function drawDetails(){
 function openTile(def){
  lastFocused=document.activeElement;selected=def;
  detailName.textContent=def.name;detailCategory.textContent=def.category;
- const credit=document.getElementById('detailPhotoCredit');
- const group=/^ap[6789]$/.test(def.id)?'ap':def.id==='house'||def.id==='utility'?'hue':
- def.id.includes('Dishwasher')?'dishwasher':def.id.includes('Oven')?'oven':
- def.id==='Hob'?'hob':def.id==='Hood'?'hood':null;
- credit.hidden=!(group&&items.get(def.id)?.card.dataset.artStatus==='photo');
- if(!credit.hidden)credit.textContent='Image credit: '+IMAGE_CREDITS[group];
  const appliance=['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood'].includes(def.id);
  detailExplanation.textContent=def.id==='sky'?'Touch the buttons below to control Sky Q.':
   appliance?'Live Home Connect read-only details; remote cooking controls are not enabled.':
