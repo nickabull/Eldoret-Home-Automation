@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Bulldog · Eldoret</title><link rel="stylesheet" href="styles.css?v=57"><meta name="theme-color" content="#0b1018">
+<style>
+body.eldoret-dashboard.bulldog-page{background:#081220;color:#e9f4ff}
+.bulldog-page main{max-width:1480px;margin:auto;padding:14px 20px 50px}
+.bulldog-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,32%);gap:24px;align-items:center;padding:28px;overflow:hidden;border:1px solid #34546b;border-radius:28px;background:radial-gradient(ellipse at 75% 35%,#265c62,#0c2334 54%,#081624 90%)}
+.bulldog-title{font-size:clamp(36px,6vw,74px);line-height:1.02;margin:8px 0 14px;letter-spacing:-.045em}
+.bulldog-eyebrow{color:#91e7d1;letter-spacing:.2em;font-weight:800;font-size:12px}
+.bulldog-subtitle{color:#b9d1dd;font-size:clamp(14px,1.4vw,20px);max-width:680px;line-height:1.5}
+.bulldog-dog{width:100%;height:260px;object-fit:cover;object-position:center;border-radius:24px;background:#f3e8dd;border:1px solid #607b83}
+.bulldog-photo-caption{font-size:11px;color:#9cb1bd;margin-top:7px}
+.bulldog-status{display:inline-flex;align-items:center;gap:9px;color:#91e7d1;font-weight:800;border:1px solid #407c70;border-radius:30px;background:#16382f;padding:8px 14px;margin:12px 0}
+.bulldog-dot{width:9px;height:9px;border-radius:50%;background:#81ecc9;box-shadow:0 0 14px #81ecc9;animation:pulse 1.7s infinite}
+@keyframes pulse{50%{opacity:.4;transform:scale(.7)}}
+.bulldog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}
+.bulldog-card{padding:23px;background:linear-gradient(145deg,#172e40,#0d1c2e);border:1px solid #334f61;border-radius:22px;min-width:0}
+.bulldog-label{font-size:12px;color:#91bfc3;font-weight:800;text-transform:uppercase;letter-spacing:.11em}
+.bulldog-value{font-size:clamp(25px,2.8vw,40px);line-height:1.2;font-weight:800;letter-spacing:-.04em;margin:14px 0 5px;font-variant-numeric:tabular-nums}
+.bulldog-detail{color:#adc5d4;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.bulldog-meter{height:7px;border-radius:20px;background:#284153;overflow:hidden;margin:13px 0 4px}
+.bulldog-meter i{display:block;height:100%;width:0;background:#7de2c6;border-radius:20px;transition:width .4s}
+.bulldog-meter i.hot{background:#f7a66f}
+.bulldog-extra{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.bulldog-list{margin-top:12px;display:grid;gap:12px}
+.bulldog-line{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid #30485b;padding-bottom:10px;font-size:13px}
+.bulldog-line strong{text-align:right;overflow-wrap:anywhere}
+.bulldog-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0}
+.bulldog-refresh{border:1px solid #518b82;background:#163d43;color:#d9fff4;border-radius:14px;padding:12px 22px;min-height:44px;cursor:pointer}
+@media(max-width:1000px){.bulldog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.bulldog-page main{padding:10px}.bulldog-hero{grid-template-columns:1fr;padding:20px}.bulldog-dog{height:180px}.bulldog-grid{gap:10px}.bulldog-card{padding:15px}.bulldog-extra{grid-template-columns:1fr}.bulldog-value{font-size:27px}}
+@media(prefers-reduced-motion:reduce){.bulldog-dot{animation:none}}
+</style></head>
+<body class="eldoret-dashboard eldoret-shell bulldog-page">
+<header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div></header>
+<nav class="tabs dashboard-tabs eldoret-primary" aria-label="Primary navigation"><a href="index.html">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="av.html">Jesse / AV</a><a href="network.html">Network</a><a href="bulldog.html" class="active" aria-current="page">Bulldog</a><a href="office.html">Epson</a><a href="appliances.html">Appliances</a><a href="radio.html">Radio</a></nav>
+<main>
+<section class="bulldog-hero"><div><p class="bulldog-eyebrow">ELDORET · ENGINE ROOM</p><h1 class="bulldog-title">Meet Bulldog.</h1><p class="bulldog-subtitle">The little Raspberry Pi with a big job. Keeping Eldoret running, checking your network and bringing everything home.</p><div class="bulldog-status" id="healthBadge"><span class="bulldog-dot"></span><span id="healthText">Connecting to Bulldog…</span></div><p class="bulldog-detail" id="lastChecked">Waiting for first system reading</p></div><figure style="margin:0"><img class="bulldog-dog" src="https://commons.wikimedia.org/wiki/Special:FilePath/Bulldog2f.jpg" alt="Portrait of an English bulldog"><figcaption class="bulldog-photo-caption">Bulldog portrait: WolvenRose, Wikimedia Commons, CC BY-SA 3.0.</figcaption></figure></section>
+<div class="bulldog-grid">
+<article class="bulldog-card"><p class="bulldog-label">CPU usage</p><div class="bulldog-value" id="cpu">—</div><div class="bulldog-meter"><i id="cpuBar"></i></div><p class="bulldog-detail" id="load">1-minute load —</p></article>
+<article class="bulldog-card"><p class="bulldog-label">CPU temperature</p><div class="bulldog-value" id="temp">—</div><div class="bulldog-meter"><i id="tempBar"></i></div><p class="bulldog-detail">Pi processor thermal sensor</p></article>
+<article class="bulldog-card"><p class="bulldog-label">Memory used</p><div class="bulldog-value" id="memory">—</div><div class="bulldog-meter"><i id="memoryBar"></i></div><p class="bulldog-detail" id="memoryDetail">—</p></article>
+<article class="bulldog-card"><p class="bulldog-label">Storage used</p><div class="bulldog-value" id="disk">—</div><div class="bulldog-meter"><i id="diskBar"></i></div><p class="bulldog-detail" id="diskDetail">—</p></article>
+<article class="bulldog-card"><p class="bulldog-label">System uptime</p><div class="bulldog-value" id="uptime">—</div><p class="bulldog-detail">Since the last reboot</p></article>
+<article class="bulldog-card"><p class="bulldog-label">Processor load</p><div class="bulldog-value" id="load5">—</div><p class="bulldog-detail" id="loadDetail">5-minute load average</p></article>
+<article class="bulldog-card"><p class="bulldog-label">Swap usage</p><div class="bulldog-value" id="swap">—</div><p class="bulldog-detail" id="swapDetail">—</p></article>
+<article class="bulldog-card"><p class="bulldog-label">Eldoret connector</p><div class="bulldog-value" id="connector">—</div><p class="bulldog-detail">This page is served by the running Eldoret process</p></article>
+</div>
+<section class="bulldog-extra">
+<article class="bulldog-card"><h2>Hardware & software</h2><div class="bulldog-list" id="hardware"></div></article>
+<article class="bulldog-card"><h2>Network & connections</h2><div class="bulldog-list" id="connections"></div></article>
+</section>
+<div class="bulldog-controls"><button class="bulldog-refresh" id="refresh">Refresh readings</button><span class="bulldog-detail">Live readings every 10 seconds while the page is visible. No extra background service required.</span></div>
+</main>
+<script>
+(()=>{const $=id=>document.getElementById(id);let busy=false;
+const num=(x,d=1)=>typeof x==='number'&&Number.isFinite(x)?x.toFixed(d):'—';
+const pct=x=>typeof x==='number'?x.toFixed(1)+'%':'—';
+const bytes=n=>typeof n==='number'?(n/1073741824>=1?(n/1073741824).toFixed(1)+' GiB':(n/1048576).toFixed(0)+' MiB'):'—';
+const uptime=n=>typeof n==='number'?Math.floor(n/86400)+'d '+Math.floor((n%86400)/3600)+'h '+Math.floor((n%3600)/60)+'m':'—';
+function meter(id,n){const e=$(id);e.style.width=(typeof n==='number'?Math.min(100,Math.max(0,n)):0)+'%';e.classList.toggle('hot',typeof n==='number'&&n>80);}
+function lines(id,pairs){const parent=$(id);parent.replaceChildren();for(const [a,b] of pairs){const row=document.createElement('div');row.className='bulldog-line';const label=document.createElement('span'),value=document.createElement('strong');label.textContent=a;value.textContent=b==null?'—':String(b);row.append(label,value);parent.append(row);}}
+function draw(p){
+ $('healthText').textContent='ELDORET ONLINE · BULLDOG REPORTING';
+ $('lastChecked').textContent='Last checked '+new Date(p.checked_at).toLocaleTimeString('en-GB');
+ $('cpu').textContent=pct(p.cpu_percent);meter('cpuBar',p.cpu_percent);
+ $('load').textContent='1-minute load '+num(p.load_1m,2)+' · '+(p.logical_cpus||'—')+' CPU cores';
+ $('temp').textContent=typeof p.temperature_c==='number'?num(p.temperature_c)+'°C':'—';meter('tempBar',p.temperature_c);
+ $('memory').textContent=pct(p.memory_percent);meter('memoryBar',p.memory_percent);
+ $('memoryDetail').textContent=bytes(p.memory_used_bytes)+' of '+bytes(p.memory_total_bytes);
+ $('disk').textContent=pct(p.disk_percent);meter('diskBar',p.disk_percent);
+ $('diskDetail').textContent=bytes(p.disk_used_bytes)+' of '+bytes(p.disk_total_bytes);
+ $('uptime').textContent=uptime(p.uptime_seconds);
+ $('load5').textContent=num(p.load_5m,2);
+ $('loadDetail').textContent='5-minute load · 15-minute '+num(p.load_15m,2);
+ $('swap').textContent=bytes(p.swap_used_bytes);
+ $('swapDetail').textContent=bytes(p.swap_total_bytes)+' allocated';
+ $('connector').textContent=p.eldoret_running?'RUNNING':'—';
+ lines('hardware',[['Model',p.model],['Hostname',p.hostname],['Operating system',p.os],['Architecture',p.architecture],['Kernel',p.kernel],['Python',p.python],['CPU cores',p.logical_cpus]]);
+ lines('connections',[['Wi-Fi',p.wifi_connected?'Connected':'Not connected'],['Ethernet',p.ethernet_connected?'Connected':'Not connected'],['Local IPs',(p.ip_addresses||[]).join(', ')||'Not reported'],['Eldoret web service',p.eldoret_running?'Responding':'Unknown'],['System boot ID',p.boot_id||'—']]);
+}
+async function refresh(){if(busy)return;busy=true;const ctl=$('refresh');ctl.disabled=true;const stop=new AbortController(),timer=setTimeout(()=>stop.abort(),8000);try{
+const res=await fetch('/api/bulldog/status',{signal:stop.signal,cache:'no-store'});if(!res.ok)throw Error('API unavailable');const p=await res.json();if(!p.checked_at||!p.hostname)throw Error('Incomplete reading');draw(p);
+}catch(e){$('healthText').textContent='WAITING FOR BULLDOG';$('lastChecked').textContent='Unable to retrieve the latest status';}finally{clearTimeout(timer);ctl.disabled=false;busy=false;}}
+$('refresh').addEventListener('click',refresh);setInterval(()=>{if(!document.hidden)refresh()},10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});refresh();
+})();
+</script><script src="remote.js?v=1"></script></body></html>
