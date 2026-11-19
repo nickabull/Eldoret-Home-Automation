@@ -61,6 +61,14 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 .sky-remote{grid-template-columns:repeat(6,minmax(0,1fr));margin-top:7px;gap:5px}
 .sky-remote button{min-height:40px}
 @media(max-height:500px){.detail-card{width:min(750px,100%)}.detail-summary{max-height:130px}.sky-remote button{min-height:38px}.detail-grid{gap:5px}}
+
+.sky-modes{display:flex;gap:6px;margin-top:5px}.sky-modes button{flex:1;min-height:40px;padding:7px;border:1px solid #487083;border-radius:9px;color:#dcebf5;background:#1a3448;font-size:13px;font-weight:800;cursor:pointer}.sky-modes button.active{background:#246258;border-color:#8be4d0}
+#skyNumberPanel[hidden],#skyRemotePanel[hidden]{display:none}
+.sky-number-display{text-align:center;min-height:32px;padding:6px;margin-top:7px;background:#0b2433;border:1px solid #477b85;border-radius:9px;font-size:21px;font-weight:850;letter-spacing:.07em}
+.sky-numpad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:6px}
+.sky-numpad button{min-height:37px;border:1px solid #567e8e;background:#24485a;border-radius:9px;color:white;font-size:19px;font-weight:800;cursor:pointer;touch-action:manipulation}
+.sky-numpad button.go{background:#226b56;border-color:#8ce3c7;font-size:15px}
+.sky-numpad button.clear{font-size:13px;background:#503740}
 </style></head><body>
 <div id="app">
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
@@ -73,7 +81,7 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 <div class="detail-top"><div><small id="detailCategory">DEVICE DETAILS</small><h2 id="detailName">Device</h2></div><button class="detail-close" id="detailClose" aria-label="Close">×</button></div>
 <div class="detail-status" id="detailState">Checking…</div>
 <p class="detail-desc" id="detailExplanation"></p><div class="detail-summary" id="detailFacts" aria-live="polite"></div>
-<div id="skyRemote" hidden><div class="sky-remote" id="skyButtons"></div><p id="remoteFeedback" aria-live="polite">Touch a button to control Sky Q.</p></div>
+<div id="skyRemote" hidden><div class="sky-modes"><button type="button" class="active" id="skyModeRemote">Remote</button><button type="button" id="skyModeNumbers">Channel number</button></div><div id="skyRemotePanel"><div class="sky-remote" id="skyButtons"></div></div><div id="skyNumberPanel" hidden><div class="sky-number-display" id="skyChannelDigits" aria-live="polite">Enter channel number</div><div class="sky-numpad" id="skyNumpad"></div></div><p id="remoteFeedback" aria-live="polite">Touch a button to control Sky Q.</p></div>
 <div class="detail-actions"><button type="button" id="detailReturn">← Back to heartbeats</button></div>
 </section></div>
 <script>
@@ -126,6 +134,41 @@ const skyButtons=[
  ['↑','up'],['↓','down'],['←','left'],['→','right'],['Play','play'],['Pause','pause'],
  ['Rewind','rewind'],['Forward','fastforward'],['Record','record'],['Red','red'],['Stop','stop'],['Search','search']
 ];
+const skyModeRemote=document.getElementById('skyModeRemote');
+const skyModeNumbers=document.getElementById('skyModeNumbers');
+const skyRemotePanel=document.getElementById('skyRemotePanel');
+const skyNumberPanel=document.getElementById('skyNumberPanel');
+const skyChannelDigits=document.getElementById('skyChannelDigits');
+let channelDigits='';
+function updateDigits(){skyChannelDigits.textContent=channelDigits||'Enter channel number';}
+function showSkyMode(numbers){
+ skyNumberPanel.hidden=!numbers;skyRemotePanel.hidden=numbers;
+ skyModeNumbers.classList.toggle('active',numbers);skyModeRemote.classList.toggle('active',!numbers);
+}
+skyModeRemote.addEventListener('click',()=>showSkyMode(false));
+skyModeNumbers.addEventListener('click',()=>showSkyMode(true));
+async function tuneChannel(){
+ if(remoteBusy||!(/^[0-9]{1,4}$/.test(channelDigits)))return;
+ remoteBusy=true;feedback.textContent='Tuning to channel '+channelDigits+'…';
+ try{const channel=channelDigits;
+   const r=await fetch('/api/sky/channel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channel})});
+   if(!r.ok)throw Error();
+   feedback.textContent='Channel '+channel+' selected';
+   channelDigits='';updateDigits();
+ }catch(_){feedback.textContent='Channel change failed — try again';}
+ finally{remoteBusy=false;}
+}
+const keypad=document.getElementById('skyNumpad');
+for(const value of ['1','2','3','4','5','6','7','8','9','Clear','0','Go']){
+ const b=document.createElement('button');b.type='button';b.textContent=value;
+ if(value==='Clear')b.className='clear';if(value==='Go')b.className='go';
+ b.addEventListener('click',()=>{
+  if(value==='Go'){tuneChannel();return}
+  if(value==='Clear')channelDigits=channelDigits.slice(0,-1);
+  else if(channelDigits.length<4)channelDigits+=value;
+  updateDigits();
+ });keypad.append(b);
+}
 const skyGrid=document.getElementById('skyButtons');
 for(const [label,key] of skyButtons){const b=document.createElement('button');b.type='button';b.textContent=label;
  b.addEventListener('click',async()=>{
