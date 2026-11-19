@@ -1061,7 +1061,7 @@ def _unifi_snmp_probe(ap):
             if name.startswith("STRING:"):
                 item["device_name"] = name.split(":", 1)[1].strip().strip('"')[:80]
             item["online"] = item["snmp_online"] = True
-            if iface.strip().strip('"') == 'STRING: "eth0"' or iface.strip() == 'STRING: eth0':
+            if iface.startswith("STRING:") and iface.split(":", 1)[1].strip().strip('"') == "eth0":
                 item["rx_octets"] = digits(read(UNIFI_SNMP_OIDS[4]), "Counter64")
                 item["tx_octets"] = digits(read(UNIFI_SNMP_OIDS[5]), "Counter64")
                 item["traffic_interface"] = "eth0"
