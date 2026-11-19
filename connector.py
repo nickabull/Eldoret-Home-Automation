@@ -1407,7 +1407,7 @@ def home_connect_status():
             # Never return raw server responses or token values to the web browser.
             result["error"]=("Home Connect needs reauthorisation" if "authorisation" in str(exc).lower()
                              else "Home Connect temporarily unavailable")
-        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+60)
+        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+1800)
         return result
 
 
@@ -1494,6 +1494,119 @@ def home_connect_details(name):
             result["error"]="Home Connect detail information temporarily unavailable"
         HOME_CONNECT_DETAILS_CACHE[name]={"expires":time.monotonic()+600,"data":result}
         return result
+
+
+# One persistent server-sent event stream avoids exhausting Home Connect's
+# daily REST allowance. Reconnect with backoff, never loop aggressively.
+HOME_CONNECT_SSE_CONNECTED = False
+HOME_CONNECT_LAST_EVENT_AT = None
+def _hc_sse_event(kind, payload, appliance_id):
+    global HOME_CONNECT_LAST_EVENT_AT
+    if kind in ("KEEP-ALIVE", ""):
+        return
+    if kind not in ("STATUS", "NOTIFY", "EVENT", "CONNECTED", "DISCONNECTED",
+                    "PAIRED", "DEPAIRED"):
+        return
+    with HOME_CONNECT_LOCK:
+        name=next((name for name,aid in HOME_CONNECT_DEVICE_IDS.items()
+                   if aid==appliance_id),None)
+        if not name:
+            return
+        cache=HOME_CONNECT_CACHE.get("data")
+        if not cache:
+            return
+        device=next((d for d in cache.get("devices",[]) if d.get("name")==name),None)
+        if device is None:
+            return
+        now=datetime.now(timezone.utc).isoformat()
+        updates=[]
+        if kind in ("CONNECTED","DISCONNECTED"):
+            connected=(kind=="CONNECTED")
+            if device.get("connected")!=connected:
+                device["connected"]=connected
+                updates.append(("Connectivity","Connected" if connected else "Disconnected"))
+        if kind in ("STATUS","NOTIFY","EVENT"):
+            for item in payload.get("items",[])[:30]:
+                if not isinstance(item,dict):
+                    continue
+                rawkey=item.get("key")
+                if not isinstance(rawkey,str) or len(rawkey)>200:
+                    continue
+                key=rawkey.split(".")[-1]
+                value=item.get("value")
+                if key in ("OperationState","DoorState","CurrentCavityTemperature",
+                           "InteriorIlluminationActive","RemoteControlActive",
+                           "RemoteControlStartAllowed","LocalControlActive"):
+                    prev=device.setdefault("status",{}).get(key)
+                    device["status"][key]=value
+                    if prev != value:
+                        updates.append((key,str(value).split(".")[-1][:100]))
+                if key in ("RemainingProgramTime","ElapsedProgramTime",
+                           "ProgramProgress","EstimatedTotalProgramTime",
+                           "RemainingProgramTimeIsEstimated"):
+                    options=device.setdefault("program_options",[])
+                    found=next((v for v in options if v.get("key")==key),None)
+                    if found is None:
+                        options.append({"key":key,"value":value,"unit":item.get("unit")})
+                    else:
+                        found.update(value=value,unit=item.get("unit"))
+                if kind=="EVENT" and key in ("ProgramFinished","ProgramAborted",
+                                               "ProgramStarted","ProgramPaused"):
+                    updates.append(("Event",key))
+        for label,value in updates:
+            HOME_CONNECT_EVENTS.append({"at":now,"name":name,
+                                        "event":label,"value":value})
+        if updates:
+            del HOME_CONNECT_EVENTS[:-300]
+            cache["events"]=HOME_CONNECT_EVENTS[-60:]
+            cache["online_count"]=sum(bool(d.get("connected")) for d in cache.get("devices",[]))
+        HOME_CONNECT_LAST_EVENT_AT=now
+
+def _hc_event_loop():
+    global HOME_CONNECT_SSE_CONNECTED
+    import urllib.error
+    failures=0
+    while True:
+        try:
+            with HOME_CONNECT_LOCK:
+                token=_hc_token()
+            req=urllib.request.Request(HOME_CONNECT_BASE+"/homeappliances/events",
+                headers={"Authorization":"Bearer "+token,"Accept":"text/event-stream",
+                         "Cache-Control":"no-cache"})
+            with urllib.request.urlopen(req,timeout=85) as response:
+                HOME_CONNECT_SSE_CONNECTED=True
+                failures=0
+                event_type=""
+                event_id=""
+                data=[]
+                while True:
+                    raw=response.readline()
+                    if not raw:
+                        break
+                    line=raw.decode("utf-8",errors="replace").rstrip("\r\n")
+                    if not line:
+                        if data:
+                            try:
+                                payload=json.loads("\n".join(data))
+                                if isinstance(payload,dict):
+                                    _hc_sse_event(event_type,payload,event_id)
+                            except ValueError:
+                                pass
+                        event_type=""
+                        event_id=""
+                        data=[]
+                    elif line.startswith("event:"):
+                        event_type=line[6:].strip()
+                    elif line.startswith("id:"):
+                        event_id=line[3:].strip()
+                    elif line.startswith("data:"):
+                        data.append(line[5:].lstrip())
+            HOME_CONNECT_SSE_CONNECTED=False
+            failures+=1
+        except Exception:
+            HOME_CONNECT_SSE_CONNECTED=False
+            failures+=1
+        time.sleep(min(900,max(30,30*(2**min(5,failures-1)))))
 
 def unifi_status():
     if _unifi_snmp_enabled():
@@ -3107,6 +3220,7 @@ if __name__ == '__main__':
 threading.Thread(target=agent_loop, daemon=True).start()
 threading.Thread(target=device_registry_loop, daemon=True).start()
 threading.Thread(target=_bulldog_history_loop, daemon=True).start()
+threading.Thread(target=_hc_event_loop, daemon=True).start()
 threading.Thread(target=remote_state_loop, daemon=True).start()
 print("Eldoret live connector running")
 print("House Hue bridge: ready")
