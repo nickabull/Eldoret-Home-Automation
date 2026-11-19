@@ -1187,10 +1187,15 @@ def unifi_client_count_pilot():
             return result
         readings = []
         for line in proc.stdout.splitlines():
-            match = re.match(r"^\\.?" + re.escape(base) +
-                             r"\\.\\d+\\s+=\\s+INTEGER:\\s+(\\d+)\\s*$", line.strip())
-            if match:
-                readings.append(int(match.group(1)))
+            oid, sep, raw = line.strip().partition(" = ")
+            oid = oid.lstrip(".")
+            if sep and oid.startswith(base + ".") and raw.startswith("INTEGER:"):
+                try:
+                    value = int(raw.split(":", 1)[1].strip())
+                    if value >= 0:
+                        readings.append(value)
+                except ValueError:
+                    pass
         if not readings:
             result["reason"] = "This AP did not expose vAP station counts"
             return result
