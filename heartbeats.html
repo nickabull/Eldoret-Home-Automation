@@ -113,7 +113,7 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 <section class="detail-card">
 <div class="detail-top"><div><small id="detailCategory">DEVICE DETAILS</small><h2 id="detailName">Device</h2></div><button class="detail-close" id="detailClose" aria-label="Close">×</button></div>
 <div class="detail-status" id="detailState">Checking…</div>
-<p class="detail-desc" id="detailExplanation"></p><div class="detail-summary" id="detailFacts" aria-live="polite"></div>
+<p class="detail-desc" id="detailExplanation"></p><div class="detail-summary" id="detailFacts" aria-live="polite"></div><p id="detailPhotoCredit" class="detail-desc" style="font-size:10px;opacity:.72;margin-top:5px" hidden></p>
 <div id="skyRemote" hidden><div class="sky-modes"><button type="button" class="active" id="skyModeRemote">Remote</button><button type="button" id="skyModeNumbers">Channel number</button></div><div id="skyRemotePanel"><div class="sky-remote" id="skyButtons"></div></div><div id="skyNumberPanel" hidden><div class="sky-number-display" id="skyChannelDigits" aria-live="polite">Enter channel number</div><div class="sky-numpad" id="skyNumpad"></div></div><p id="remoteFeedback" aria-live="polite">Touch a button to control Sky Q.</p></div>
 <div class="detail-actions"><button type="button" id="detailReturn">← Back to heartbeats</button></div>
 </section></div>
@@ -340,6 +340,12 @@ function drawDetails(){
 function openTile(def){
  lastFocused=document.activeElement;selected=def;
  detailName.textContent=def.name;detailCategory.textContent=def.category;
+ const credit=document.getElementById('detailPhotoCredit');
+ const group=/^ap[6789]$/.test(def.id)?'ap':def.id==='house'||def.id==='utility'?'hue':
+ def.id.includes('Dishwasher')?'dishwasher':def.id.includes('Oven')?'oven':
+ def.id==='Hob'?'hob':def.id==='Hood'?'hood':null;
+ credit.hidden=!(group&&items.get(def.id)?.card.dataset.artStatus==='photo');
+ if(!credit.hidden)credit.textContent='Image credit: '+IMAGE_CREDITS[group];
  const appliance=['Main Kitchen Dishwasher','Back Kitchen Dishwasher','Left Oven','Right Oven','Hob','Hood'].includes(def.id);
  detailExplanation.textContent=def.id==='sky'?'Touch the buttons below to control Sky Q.':
   appliance?'Live Home Connect read-only details; remote cooking controls are not enabled.':
