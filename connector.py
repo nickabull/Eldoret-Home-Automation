@@ -1402,6 +1402,7 @@ def home_connect_status():
                 result["devices"]=list(pool.map(probe,all_devices[:16]))
             result["online_count"]=sum(bool(d["connected"]) for d in result["devices"])
             _hc_record_activity(result["devices"])
+            result["events"]=HOME_CONNECT_EVENTS[-60:]
         except (OSError,ValueError,KeyError,RuntimeError,urllib.error.URLError) as exc:
             # Never return raw server responses or token values to the web browser.
             result["error"]=("Home Connect needs reauthorisation" if "authorisation" in str(exc).lower()
