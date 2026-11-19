@@ -95,6 +95,13 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 .tile[data-art="sky"]{background-position:60% 40%}
 .tile[data-art="home"][data-id="Left Oven"],.tile[data-art="home"][data-id="Right Oven"]{background-position:85% 35%}
 .tile[data-art="home"][data-id="Hob"],.tile[data-art="home"][data-id="Hood"]{background-position:20% 40%}
+
+.tile[data-id="bulldog"]{background-image:url('/eldoret-house-night.webp');background-position:48% 45%}
+.tile[data-id="house"],.tile[data-id="utility"]{background-position:53% 50%}
+.tile[data-id="ap6"],.tile[data-id="ap7"],.tile[data-id="ap8"],.tile[data-id="ap9"]{background-position:56% 47%}
+.tile[data-id="Main Kitchen Dishwasher"],.tile[data-id="Back Kitchen Dishwasher"]{background-position:58% 52%}
+.tile[data-id="Left Oven"],.tile[data-id="Right Oven"]{background-position:63% 49%}
+.tile[data-id="Hob"],.tile[data-id="Hood"]{background-position:55% 48%}
 </style></head><body>
 <div id="app">
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
@@ -131,6 +138,47 @@ const definitions=[
  {id:'ps5',category:'MEDIA',name:'Jesse’s PS5'}
 ];
 const items=new Map(),sources=new Map(),latest=new Map();
+
+/*
+ * Optional photographic artwork. Sky Q retains its live programme image service.
+ * Wikimedia Commons photo credits are listed in the tile details under Image credit.
+ * On failure, the existing locally hosted background remains fully functional.
+ */
+const IMAGE_CREDITS={
+ 'ap':'L3u / Wikimedia Commons (Ubiquiti Unifi AP.jpg, CC BY-SA 4.0)',
+ 'dishwasher':'Nenad Stojković / Wikimedia Commons (Dishwasher in a modern kitchen..., CC BY 2.0)',
+ 'oven':'Nenad Stojković / Wikimedia Commons (Hands open oven door..., CC BY)',
+ 'hob':'Willtron / Wikimedia Commons (Gaggenau.jpg, CC BY-SA)',
+ 'hood':'Tomwsulcer / Wikimedia Commons (Kitchen design at a store in NJ 1.jpg)',
+ 'hue':'Philips Hue lighting lifestyle imagery (product marketing)'
+};
+const tilePhoto={
+ house:'https://bilder.obi.at/70bce927-b1e9-4592-8f9b-86175a699a69/prZZK/image.jpeg',
+ utility:'https://bilder.obi.at/70bce927-b1e9-4592-8f9b-86175a699a69/prZZK/image.jpeg',
+ ap6:'https://commons.wikimedia.org/wiki/Special:FilePath/Ubiquiti_Unifi_AP.jpg?width=640',
+ ap7:'https://commons.wikimedia.org/wiki/Special:FilePath/Ubiquiti_Unifi_AP.jpg?width=640',
+ ap8:'https://commons.wikimedia.org/wiki/Special:FilePath/Ubiquiti_Unifi_AP.jpg?width=640',
+ ap9:'https://commons.wikimedia.org/wiki/Special:FilePath/Ubiquiti_Unifi_AP.jpg?width=640',
+ 'Main Kitchen Dishwasher':'https://commons.wikimedia.org/wiki/Special:FilePath/Dishwasher_is_in_operation_with_clean_dishes_inside_a_kitchen_setting.jpg?width=640',
+ 'Back Kitchen Dishwasher':'https://commons.wikimedia.org/wiki/Special:FilePath/Dishwasher_is_in_operation_with_clean_dishes_inside_a_kitchen_setting.jpg?width=640',
+ 'Left Oven':'https://commons.wikimedia.org/wiki/Special:FilePath/Hands_open_oven_door_to_take_out_baked_food_from_inside_in_a_modern_kitchen.jpg?width=640',
+ 'Right Oven':'https://commons.wikimedia.org/wiki/Special:FilePath/Hands_open_oven_door_to_take_out_baked_food_from_inside_in_a_modern_kitchen.jpg?width=640',
+ Hob:'https://commons.wikimedia.org/wiki/Special:FilePath/Gaggenau.jpg?width=640',
+ Hood:'https://commons.wikimedia.org/wiki/Special:FilePath/Kitchen_design_at_a_store_in_NJ_1.jpg?width=640'
+};
+const photoCache=new Map();
+function usePhoto(id,url){
+ const tile=items.get(id)?.card;
+ if(!tile||!url)return;
+ let image=photoCache.get(url);
+ if(!image){image=new Image();photoCache.set(url,image);image.src=url;}
+ const apply=()=>{if(image.naturalWidth>0&&tile.dataset.artStatus==='fallback'){
+   tile.style.backgroundImage='url("'+url+'")';tile.dataset.artStatus='photo';
+ }};
+ if(image.complete)apply();
+ else image.addEventListener('load',apply,{once:true});
+}
+
 const grid=document.getElementById('grid'),updated=document.getElementById('updated'),overall=document.getElementById('overall');
 for(const x of definitions){
  const card=document.createElement('article');card.className='tile pending';card.setAttribute('aria-label',x.name+', waiting for data');
@@ -145,10 +193,12 @@ for(const x of definitions){
    x.id==='house'||x.id==='utility'?'home':x.id==='router'||/^ap[6789]$/.test(x.id)?'network':'home';
  card.dataset.art=group;
  card.dataset.id=x.id;
+ card.dataset.artStatus='fallback';
  card.append(top,story);card.tabIndex=0;card.setAttribute('role','button');
  card.addEventListener('click',()=>openTile(x));
  card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTile(x);}});
  grid.append(card);items.set(x.id,{card,info,headline,name:x.name});
+ if(tilePhoto[x.id])usePhoto(x.id,tilePhoto[x.id]);
 }
 function set(id,state,detail,headline){
  const x=items.get(id);if(!x)return;
