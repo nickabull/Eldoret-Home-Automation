@@ -277,7 +277,7 @@ function drawDetails(){
  }else if(id==='house'||id==='utility'){
   metrics(wrapper,[['Bridge','Responding'],['Any lights on',source.state?.any_on],['All lights on',source.state?.all_on],['Group',source.name||'Whole bridge']]);
  }else if(/^ap[6789]$/.test(id)){
-  metrics(wrapper,[['Access point',source.name],['IP address',source.ip],['Ping',number(source.latency_ms,' ms')],['Ethernet incoming',number(source.rx_mbps,' Mbps')],['Ethernet outgoing',number(source.tx_mbps,' Mbps')],['Firmware',source.firmware],['Uptime',source.uptime]]);
+  metrics(wrapper,[['Access point',source.name],['IP address',source.ip],['Connected devices',numeric(source.clients)?source.clients:'Unavailable'],['Client-count source',numeric(source.clients)?'Direct encrypted SNMP':'Not reported'],['Client count checked',source.clients_checked_at],['Ping',number(source.latency_ms,' ms')],['Ethernet incoming',number(source.rx_mbps,' Mbps')],['Ethernet outgoing',number(source.tx_mbps,' Mbps')],['Firmware',source.firmware],['Uptime',source.uptime_seconds]]);
  }else if(id==='sky'){
   metrics(wrapper,[['Programme',source.programme||source.title],['Channel',source.channel],['Channel number',source.channelno],['Playback',source.live?'Live TV':source.playback||'Unknown'],['Starts',source.start],['Ends',source.end]]);
  }else if(id==='ps5'){
@@ -351,7 +351,10 @@ const jobs=[
    if(!recent||!d){set(id,'warn','Stale monitoring','Checking the access point');continue}
    if(d.snmp_online===true||d.online===true){
     const rate=numeric(d.rx_mbps)?d.rx_mbps.toFixed(1)+' Mbps':null;
-    set(id,'good',(numeric(d.latency_ms)?d.latency_ms.toFixed(0)+' ms':'Responding')+(rate?' · '+rate:''),'Wi-Fi is responding');
+    const clients=numeric(d.clients)&&elapsed(d.clients_checked_at)<180?d.clients:null;
+    const headline=clients===null?'Wi-Fi connected':clients+' '+(clients===1?'device':'devices')+' connected';
+    const detail=(numeric(d.latency_ms)?d.latency_ms.toFixed(0)+' ms ping':'AP responding')+(rate?' · '+rate:'')+(clients===null?' · clients unavailable':'');
+    set(id,'good',detail,headline);
    }else set(id,'bad','No AP response','Wi-Fi needs attention');
   }
  }},
