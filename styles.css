@@ -1276,3 +1276,74 @@ body.eldoret-shell .sport-now.has-now-artwork,body.eldoret-shell .sport-now.has-
  body.eldoret-shell.epson-page .epson-hero h2{font-size:24px!important}
  body.eldoret-shell.epson-page .epson-hero p:last-child{font-size:11px!important;line-height:1.4!important}
 }
+
+
+/* Eldoret Tablet v1.0 — 4:3 iPad-sized landscape layout.
+   Restore real touch sizes instead of squeezing a 1600×900 dashboard onto a 1024×768 screen.
+   The original fixed 16:9 large-display rules remain intact. */
+@media (min-width:760px) and (max-width:1100px) and (min-aspect-ratio:4/3){
+ html:has(body.eldoret-shell){height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
+ body.eldoret-shell{
+  position:relative!important;inset:auto!important;transform:none!important;
+  transform-origin:initial!important;width:100%!important;height:auto!important;
+  min-height:100vh!important;min-height:100dvh!important;max-width:none!important;
+  display:block!important;overflow:visible!important;border:0!important;
+ }
+ body.eldoret-shell>header.eldoret-header{
+  position:relative!important;height:64px!important;min-height:64px!important;
+  padding:10px 24px 4px!important;width:100%!important
+ }
+ body.eldoret-shell .eldoret-brand{font-size:19px!important;gap:10px!important}
+ body.eldoret-shell .eldoret-brand small{font-size:7px!important}
+ body.eldoret-shell .eldoret-clock time{font-size:25px!important}
+ body.eldoret-shell>nav.eldoret-primary{
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  width:calc(100% - 48px)!important;height:auto!important;min-height:100px!important;
+  margin:8px 24px 8px!important;padding:0 0 9px!important;gap:6px!important;
+  overflow:visible!important;flex:none!important
+ }
+ body.eldoret-shell>nav.eldoret-primary>a{
+  width:100%!important;min-width:0!important;min-height:43px!important;
+  padding:8px 5px!important;font-size:12px!important;white-space:nowrap!important;
+  border-radius:10px!important
+ }
+ body.eldoret-shell>main{
+  display:block!important;position:relative!important;flex:none!important;
+  width:100%!important;height:auto!important;min-height:0!important;max-width:none!important;
+  overflow:visible!important;padding:14px 24px 40px!important;margin:0!important;
+  scrollbar-width:auto!important
+ }
+ body.eldoret-shell .eldoret-content{
+  display:block!important;position:relative!important;zoom:1!important;
+  transform:none!important;width:100%!important;height:auto!important;overflow:visible!important
+ }
+ body.eldoret-shell .home-vitals{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+ body.eldoret-shell .vital-router{grid-column:span 2!important}
+ body.eldoret-shell .vital-card{min-height:186px!important;padding:16px 18px!important}
+ body.eldoret-shell .home-speeds{gap:20px!important;flex-wrap:wrap}
+ body.eldoret-shell .home-speeds strong{font-size:28px!important}
+ body.eldoret-shell .home-hero{min-height:180px!important;padding:16px 0!important}
+ body.eldoret-shell .home-orbit{width:135px!important;height:135px!important;margin-right:18px!important}
+ body.eldoret-shell .home-hero h1{font-size:42px!important}
+ body.eldoret-shell .home-summary{font-size:13px!important}
+ body.eldoret-shell .home-news{padding:13px 16px!important}
+ body.eldoret-shell .tv-wrap{max-width:none!important}
+ body.eldoret-shell .tv-subtabs button,
+ body.eldoret-shell .tv-actions button,
+ body.eldoret-shell .tv-basic button{min-height:46px!important}
+ body.eldoret-shell .tv-panel{min-height:0!important}
+ body.eldoret-shell .sky-subnav{flex-wrap:wrap!important}
+ body.eldoret-shell #recordingsGrid,body.eldoret-shell #guideGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-auto-rows:auto!important}
+ body.eldoret-shell #skyAppsGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ body.eldoret-shell [data-shell-hidden]{display:none!important}
+ body.eldoret-shell .mobile-dock{display:none!important}
+}
+/* Portrait iPads and larger tablets: two-column cards with full-width touch navigation. */
+@media (min-width:700px) and (max-width:1100px) and (max-aspect-ratio:4/3){
+ body.eldoret-shell .home-vitals{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+ body.eldoret-shell .vital-router{grid-column:span 2!important}
+ body.eldoret-shell>nav.eldoret-primary{grid-template-columns:repeat(5,minmax(0,1fr))!important;height:auto!important;gap:5px!important;min-height:102px!important}
+ body.eldoret-shell>nav.eldoret-primary>a{min-height:42px!important}
+ body.eldoret-shell .home-hero{min-height:190px!important}
+ body.eldoret-shell .home-orbit{opacity:.2!important}
+}
