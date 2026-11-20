@@ -580,6 +580,85 @@ def lg_lounge_control(action, input_id=None):
         LG_LIVE_CACHE["at"]=0
     return {"ok":True,"detail":"LG acknowledged "+action.replace("_"," ")+". Await fresh readback."}
 
+
+# Lounge WOL pilot. MAC is learned from the LAN neighbour entry only after
+# authenticating to the ALREADY PAIRED TV; no guessed MAC or broadcast scanning.
+LG_WOL_FILE=os.path.expanduser("~/eldoret-connector/lg/lounge-wol.json")
+def _lg_mac_from_arp(ip):
+    import re
+    with open("/proc/net/arp",encoding="ascii") as f:
+        rows=f.readlines()[1:]
+    for row in rows:
+        fields=row.split()
+        if len(fields)<6 or fields[0]!=ip or fields[2]!="0x2":continue
+        mac=fields[3].lower()
+        if re.fullmatch(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}",mac) and mac!="00:00:00:00:00:00":
+            return mac
+    return None
+
+def lg_lounge_wol_status():
+    import stat
+    saved=None
+    try:
+        info=os.stat(LG_WOL_FILE)
+        if info.st_uid!=os.getuid() or stat.S_IMODE(info.st_mode)&0o077:
+            raise RuntimeError("Wake configuration permissions unsafe")
+        with open(LG_WOL_FILE,encoding="utf-8") as f:saved=json.load(f)
+    except FileNotFoundError:pass
+    return {"ready":bool(saved and saved.get("mac") and saved.get("ip")==LG_LOUNGE_IP),
+            "ip":LG_LOUNGE_IP,"mac":saved.get("mac") if saved else None,
+            "detail":"MAC securely recorded from paired lounge LG" if saved else "TV MAC not recorded. Learn it while television is on."}
+
+def lg_lounge_learn_mac():
+    # Validate this TV identity through its existing client key and TLS fingerprint.
+    ws=_lg_open_paired()
+    try:
+        # Query confirms responsive authenticated SSAP, not merely an open TCP port.
+        result,ok=_lg_ssap_request(ws,"eldoret-wol-identify",
+                                  "ssap://com.webos.applicationManager/getForegroundAppInfo")
+        if not ok:raise RuntimeError("Could not verify paired TV before learning MAC")
+        # Reading neighbour table after talking to that IP ensures recent ARP.
+        mac=_lg_mac_from_arp(LG_LOUNGE_IP)
+        if not mac:raise RuntimeError("No verified LAN MAC entry for lounge TV. Check wired/Wi-Fi setup.")
+        saved=_lg_saved()
+        if not saved or not saved.get("fingerprint"):raise RuntimeError("Missing LG pairing fingerprint")
+        folder=os.path.dirname(LG_WOL_FILE)
+        os.makedirs(folder,mode=0o700,exist_ok=True)
+        os.chmod(folder,0o700)
+        import tempfile
+        fd,tmp=tempfile.mkstemp(prefix=".wol-",dir=folder)
+        try:
+            os.fchmod(fd,0o600)
+            with os.fdopen(fd,"w",encoding="utf-8") as f:
+                json.dump({"ip":LG_LOUNGE_IP,"mac":mac,"fingerprint":saved["fingerprint"],
+                           "learned_at":datetime.now(timezone.utc).isoformat()},f)
+            os.replace(tmp,LG_WOL_FILE)
+        finally:
+            if os.path.exists(tmp):os.unlink(tmp)
+        return {"ok":True,"detail":"Learned lounge TV MAC from paired local TV. You can now try waking it from standby.","mac":mac}
+    finally:ws.close()
+
+def lg_lounge_wake():
+    import re
+    cfg=lg_lounge_wol_status()
+    if not cfg["ready"]:raise RuntimeError("Learn and verify the lounge TV MAC before trying wake-up")
+    saved=_lg_saved()
+    with open(LG_WOL_FILE,encoding="utf-8") as f:wol=json.load(f)
+    if not saved or saved.get("fingerprint")!=wol.get("fingerprint"):
+        raise RuntimeError("Paired TV identity changed. Wake refused.")
+    mac=cfg["mac"]
+    if not re.fullmatch(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}",str(mac)):
+        raise RuntimeError("Saved MAC format invalid")
+    binary=bytes.fromhex(mac.replace(":",""))
+    packet=b"\xff"*6+binary*16
+    sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST,1)
+        sock.settimeout(2)
+        sock.sendto(packet,("10.0.0.255",9))
+    finally:sock.close()
+    return {"ok":True,"detail":"Wake-on-LAN magic packet sent to saved lounge TV. This does not prove it woke; check the screen and live status."}
+
 def lg_tv_status(ip=None):
     ip=ip or _registry_ip("lg_tv_1","10.0.0.33")
     ports=[p for p in (80,3000,3001) if _tcp_open(ip,p,timeout=0.5)]
@@ -3583,6 +3662,10 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 self.send_bytes(json.dumps({"candidates":[],"error":"LG discovery unavailable"}).encode())
             return
+        if path == "/api/lg/wol-status":
+            try:self.send_bytes(json.dumps(lg_lounge_wol_status()).encode())
+            except Exception:self.send_bytes(json.dumps({"ready":False,"detail":"Wake status unavailable"}).encode())
+            return
         if path == "/api/lg/live":
             self.send_bytes(json.dumps(lg_lounge_live()).encode())
             return
@@ -3703,7 +3786,7 @@ class Handler(BaseHTTPRequestHandler):
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
         payload = json.loads(raw_body or b"{}")
-        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control"):
+        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake"):
             # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
             origin=self.headers.get("Origin","")
             host=self.headers.get("Host","")
@@ -3722,6 +3805,10 @@ class Handler(BaseHTTPRequestHandler):
                     result={"ok":started,"detail":"Pairing request starting; look at lounge LG." if started else "Already attempting pairing."}
                 elif self.path=="/api/lg/control":
                     result=lg_lounge_control(payload.get("action"),payload.get("input_id"))
+                elif self.path=="/api/lg/learn-mac":
+                    result=lg_lounge_learn_mac()
+                elif self.path=="/api/lg/wake":
+                    result=lg_lounge_wake()
                 else:
                     result=lg_bulldog_launch()
                 self.send_bytes(json.dumps(result).encode())
