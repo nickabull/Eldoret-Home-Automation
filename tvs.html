@@ -29,7 +29,12 @@
 .tv-confirm p{margin:0;color:#ffb3ae;font-size:14px;line-height:1.25;max-width:260px}
 .tv-confirm button{border:0;border-radius:10px;padding:11px 17px;background:#ff3b30;color:#fff;font:inherit;font-weight:900;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
 .tv-confirm button.cancel{display:none}
+/* Keep wake confirmation in the lounge panel so it cannot be covered by the fixed header or other confirmations. */
+#confirmWake{position:relative;top:auto;right:auto;left:auto;margin:12px 0;max-width:100%;justify-content:flex-start;z-index:5}
+#confirmWake p{max-width:none}
+#confirmWake .cancel{display:inline-flex;background:#354958;color:#fff}
 @media(max-width:700px){.tv-confirm{top:166px;right:18px;left:18px;max-width:none;justify-content:space-between}.tv-confirm p{max-width:55vw}}
+@media(max-width:700px){#confirmWake{position:relative;top:auto;right:auto;left:auto;max-width:100%}#confirmWake p{max-width:none}}
 @media(max-width:600px){.tv-wrap{padding:15px}.tv-panel{padding:16px}.tv-subtabs button{font-size:12px;padding:10px 13px}}
 .tv-readbacks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:15px 0}
 .tv-metric{border:1px solid #426277;border-radius:12px;background:#0d2737;padding:12px;min-width:0}
@@ -70,7 +75,7 @@
 <div class="tv-confirm" id="confirmTivvy" hidden><p>Open <strong>Tivvy Live</strong> on the lounge TV now? This will switch its current app to the browser.</p><button type="button" id="confirmLaunch">CONFIRM</button><button type="button" id="cancelLaunch" class="cancel">Cancel</button></div>
 <div class="tv-feedback" id="loungeFeedback" role="status">Waiting for live Bulldog status…</div>
 <p class="tv-meta" id="wolInfo">Wake-on-LAN not set up yet. Save the MAC while the TV is on.</p>
-<div class="tv-confirm" id="confirmWake" hidden><p>Wake lounge TV?</p><button id="confirmWakeGo" type="button">CONFIRM</button><button id="confirmWakeCancel" type="button" class="cancel">Cancel</button></div>
+<div class="tv-confirm" id="confirmWake" hidden><p>Send a wake packet to the lounge LG now?</p><button id="confirmWakeGo" type="button">SEND WAKE PACKET</button><button id="confirmWakeCancel" type="button" class="cancel">Cancel</button></div>
 <h3>Live return information</h3>
 <div class="tv-readbacks" aria-live="polite">
 <div class="tv-metric"><small>Power / reachability</small><strong id="tvPower">Checking…</strong></div>
@@ -228,7 +233,7 @@ $('wakeTv').addEventListener('click',()=>{
  cancelConfirm();resetRemote();$('confirmWake').hidden=false;
  clearTimeout(wakePending);wakePending=setTimeout(cancelWake,10000);
 });
-$('confirmWakeGo').addEventListener('click',()=>{cancelWake();wolCall('/api/lg/wake');});
+$('confirmWakeGo').addEventListener('click',()=>{cancelWake();$('loungeFeedback').textContent='Wake confirmed — contacting Bulldog…';wolCall('/api/lg/wake');});
 $('confirmWakeCancel').addEventListener('click',cancelWake);
 checkWol();setInterval(()=>{if(!document.hidden)checkWol();},3500);
 readLive();setInterval(readLive,15000);
