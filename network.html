@@ -84,13 +84,15 @@ function render(p){
    for(const [label,value] of [['Ethernet in',d.rx_mbps],['Ethernet out',d.tx_mbps]]){
     const r=add(rates,'div','');add(r,'strong',numeric(value,2)+' Mbps');add(r,'span',label);
    }
+   const clientsFresh=typeof d.clients==='number'&&Number.isFinite(Date.parse(d.clients_checked_at||''))&&Date.now()-Date.parse(d.clients_checked_at)>=-5000&&Date.now()-Date.parse(d.clients_checked_at)<180000;
+   add(card,'div',clientsFresh?d.clients+' connected devices · direct SNMPv3':'Connected devices · unavailable','unifi-meta');
    add(card,'div','Latency '+(d.latency_ms==null?'—':numeric(d.latency_ms)+' ms'),'unifi-meta');
    add(card,'div','SNMP uptime '+uptime(d.uptime_seconds),'unifi-meta');
    add(card,'div','Firmware '+(d.firmware||'—'),'unifi-meta');
    if(d.traffic_note)add(card,'div',d.traffic_note,'unifi-meta');
   }else{
    add(card,'strong',d.online?numeric(d.clients,0):'—','net-value');
-   add(card,'p','Connected clients · controller reading');
+   add(card,'p','Connected clients · UniFi controller','unifi-meta');
    add(card,'div','CPU '+numeric(d.cpu_percent,0)+'% · Memory '+numeric(d.memory_percent,0)+'%','unifi-meta');
    add(card,'div','Uptime '+uptime(d.uptime_seconds),'unifi-meta');
    add(card,'div','Firmware '+(d.firmware||'—'),'unifi-meta');
