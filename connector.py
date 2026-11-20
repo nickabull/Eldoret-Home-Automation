@@ -229,6 +229,23 @@ def velux_status(ip=None):
                   else ("VELUX gateway reachable; KLF 200 API port did not answer." if ports else "VELUX gateway did not answer."))
     }
 
+
+def lg_discovery_status():
+    """Read-only LG webOS LAN presence inventory; never pairs, wakes or controls TVs."""
+    found = sorted(set(_scan_port(3000, 0.06) + _scan_port(3001, 0.06)),
+                   key=lambda ip: tuple(int(v) for v in ip.split(".")))
+    # A reachable webOS service is a candidate, not proof of which room/TV it is.
+    targets = []
+    for ip in found:
+        plain = _tcp_open(ip, 3000, timeout=0.35)
+        tls = _tcp_open(ip, 3001, timeout=0.35)
+        targets.append({"ip":ip,"webos_plain":plain,"webos_tls":tls,
+                        "identity":"unverified","room":"unassigned"})
+    return {"source":"LAN webOS port discovery","checked_at":datetime.now(timezone.utc).isoformat(),
+            "candidate_count":len(targets),"candidates":targets,
+            "note":"Only powered/reachable TVs may appear. No room identity or pairing inferred."}
+
+
 def lg_tv_status(ip=None):
     ip=ip or _registry_ip("lg_tv_1","10.0.0.33")
     ports=[p for p in (80,3000,3001) if _tcp_open(ip,p,timeout=0.5)]
@@ -3222,6 +3239,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(playstation_status()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"online": False, "error": str(e)}).encode())
+            return
+        if path == "/api/lg/discovery":
+            try:
+                self.send_bytes(json.dumps(lg_discovery_status()).encode())
+            except Exception:
+                self.send_bytes(json.dumps({"candidates":[],"error":"LG discovery unavailable"}).encode())
             return
         if path == "/api/lg/status":
             try:
