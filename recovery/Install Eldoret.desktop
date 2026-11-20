@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Install Eldoret (Bulldog Recovery)
+Comment=Restore Bulldog from a verified private backup on a fresh Raspberry Pi
+Icon=utilities-terminal
+Terminal=true
+Exec=/usr/bin/bash -lc "bash \"$HOME/Bulldog-Recovery/install-eldoret.sh\""
+Categories=System;
+StartupNotify=false
