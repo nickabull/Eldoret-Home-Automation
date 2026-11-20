@@ -703,6 +703,254 @@ def lg_kitchen_wake():
     return {"ok":True,"detail":"Kitchen wake packet sent. Checking response for up to 42 seconds."}
 
 
+# Five additional independently paired LG TVs (fixed trusted addresses only).
+# Kids' rooms deliberately expose pairing + volume/mute/channel controls only.
+LG_EXTRA_ROOMS={
+    "pit":{"ip":"10.0.0.47","media":True},
+    "bedroom":{"ip":"10.0.0.45","media":True},
+    "jesse":{"ip":"10.0.0.49","media":False},
+    "ella":{"ip":"10.0.0.40","media":False},
+    "thea":{"ip":"10.0.0.43","media":False},
+}
+LG_EXTRA_LOCK=threading.Lock()
+LG_EXTRA_JOBS={room:{"state":"idle","detail":"Ready for individual pairing.","at":None,"busy":False} for room in LG_EXTRA_ROOMS}
+LG_EXTRA_WOL={room:{"state":"idle","detail":"Not yet wake-tested.","checked_at":None} for room in ("pit","bedroom")}
+LG_EXTRA_WOL_LOCK=threading.Lock()
+
+def _lg_extra_config(room):
+    if room not in LG_EXTRA_ROOMS:raise ValueError("Unknown TV room")
+    return LG_EXTRA_ROOMS[room]
+
+def _lg_extra_file(room,kind="pair"):
+    _lg_extra_config(room)
+    name=room+".json" if kind=="pair" else room+"-wol.json"
+    return os.path.expanduser("~/eldoret-connector/lg/"+name)
+
+def _lg_extra_read(room,kind="pair"):
+    import stat
+    path=_lg_extra_file(room,kind)
+    try:
+        st=os.stat(path)
+        if st.st_uid!=os.getuid() or stat.S_IMODE(st.st_mode)&0o077:
+            raise RuntimeError("TV "+room+" storage permissions unsafe")
+        with open(path,encoding="utf-8") as f:return json.load(f)
+    except FileNotFoundError:return None
+
+def _lg_extra_write(room,kind,record):
+    import tempfile
+    path=_lg_extra_file(room,kind)
+    folder=os.path.dirname(path)
+    os.makedirs(folder,mode=0o700,exist_ok=True)
+    os.chmod(folder,0o700)
+    fd,temp=tempfile.mkstemp(prefix="."+room+"-",dir=folder)
+    try:
+        os.fchmod(fd,0o600)
+        with os.fdopen(fd,"w",encoding="utf-8") as f:json.dump(record,f)
+        os.replace(temp,path)
+    finally:
+        if os.path.exists(temp):os.unlink(temp)
+
+def _lg_extra_status(room):
+    cfg=_lg_extra_config(room)
+    with LG_EXTRA_LOCK:job=dict(LG_EXTRA_JOBS[room])
+    job.pop("busy",None)
+    try:saved=_lg_extra_read(room)
+    except RuntimeError as exc:
+        saved=None
+        job.update(state="error",detail=str(exc))
+    job.update(ip=cfg["ip"],paired=bool(saved and saved.get("client_key") and
+                                        saved.get("ip")==cfg["ip"]),
+               media=cfg["media"])
+    return job
+
+def _lg_extra_set(room,state,detail):
+    with LG_EXTRA_LOCK:
+        LG_EXTRA_JOBS[room].update(state=state,detail=detail,at=datetime.now(timezone.utc).isoformat())
+
+def _lg_extra_pair_worker(room):
+    cfg=_lg_extra_config(room)
+    ws=None
+    try:
+        saved=_lg_extra_read(room)
+        ws=_LGWebSocket(cfg["ip"])
+        _lg_extra_set(room,"connecting","Connecting securely to "+room+" TV...")
+        ws.connect()
+        if saved and saved.get("fingerprint")!=ws.fingerprint:
+            raise RuntimeError("TV identity changed. Pairing stopped.")
+        _lg_extra_set(room,"waiting","Accept the Eldoret pairing prompt on the "+room+" TV.")
+        ws.send(json.dumps(_lg_register_message((saved or {}).get("client_key"))))
+        deadline=time.monotonic()+65
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(min(6,max(1,deadline-time.monotonic())))
+            try:message=ws.recv_json()
+            except socket.timeout:continue
+            if message.get("type")=="registered":
+                key=(message.get("payload") or {}).get("client-key") or (saved or {}).get("client_key")
+                if not isinstance(key,str) or len(key)<10:raise RuntimeError("TV did not grant pairing key")
+                _lg_extra_write(room,"pair",{"ip":cfg["ip"],"client_key":key,
+                          "fingerprint":ws.fingerprint,
+                          "paired_at":datetime.now(timezone.utc).isoformat()})
+                _lg_extra_set(room,"paired","Paired with Bulldog. Remote controls ready.")
+                return
+            if message.get("type")=="error":raise RuntimeError("TV rejected pairing")
+        raise RuntimeError("Pairing timed out: no approval received.")
+    except Exception as exc:
+        _lg_extra_set(room,"error",str(exc)[:180])
+    finally:
+        if ws:ws.close()
+        with LG_EXTRA_LOCK:LG_EXTRA_JOBS[room]["busy"]=False
+
+def lg_extra_pair_start(room):
+    _lg_extra_config(room)
+    with LG_EXTRA_LOCK:
+        if LG_EXTRA_JOBS[room]["busy"]:return False
+        LG_EXTRA_JOBS[room]["busy"]=True
+    threading.Thread(target=_lg_extra_pair_worker,args=(room,),daemon=True).start()
+    return True
+
+def _lg_extra_open(room):
+    cfg=_lg_extra_config(room)
+    saved=_lg_extra_read(room)
+    if not saved or not saved.get("client_key") or saved.get("ip")!=cfg["ip"]:
+        raise RuntimeError("Pair "+room+" TV first")
+    ws=_LGWebSocket(cfg["ip"])
+    try:
+        ws.connect()
+        if ws.fingerprint!=saved.get("fingerprint"):
+            raise RuntimeError("TV certificate changed. Connection refused.")
+        ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+        deadline=time.monotonic()+10
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(2)
+            try:reply=ws.recv_json()
+            except socket.timeout:continue
+            if reply.get("type")=="registered":return ws
+            if reply.get("type")=="error":raise RuntimeError("TV rejected stored pairing")
+        raise RuntimeError("TV did not confirm pairing")
+    except Exception:
+        ws.close()
+        raise
+
+def lg_extra_control(room,action):
+    # Strictly limited to benign basic remote keys; no media controls on kids' rooms.
+    actions={"volume_up":("ssap://audio/volumeUp",None),
+             "volume_down":("ssap://audio/volumeDown",None),
+             "mute":("ssap://audio/setMute",{"mute":True}),
+             "unmute":("ssap://audio/setMute",{"mute":False}),
+             "channel_up":("ssap://tv/channelUp",None),
+             "channel_down":("ssap://tv/channelDown",None)}
+    if action not in actions:raise ValueError("Unsupported TV control")
+    ws=_lg_extra_open(room)
+    try:
+        uri,payload=actions[action]
+        _,ok=_lg_ssap_request(ws,"eldoret-"+room+"-control",uri,payload)
+        if not ok:raise RuntimeError("TV did not acknowledge "+action)
+        return {"ok":True,"detail":room.title()+" TV acknowledged "+action.replace("_"," ")}
+    finally:ws.close()
+
+def lg_extra_media(room,action):
+    if not _lg_extra_config(room)["media"]:
+        raise ValueError("Media shortcuts are unavailable in this room")
+    ws=_lg_extra_open(room)
+    try:
+        if action=="tivvy":
+            _,ok=_lg_ssap_request(ws,"eldoret-"+room+"-tivvy",
+                      "ssap://system.launcher/launch",
+                      {"id":"com.webos.app.browser","params":{"target":"https://is.gd/TivvyTV26"}})
+            if not ok:raise RuntimeError("TV did not acknowledge Tivvy browser launch")
+            return {"ok":True,"detail":"TV accepted Tivvy TV launch; check the picture."}
+        if action=="hdmi1":
+            import re
+            data,ok=_lg_ssap_request(ws,"eldoret-"+room+"-inputs",
+                                         "ssap://tv/getExternalInputList")
+            if not ok or not isinstance(data,dict):
+                raise RuntimeError("Could not read TV inputs")
+            ids=[x.get("id") for x in (data.get("devices") or [])
+                 if isinstance(x,dict) and isinstance(x.get("id"),str)
+                 and re.search(r"(?i)(?:^|[^a-z0-9])hdmi[ _-]*1(?:$|[^0-9])",x["id"])]
+            if len(ids)!=1:raise RuntimeError("HDMI 1 was not identified unambiguously")
+            _,ok=_lg_ssap_request(ws,"eldoret-"+room+"-switch",
+                                     "ssap://tv/switchInput",{"inputId":ids[0]})
+            if not ok:raise RuntimeError("TV did not acknowledge HDMI 1")
+            return {"ok":True,"detail":"TV acknowledged HDMI 1 (Sky Q); check picture."}
+        raise ValueError("Unknown media action")
+    finally:ws.close()
+
+def lg_extra_wol_status(room):
+    cfg=_lg_extra_config(room)
+    if not cfg["media"]:raise ValueError("Wake functions not available in this room")
+    saved=_lg_extra_read(room)
+    wake=_lg_extra_read(room,"wol")
+    ready=bool(saved and wake and wake.get("mac") and
+               saved.get("ip")==cfg["ip"] and wake.get("ip")==cfg["ip"]
+               and saved.get("fingerprint")==wake.get("fingerprint"))
+    with LG_EXTRA_WOL_LOCK:verify=dict(LG_EXTRA_WOL[room])
+    return {"ready":ready,"ip":cfg["ip"],"verification":verify,
+            "detail":"Wake MAC securely stored" if ready else "Learn MAC while TV is on"}
+
+def lg_extra_learn_mac(room):
+    if not _lg_extra_config(room)["media"]:
+        raise ValueError("Wake function not available")
+    ws=_lg_extra_open(room)
+    try:
+        _,ok=_lg_ssap_request(ws,"eldoret-"+room+"-identify",
+                  "ssap://com.webos.applicationManager/getForegroundAppInfo")
+        if not ok:raise RuntimeError("TV did not authenticate MAC learning")
+        mac=_lg_mac_from_arp(LG_EXTRA_ROOMS[room]["ip"])
+        if not mac:raise RuntimeError("TV LAN MAC not found. Check TV on and connection.")
+        saved=_lg_extra_read(room)
+        _lg_extra_write(room,"wol",{"ip":LG_EXTRA_ROOMS[room]["ip"],
+                          "mac":mac,"fingerprint":saved["fingerprint"],
+                          "learned_at":datetime.now(timezone.utc).isoformat()})
+        return {"ok":True,"detail":"MAC saved securely for "+room+" TV"}
+    finally:ws.close()
+
+def _lg_extra_wol_verify(room):
+    deadline=time.monotonic()+42
+    while time.monotonic()<deadline:
+        ws=None
+        try:
+            ws=_lg_extra_open(room)
+            _,ok=_lg_ssap_request(ws,"eldoret-"+room+"-wake-verify",
+                  "ssap://com.webos.applicationManager/getForegroundAppInfo")
+            if ok:
+                with LG_EXTRA_WOL_LOCK:
+                    LG_EXTRA_WOL[room].update(state="responding",
+                        detail="Paired TV authenticated after wake",
+                        checked_at=datetime.now(timezone.utc).isoformat())
+                return
+        except Exception:pass
+        finally:
+            if ws:ws.close()
+        time.sleep(3)
+    with LG_EXTRA_WOL_LOCK:
+        LG_EXTRA_WOL[room].update(state="timeout",
+            detail="No authenticated TV response within 42 seconds",
+            checked_at=datetime.now(timezone.utc).isoformat())
+
+def lg_extra_wake(room):
+    import re
+    if not lg_extra_wol_status(room)["ready"]:
+        raise RuntimeError("Learn "+room+" TV MAC first")
+    config=_lg_extra_read(room,"wol")
+    mac=config["mac"]
+    if not re.fullmatch(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}",str(mac)):
+        raise RuntimeError("Invalid stored TV MAC")
+    packet=bytes([255])*6+bytes.fromhex(mac.replace(":",""))*16
+    sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST,1)
+        sock.settimeout(2)
+        sock.sendto(packet,("10.0.0.255",9))
+    finally:sock.close()
+    with LG_EXTRA_WOL_LOCK:
+        LG_EXTRA_WOL[room].update(state="checking",
+            detail="Wake packet sent; authenticating TV response",
+            checked_at=datetime.now(timezone.utc).isoformat())
+    threading.Thread(target=_lg_extra_wol_verify,args=(room,),daemon=True).start()
+    return {"ok":True,"detail":"Wake sent. Waiting for authenticated TV response."}
+
+
 # Experimental lounge LG telemetry. The TV is the source of truth; never infer state from our buttons.
 LG_LIVE_LOCK=threading.Lock()
 LG_LIVE_CACHE={"at":0,"data":None}
@@ -4084,6 +4332,15 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/lg/kitchen/wol-status":
             self.send_bytes(json.dumps(lg_kitchen_wol_status()).encode())
             return
+        if path.startswith("/api/lg/room/"):
+            bits=path.strip("/").split("/")
+            if len(bits)!=5 or bits[0:3]!=["api","lg","room"] or bits[3] not in LG_EXTRA_ROOMS or bits[4] not in ("status","wol-status"):
+                self.send_error(404);return
+            try:
+                result=_lg_extra_status(bits[3]) if bits[4]=="status" else lg_extra_wol_status(bits[3])
+                self.send_bytes(json.dumps(result).encode())
+            except Exception as e:self.send_bytes(json.dumps({"error":str(e)[:180]}).encode())
+            return
         if path == "/api/lg/kitchen/status":
             self.send_bytes(json.dumps(lg_kitchen_status()).encode())
             return
@@ -4204,7 +4461,7 @@ class Handler(BaseHTTPRequestHandler):
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
         payload = json.loads(raw_body or b"{}")
-        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy","/api/lg/kitchen/learn-mac","/api/lg/kitchen/wake","/api/lg/kitchen/hdmi1","/api/lg/hdmi1"):
+        if self.path.startswith("/api/lg/room/") or self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy","/api/lg/kitchen/learn-mac","/api/lg/kitchen/wake","/api/lg/kitchen/hdmi1","/api/lg/hdmi1"):
             # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
             origin=self.headers.get("Origin","")
             host=self.headers.get("Host","")
@@ -4218,7 +4475,25 @@ class Handler(BaseHTTPRequestHandler):
             if self.path=="/api/lg/control" and (not isinstance(payload,dict) or set(payload)-{"action","input_id"}):
                 self.send_error(400); return
             try:
-                if self.path=="/api/lg/kitchen/hdmi1":
+                if self.path.startswith("/api/lg/room/"):
+                    bits=self.path.strip("/").split("/")
+                    if len(bits)!=5 or bits[0:3]!=["api","lg","room"]:
+                        raise ValueError("Invalid TV endpoint")
+                    room,action=bits[3],bits[4]
+                    cfg=_lg_extra_config(room)
+                    if action=="pair":
+                        started=lg_extra_pair_start(room)
+                        result={"ok":started,"detail":"Pairing started. Accept Eldoret prompt on "+room+" TV." if started else "TV pairing already in progress"}
+                    elif action in ("volume_up","volume_down","mute","unmute","channel_up","channel_down"):
+                        result=lg_extra_control(room,action)
+                    elif cfg["media"] and action in ("tivvy","hdmi1"):
+                        result=lg_extra_media(room,action)
+                    elif cfg["media"] and action=="learn-mac":
+                        result=lg_extra_learn_mac(room)
+                    elif cfg["media"] and action=="wake":
+                        result=lg_extra_wake(room)
+                    else:raise ValueError("This TV does not permit that action")
+                elif self.path=="/api/lg/kitchen/hdmi1":
                     result=lg_switch_sky_hdmi1("kitchen")
                 elif self.path=="/api/lg/hdmi1":
                     result=lg_switch_sky_hdmi1("lounge")
