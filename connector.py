@@ -4186,6 +4186,35 @@ def home_weather(latitude, longitude):
             "rain_chance": daily["precipitation_probability_max"][0], "forecast_at": current["time"], "source": "Open-Meteo"}
     return _home_cached("weather:" + str(round(lat, 3)) + ":" + str(round(lon, 3)), 900, read)
 
+# VELUX HAP is strictly read-only until supervised rain-safe window tests are completed.
+# The local script uses isolated aiohomekit credentials; never return or log its JSON key file.
+_VELUX_READ_CACHE = {"at": 0.0, "data": None}
+_VELUX_READ_LOCK = threading.Lock()
+
+def velux_homekit_readonly():
+    with _VELUX_READ_LOCK:
+        now = time.monotonic()
+        if _VELUX_READ_CACHE["data"] is not None and now - _VELUX_READ_CACHE["at"] < 20:
+            return dict(_VELUX_READ_CACHE["data"])
+        python_bin = os.path.expanduser("~/velux-homekit-venv/bin/python")
+        script = os.path.expanduser("~/eldoret-connector/velux-readonly.py")
+        if not os.path.isfile(python_bin) or not os.path.isfile(script):
+            return {"connected": False, "mode": "read-only", "climate": None,
+                    "windows": [], "error": "VELUX local reader not installed on Bulldog"}
+        try:
+            p = subprocess.run([python_bin, script], capture_output=True, text=True,
+                               timeout=18, check=False)
+            if p.returncode != 0:
+                raise RuntimeError("Local VELUX reader returned an error")
+            data = json.loads(p.stdout)
+            if not isinstance(data, dict):
+                raise ValueError("Invalid local VELUX response")
+        except (subprocess.SubprocessError, ValueError, OSError, json.JSONDecodeError) as exc:
+            data = {"connected": False, "mode": "read-only", "climate": None,
+                    "windows": [], "error": "VELUX local read unavailable: " + type(exc).__name__}
+        _VELUX_READ_CACHE.update(at=now, data=data)
+        return dict(data)
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -4234,6 +4263,8 @@ class Handler(BaseHTTPRequestHandler):
             "/index.html": ("index.html", "text/html; charset=utf-8"),
             "/home-briefing.js": ("home-briefing.js", "application/javascript; charset=utf-8"),
             "/home.js": ("home.js", "application/javascript; charset=utf-8"),
+            "/velux.html": ("velux.html", "text/html; charset=utf-8"),
+            "/velux.js": ("velux.js", "application/javascript; charset=utf-8"),
             "/home.css": ("home.css", "text/css; charset=utf-8"),
             "/lights.html": ("lights.html", "text/html; charset=utf-8"),
             "/lights.js": ("lights.js", "application/javascript; charset=utf-8"),
@@ -4365,6 +4396,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps(lan_inventory()).encode())
             except Exception as e:
                 self.send_bytes(json.dumps({"devices": [], "error": str(e)}).encode())
+            return
+        if path == "/api/velux/homekit":
+            self.send_bytes(json.dumps(velux_homekit_readonly()).encode())
             return
         if path == "/api/velux/discovery":
             try:
