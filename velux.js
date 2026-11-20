@@ -45,8 +45,11 @@
       const response = await fetch('/api/velux/homekit', {cache:'no-store', signal: abort.signal});
       if (!response.ok) throw new Error('Local API did not respond');
       const data = await response.json();
-      const fresh = data.checked_at && Date.now() - Date.parse(data.checked_at) < 90000 && Date.now() - Date.parse(data.checked_at) > -10000;
-      if (!data.connected || !fresh) throw new Error(data.error || 'No fresh sensor reading');
+      const readingAge = data.checked_at ? Date.now() - Date.parse(data.checked_at) : NaN;
+      // Browser and Bulldog clocks can differ. Keep a generous clock-skew allowance,
+      // while rejecting old/missing reads and never accepting disconnected status.
+      const fresh = Number.isFinite(readingAge) && readingAge > -120000 && readingAge < 120000;
+      if (!data.connected || !fresh) throw new Error(data.error || ('Reading unavailable (age ' + (Number.isFinite(readingAge) ? Math.round(readingAge/1000)+'s' : 'unknown') + ')'));
       $('velux-link').textContent = 'LOCAL · CONNECTED';
       $('velux-checked').textContent = 'Updated ' + new Date(data.checked_at).toLocaleTimeString('en-GB') + ' · sensor readings';
       const c = data.climate || {};
