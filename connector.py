@@ -503,6 +503,47 @@ def lg_kitchen_status():
     result["ip"]=LG_KITCHEN_IP
     return result
 
+def lg_kitchen_reachability():
+    """Explicit read-only live test; saved pairing alone does not prove TV is reachable."""
+    checked=datetime.now(timezone.utc).isoformat()
+    saved=_lg_kitchen_saved()
+    if not saved or not saved.get("client_key") or saved.get("ip")!=LG_KITCHEN_IP:
+        return {"paired":False,"reachable":False,"checked_at":checked,
+                "detail":"Kitchen LG is not paired; pair it while powered on."}
+    ws=_LGWebSocket(LG_KITCHEN_IP)
+    try:
+        ws.connect()
+        if ws.fingerprint!=saved.get("fingerprint"):
+            return {"paired":True,"reachable":False,"checked_at":checked,
+                    "detail":"Kitchen LG identity did not match saved pairing."}
+        ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+        deadline=time.monotonic()+8
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(min(2,max(.2,deadline-time.monotonic())))
+            try:msg=ws.recv_json()
+            except socket.timeout:continue
+            if msg.get("type")=="registered":
+                _,ok=_lg_ssap_request(ws,"eldoret-kitchen-refresh",
+                          "ssap://com.webos.applicationManager/getForegroundAppInfo")
+                return {"paired":True,"reachable":bool(ok),"checked_at":checked,
+                        "detail":"Kitchen TV responded to an authenticated live check." if ok else "Kitchen TV connected but did not answer live status."}
+            if msg.get("type")=="error":
+                return {"paired":True,"reachable":False,"checked_at":checked,
+                        "detail":"Kitchen TV rejected stored pairing credentials."}
+        return {"paired":True,"reachable":False,"checked_at":checked,
+                "detail":"Kitchen TV did not confirm the connection before timeout."}
+    except (OSError,RuntimeError,ValueError) as exc:
+        # Do not leak details from credentials or underlying socket addresses.
+        import errno
+        if isinstance(exc,OSError) and exc.errno in (errno.EHOSTUNREACH,errno.ENETUNREACH):
+            message="Kitchen TV is unreachable on the network (possibly in standby)."
+        elif isinstance(exc,(TimeoutError,socket.timeout)):
+            message="Kitchen TV did not respond before timeout."
+        else:
+            message="Kitchen TV connection failed; check it is switched on and on the home network."
+        return {"paired":True,"reachable":False,"checked_at":checked,"detail":message}
+    finally:ws.close()
+
 def _lg_kitchen_pair_task():
     global LG_KITCHEN_BUSY
     ws=_LGWebSocket(LG_KITCHEN_IP)
@@ -4383,6 +4424,10 @@ class Handler(BaseHTTPRequestHandler):
                 result=_lg_extra_status(bits[3]) if bits[4]=="status" else lg_extra_wol_status(bits[3])
                 self.send_bytes(json.dumps(result).encode())
             except Exception as e:self.send_bytes(json.dumps({"error":str(e)[:180]}).encode())
+            return
+        if path == "/api/lg/kitchen/reachability":
+            try:self.send_bytes(json.dumps(lg_kitchen_reachability()).encode())
+            except Exception:self.send_bytes(json.dumps({"paired":False,"reachable":False,"detail":"Kitchen TV reachability check unavailable"}).encode())
             return
         if path == "/api/lg/kitchen/status":
             self.send_bytes(json.dumps(lg_kitchen_status()).encode())
