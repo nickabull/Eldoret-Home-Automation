@@ -2416,7 +2416,7 @@ def sky_send_key(key):
 def fetch_github(path):
     now = time.time()
     cached = STATIC_CACHE.get(path)
-    if cached and (now - cached["time"] < STATIC_CACHE_TTL):
+    if cached and (now - cached["time"] < (15 if path == "tvs.html" else STATIC_CACHE_TTL)):
         return cached["data"]
     try:
         req = urllib.request.Request(
