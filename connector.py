@@ -246,6 +246,213 @@ def lg_discovery_status():
             "note":"Only powered/reachable TVs may appear. No room identity or pairing inferred."}
 
 
+
+# Lounge webOS pilot: one fixed IP, explicit user-triggered control, private key only on Bulldog.
+LG_LOUNGE_IP = "10.0.0.51"
+LG_LOUNGE_KEY_FILE = os.path.expanduser("~/eldoret-connector/lg/lounge.json")
+LG_LOUNGE_LOCK = threading.Lock()
+LG_LOUNGE_JOB = {"state":"idle","detail":"Ready to request pairing.","at":None}
+LG_LOUNGE_BUSY = False
+
+class _LGWebSocket:
+    """Small RFC6455 client over local webOS TLS; no third-party packages."""
+    def __init__(self, ip):
+        import struct
+        self.struct = struct
+        self.ip = ip
+        self.sock = None
+        self.fingerprint = None
+
+    def connect(self):
+        raw = socket.create_connection((self.ip,3001),timeout=5)
+        try:
+            # LG TVs often use self-signed certificates. Encrypted but not public-CA authenticated.
+            self.sock = ssl._create_unverified_context().wrap_socket(raw,server_hostname=self.ip)
+            self.sock.settimeout(6)
+            self.fingerprint = hashlib.sha256(self.sock.getpeercert(binary_form=True)).hexdigest()
+            nonce=base64.b64encode(secrets.token_bytes(16)).decode()
+            request=("GET / HTTP/1.1\r\nHost: "+self.ip+":3001\r\n"
+                     "Upgrade: websocket\r\nConnection: Upgrade\r\n"
+                     "Sec-WebSocket-Version: 13\r\nSec-WebSocket-Key: "+nonce+"\r\n\r\n")
+            self.sock.sendall(request.encode("ascii"))
+            header=bytearray()
+            while not header.endswith(b"\r\n\r\n"):
+                if len(header)>8192: raise RuntimeError("Unexpected large webOS handshake")
+                char=self.sock.recv(1)
+                if not char: raise RuntimeError("TV closed during TLS WebSocket handshake")
+                header.extend(char)
+            header_text=header.decode("iso-8859-1")
+            if not header_text.startswith("HTTP/1.1 101 ") and not header_text.startswith("HTTP/1.0 101 "):
+                raise RuntimeError("webOS rejected WebSocket upgrade")
+            expected=base64.b64encode(hashlib.sha1((nonce+"258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encode()).digest()).decode()
+            if ("sec-websocket-accept: "+expected).lower() not in header_text.lower():
+                raise RuntimeError("TV returned incorrect WebSocket acceptance")
+        except Exception:
+            self.close()
+            raise
+
+    def _exact(self, n):
+        data=bytearray()
+        while len(data)<n:
+            part=self.sock.recv(n-len(data))
+            if not part: raise RuntimeError("TV closed the connection")
+            data.extend(part)
+        return bytes(data)
+
+    def send(self, payload, opcode=1):
+        frame=payload if isinstance(payload,bytes) else payload.encode("utf-8")
+        if len(frame)>65536: raise RuntimeError("Oversized command")
+        key=secrets.token_bytes(4)
+        length=len(frame)
+        hdr=bytes([0x80|opcode,0x80|min(length,126)])
+        if length>=126: hdr=bytes([0x80|opcode,0x80|126])+self.struct.pack("!H",length)
+        masked=bytes(b^key[i%4] for i,b in enumerate(frame))
+        self.sock.sendall(hdr+key+masked)
+
+    def recv_json(self):
+        import struct
+        while True:
+            a,b=self._exact(2)
+            opcode=a&0x0f
+            if not (a&0x80): raise RuntimeError("Fragmented webOS message unsupported")
+            length=b&0x7f
+            if length==126: length=struct.unpack("!H",self._exact(2))[0]
+            if length==127: length=struct.unpack("!Q",self._exact(8))[0]
+            if length>65536: raise RuntimeError("Oversized TV message")
+            mask=self._exact(4) if b&0x80 else None
+            data=self._exact(length)
+            if mask: data=bytes(v^mask[i%4] for i,v in enumerate(data))
+            if opcode==8: raise RuntimeError("TV closed the webOS session")
+            if opcode==9: self.send(data,opcode=10); continue
+            if opcode!=1: continue
+            return json.loads(data.decode("utf-8"))
+
+    def close(self):
+        if self.sock:
+            try: self.sock.close()
+            except Exception: pass
+        self.sock=None
+
+def _lg_saved():
+    import stat
+    try:
+        st=os.stat(LG_LOUNGE_KEY_FILE)
+        if st.st_uid!=os.getuid() or stat.S_IMODE(st.st_mode)&0o077:
+            raise RuntimeError("Private TV pairing file permissions are unsafe")
+        with open(LG_LOUNGE_KEY_FILE,encoding="utf-8") as f: return json.load(f)
+    except FileNotFoundError:
+        return None
+
+def _lg_write(data):
+    folder=os.path.dirname(LG_LOUNGE_KEY_FILE)
+    os.makedirs(folder,mode=0o700,exist_ok=True)
+    os.chmod(folder,0o700)
+    import tempfile
+    fd,tmp=tempfile.mkstemp(prefix=".lgtv-",dir=folder)
+    try:
+        os.fchmod(fd,0o600)
+        with os.fdopen(fd,"w",encoding="utf-8") as f: json.dump(data,f)
+        os.replace(tmp,LG_LOUNGE_KEY_FILE)
+    finally:
+        if os.path.exists(tmp):os.unlink(tmp)
+
+def _lg_register_message(key=None):
+    manifest={"manifestVersion":1,"appVersion":"1.0","signed":{"created":"20261120",
+              "appId":"com.eldoret.remote","vendorId":"com.eldoret","localizedAppNames":{"":"Eldoret"},
+              "localizedVendorNames":{"":"Eldoret"},"permissions":["LAUNCH","READ_RUNNING_APPS"]},
+              "permissions":["LAUNCH","READ_RUNNING_APPS"]}
+    payload={"forcePairing":False,"pairingType":"PROMPT","manifest":manifest}
+    if key: payload["client-key"]=key
+    return {"type":"register","id":"eldoret-register","payload":payload}
+
+def _lg_set(state,detail):
+    with LG_LOUNGE_LOCK:
+        LG_LOUNGE_JOB.update(state=state,detail=detail,at=datetime.now(timezone.utc).isoformat())
+
+def lg_bulldog_status():
+    with LG_LOUNGE_LOCK: result=dict(LG_LOUNGE_JOB)
+    try: result["paired"]=bool((_lg_saved() or {}).get("client_key"))
+    except RuntimeError: result["paired"]=False;result["detail"]="Pairing storage permissions need checking."
+    result["ip"]=LG_LOUNGE_IP
+    return result
+
+def _lg_pair_task():
+    global LG_LOUNGE_BUSY
+    ws=_LGWebSocket(LG_LOUNGE_IP)
+    try:
+        _lg_set("connecting","Connecting via encrypted webOS port 3001...")
+        saved=_lg_saved()
+        ws.connect()
+        if saved and saved.get("fingerprint") != ws.fingerprint:
+            raise RuntimeError("LG certificate changed. Pairing stopped for safety.")
+        _lg_set("waiting","Encrypted TV connection established. Watch the lounge television for a pairing prompt.")
+        ws.send(json.dumps(_lg_register_message((saved or {}).get("client_key"))))
+        deadline=time.monotonic()+65
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(min(6,max(1,deadline-time.monotonic())))
+            try: message=ws.recv_json()
+            except socket.timeout: continue
+            if message.get("type")=="registered":
+                payload=message.get("payload") or {}
+                key=payload.get("client-key") or (saved or {}).get("client_key")
+                if not isinstance(key,str) or len(key)<10:
+                    raise RuntimeError("TV replied but did not grant a pairing key")
+                _lg_write({"ip":LG_LOUNGE_IP,"client_key":key,"fingerprint":ws.fingerprint,
+                           "paired_at":datetime.now(timezone.utc).isoformat()})
+                _lg_set("paired","Success! Lounge TV paired with Bulldog. Ready to open Tivvy TV.")
+                return
+            if message.get("type")=="error":
+                raise RuntimeError("LG refused the registration request; check TV permissions.")
+        raise RuntimeError("Timed out waiting for approval on the TV (65 seconds).")
+    except Exception as exc:
+        _lg_set("error",str(exc)[:180])
+    finally:
+        ws.close()
+        with LG_LOUNGE_LOCK: LG_LOUNGE_BUSY=False
+
+def lg_bulldog_pair_start():
+    global LG_LOUNGE_BUSY
+    with LG_LOUNGE_LOCK:
+        if LG_LOUNGE_BUSY: return False
+        LG_LOUNGE_BUSY=True
+    threading.Thread(target=_lg_pair_task,daemon=True).start()
+    return True
+
+def lg_bulldog_launch():
+    saved=_lg_saved()
+    if not saved or not saved.get("client_key"):
+        raise RuntimeError("Pair the lounge LG before launching its browser")
+    ws=_LGWebSocket(LG_LOUNGE_IP)
+    try:
+        ws.connect()
+        if saved.get("fingerprint")!=ws.fingerprint:
+            raise RuntimeError("LG certificate differs from paired television. Stopped.")
+        ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+        deadline=time.monotonic()+12
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(3)
+            try:msg=ws.recv_json()
+            except socket.timeout:continue
+            if msg.get("type")=="error": raise RuntimeError("LG rejected stored pairing key")
+            if msg.get("type")=="registered":break
+        else:raise RuntimeError("LG did not register the existing pairing")
+        ws.send(json.dumps({"type":"request","id":"eldoret-browser",
+                           "uri":"ssap://system.launcher/launch",
+                           "payload":{"id":"com.webos.app.browser",
+                                      "params":{"target":"https://is.gd/TivvyTV26"}}}))
+        ws.sock.settimeout(6)
+        try:
+            while True:
+                msg=ws.recv_json()
+                if msg.get("id")=="eldoret-browser":
+                    if msg.get("type")=="error":raise RuntimeError("LG rejected browser launch")
+                    return {"ok":True,"detail":"LG accepted browser launch. Check TV for the Tivvy page."}
+        except socket.timeout:
+            return {"ok":True,"detail":"Browser launch sent; TV did not confirm within six seconds."}
+    finally:
+        ws.close()
+
+
 def lg_tv_status(ip=None):
     ip=ip or _registry_ip("lg_tv_1","10.0.0.33")
     ports=[p for p in (80,3000,3001) if _tcp_open(ip,p,timeout=0.5)]
@@ -3095,6 +3302,7 @@ class Handler(BaseHTTPRequestHandler):
             "/bulldog.html": ("bulldog.html", "text/html; charset=utf-8"),
             "/heartbeats.html": ("heartbeats.html", "text/html; charset=utf-8"),
             "/lg-tivvy-test.html": ("lg-tivvy-test.html", "text/html; charset=utf-8"),
+            "/lg-bulldog.html": ("lg-bulldog.html", "text/html; charset=utf-8"),
             "/av.html": ("av.html", "text/html; charset=utf-8"),
             "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
             "/office.html": ("office.html", "text/html; charset=utf-8"),
@@ -3247,6 +3455,9 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 self.send_bytes(json.dumps({"candidates":[],"error":"LG discovery unavailable"}).encode())
             return
+        if path == "/api/lg/control-status":
+            self.send_bytes(json.dumps(lg_bulldog_status()).encode())
+            return
         if path == "/api/lg/status":
             try:
                 self.send_bytes(json.dumps(lg_tv_status()).encode())
@@ -3361,6 +3572,27 @@ class Handler(BaseHTTPRequestHandler):
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
         payload = json.loads(raw_body or b"{}")
+        if self.path in ("/api/lg/pair","/api/lg/open-tivvy"):
+            # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
+            origin=self.headers.get("Origin","")
+            host=self.headers.get("Host","")
+            if (_remote_request(self) or origin!="http://"+host or not host or
+                not host.startswith(("10.0.0.34:","localhost:","127.0.0.1:"))):
+                self.send_error(403); return
+            if self.headers.get("Content-Type","").split(";")[0].strip()!="application/json" or len(raw_body)>128:
+                self.send_error(400); return
+            if payload:
+                self.send_error(400); return
+            try:
+                if self.path=="/api/lg/pair":
+                    started=lg_bulldog_pair_start()
+                    result={"ok":started,"detail":"Pairing request starting; look at lounge LG." if started else "Already attempting pairing."}
+                else:
+                    result=lg_bulldog_launch()
+                self.send_bytes(json.dumps(result).encode())
+            except Exception as exc:
+                self.send_bytes(json.dumps({"ok":False,"detail":str(exc)[:180]}).encode())
+            return
         if self.path == "/api/sky/app/launch":
             try:
                 sky_launch_app(payload.get("appid"))
