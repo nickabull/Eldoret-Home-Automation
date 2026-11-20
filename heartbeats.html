@@ -96,6 +96,13 @@ footer button{border:1px solid #47746f;background:#1c4447;color:#ddfff3;padding:
 .tile[data-art="home"][data-id="Left Oven"],.tile[data-art="home"][data-id="Right Oven"]{background-position:85% 35%}
 .tile[data-art="home"][data-id="Hob"],.tile[data-art="home"][data-id="Hood"]{background-position:20% 40%}
 
+/* Direct router WAN2 telemetry sparkline, not a simulated animation. */
+.tile[data-id="router"] .router-spark{position:absolute;left:10px;right:10px;bottom:5px;height:20px;width:calc(100% - 20px);z-index:2;pointer-events:none;opacity:.9}
+.tile[data-id="router"] .story{padding-bottom:19px}
+.tile[data-id="router"] .router-spark .down{stroke:#8cf4cf;stroke-width:1.8;fill:none;vector-effect:non-scaling-stroke}
+.tile[data-id="router"] .router-spark .up{stroke:#88bbff;stroke-width:1.4;fill:none;vector-effect:non-scaling-stroke}
+.tile[data-id="router"] .router-spark .baseline{stroke:#a6edd9;opacity:.25;stroke-width:.7}
+@media(max-height:400px){.tile[data-id="router"] .router-spark{height:13px;bottom:2px}.tile[data-id="router"] .story{padding-bottom:11px}}
 </style></head><body>
 <div id="app">
 <header><div class="brand"><span class="dog" aria-hidden="true">🐶</span><div><div class="title">BULLDOG <span style="font-weight:400;color:#8cf4cf">/ HEARTBEATS</span></div><div class="subtitle">ELDORET · EVERYTHING AT A GLANCE</div></div></div>
@@ -147,6 +154,16 @@ for(const x of definitions){
    x.id==='house'||x.id==='utility'?'home':x.id==='router'||/^ap[6789]$/.test(x.id)?'network':'home';
  card.dataset.art=group;
  card.dataset.id=x.id;
+ if(x.id==='router'){
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','router-spark');svg.setAttribute('viewBox','0 0 100 24');
+  svg.setAttribute('preserveAspectRatio','none');svg.setAttribute('aria-hidden','true');
+  for(const [cls,d] of [['baseline','M0 22 H100'],['down',''],['up','']]){
+   const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+   path.setAttribute('class',cls);path.setAttribute('d',d);svg.append(path);
+  }
+  card.append(svg);
+ }
  card.append(top,story);card.tabIndex=0;card.setAttribute('role','button');
  card.addEventListener('click',()=>openTile(x));
  card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTile(x);}});
@@ -330,6 +347,28 @@ function renderDishwasher(d){
  const detail=state==='Run'?(eta===null?'Running · remaining time unavailable':eta+' min remaining'+(!cycle?' · cycle not reported':'')):state;
  set(d.name,'good',detail,headline);
 }
+function renderRouterSpark(p){
+ const svg=items.get('router')?.card.querySelector('.router-spark');
+ if(!svg)return;
+ const paths=svg.querySelectorAll('path');
+ if(!p.online){paths[1].setAttribute('d','');paths[2].setAttribute('d','');return;}
+ const history=Array.isArray(p.history)?p.history.slice(-60):[];
+ const valid=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0;
+ const max=Math.max(1,...history.flatMap(s=>[s.download,s.upload]).filter(valid));
+ function coordinates(key){
+  let drawing='',move=true;
+  for(let i=0;i<history.length;i++){
+   const v=history[i]?.[key];
+   if(!valid(v)){move=true;continue;}
+   const x=history.length>1?i*100/(history.length-1):100;
+   const y=22-Math.min(1,v/max)*19;
+   drawing+=(move?'M':'L')+x.toFixed(2)+' '+y.toFixed(2)+' ';move=false;
+  }
+  return drawing;
+ }
+ paths[1].setAttribute('d',coordinates('download'));
+ paths[2].setAttribute('d',coordinates('upload'));
+}
 function markFailed(ids){for(const id of ids)set(id,'warn','No fresh reading','Waiting for fresh data');}
 const jobs=[
  {id:'bulldog',url:'/api/bulldog/status',ids:['bulldog'],period:10000,read:p=>{
@@ -339,6 +378,7 @@ const jobs=[
   set('bulldog',severity,(numeric(p.temperature_c)?p.temperature_c.toFixed(1)+'°C · ':'')+cpu, severity==='good'?'Bulldog is running smoothly':'Bulldog needs a look');
  }},
  {id:'router',url:'/api/router/status',ids:['router'],period:10000,read:p=>{
+  renderRouterSpark(p);
   if(p.online===true)set('router','good',numeric(p.download_mbps)?p.download_mbps.toFixed(1)+' Mbps down · '+(numeric(p.upload_mbps)?p.upload_mbps.toFixed(2)+' up':'WAN connected'):'WAN connected','Internet is connected');
   else set('router','bad','No router response','Internet needs attention');
  }},
