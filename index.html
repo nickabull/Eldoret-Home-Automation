@@ -156,7 +156,7 @@ body.eldoret-dashboard.home-page{width:100%;height:auto;min-height:100dvh;displa
  }
  function velux(p){
     const age=p.checked_at?Date.now()-Date.parse(p.checked_at):Infinity;
-    const fresh=p.connected===true&&age>=-10000&&age<90000&&p.climate&&Number.isFinite(p.climate.temperature);
+    const fresh=p.connected===true&&Number.isFinite(age)&&age>=-120000&&age<120000&&p.climate&&Number.isFinite(p.climate.temperature);
     if(!fresh){card('velux','unknown','NO FRESH READING','Waiting for Utility temperature.',p.error||'Bulldog VELUX read-only link not ready.');$('homeVeluxMeta').textContent='Two roof windows · automation off';return;}
     const ws=(p.windows||[]).filter(w=>Number.isFinite(w.current_position));
     const count=ws.filter(w=>w.current_position>0).length;
