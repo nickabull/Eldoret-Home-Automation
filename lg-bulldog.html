@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Eldoret · Lounge LG test</title>
+<style>body{margin:0;padding:24px;background:#091827;color:#effff8;font:16px system-ui}main{max-width:620px;margin:auto}h1{font-size:26px}p{line-height:1.5;color:#b6d1d3}.card{border:1px solid #4a857d;border-radius:17px;background:#152c38;padding:22px;margin-top:20px}button{padding:15px 19px;border:1px solid #7bd9be;border-radius:10px;background:#1d6250;color:white;font-weight:800;font-size:17px;margin:5px 5px 8px 0;cursor:pointer}button:disabled{opacity:.4;cursor:default}#status{margin:15px 0;background:#071c29;border-left:4px solid #87e8c8;padding:13px;min-height:46px;white-space:pre-wrap}small{color:#9cbab9}</style></head>
+<body><main><h1>📺 Lounge LG — Bulldog test</h1><p>This new test uses <b>Bulldog → encrypted webOS port 3001 → LG 10.0.0.51</b>. Nothing runs unless you press a button. Keep the lounge television on.</p>
+<section class="card"><p><b>Step 1:</b> Press Pair. Watch the lounge television for the prompt and accept it using your LG remote.</p>
+<button id="pair">Pair lounge LG</button>
+<p><b>Step 2:</b> When Bulldog reports paired, open the Tivvy Live URL in the television browser.</p>
+<button id="open" disabled>Open Tivvy TV on lounge LG</button>
+<div id="status" role="status">Checking Bulldog...</div>
+<small>Only IP 10.0.0.51. No TV power/volume/channel commands. The pairing key remains in a 0600 private file on Bulldog; this page never receives or displays it. No other LG televisions are targeted.</small></section></main>
+<script>
+(()=>{
+const status=document.getElementById('status'),pair=document.getElementById('pair'),open=document.getElementById('open');
+let busy=false;
+function update(p){if(!p||typeof p!=='object')return;status.textContent=(p.state==='paired'?'✓ ':'')+(p.detail||'Checking…')+'\n'+(p.paired?'Paired: yes':'Paired: no')+' · IP 10.0.0.51';open.disabled=busy||!p.paired;pair.disabled=busy||p.state==='waiting'||p.state==='connecting'}
+async function poll(){try{const r=await fetch('/api/lg/control-status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);update(await r.json())}catch(e){status.textContent='Cannot contact Bulldog LG control: '+e.message}}
+async function command(path){if(busy)return;busy=true;pair.disabled=true;open.disabled=true;status.textContent=path.endsWith('pair')?'Asking Bulldog to connect. Watch the TV for a permission prompt…':'Asking Bulldog to launch browser…';try{const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!r.ok)throw Error('HTTP '+r.status);const p=await r.json();status.textContent=p.detail||'Request sent.';if(path.endsWith('pair'))setTimeout(poll,700)}catch(e){status.textContent='Request failed: '+e.message}finally{busy=false;setTimeout(poll,1800)}}
+pair.onclick=()=>command('/api/lg/pair');open.onclick=()=>command('/api/lg/open-tivvy');poll();setInterval(poll,2200);
+})();
+</script></body></html>
