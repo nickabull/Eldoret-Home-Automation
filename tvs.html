@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.6.0"><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018">
+<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.7.0"><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018">
 <style>
 .tv-version{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#a9c9d4;font-size:12px;margin:-7px 0 15px}.tv-version strong{color:#a5f0dd}.tv-version button{border:1px solid #487c90;background:#173b4a;color:#fff;padding:7px 11px;border-radius:9px;cursor:pointer;font:inherit;font-weight:700}
 .tv-wrap{max-width:1180px;margin:0 auto;padding:24px 24px 50px}
@@ -56,8 +56,8 @@
 <nav class="tabs dashboard-tabs eldoret-primary" aria-label="Primary navigation"><a href="index.html">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="tvs.html" class="active" aria-current="page">TVs</a><a href="av.html">Jesse / AV</a><a href="network.html">Network</a><a href="bulldog.html">Bulldog</a><a href="office.html">Epson</a><a href="appliances.html">Appliances</a><a href="radio.html">Radio</a></nav>
 <main class="tv-wrap">
 <div class="tv-kicker">HOME ENTERTAINMENT · LG WEBOS</div><h1 class="tv-title">Your televisions</h1>
-<p class="tv-intro">Seven TVs. All seven network addresses are now recorded from the DrayTek. The lounge is paired and fully operational; the other rooms are ready for individual LG pairing.</p>
-<div class="tv-version" role="status"><strong>TV build v1.6.0</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
+<p class="tv-intro">Seven TVs. All seven network addresses are now recorded from the DrayTek. Lounge and Kitchen are paired and working. Pit, Bedroom, Jesse, Ella and Thea are ready for individual pairing.</p>
+<div class="tv-version" role="status"><strong>TV build v1.7.0</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
 <div class="tv-subtabs" role="tablist" aria-label="Television by room">
 <button type="button" id="tab-lounge" role="tab" aria-selected="true" aria-controls="panel-lounge" data-room="lounge">Lounge TV</button>
 <button type="button" id="tab-kitchen" role="tab" aria-selected="false" aria-controls="panel-kitchen" data-room="kitchen">Kitchen TV</button>
@@ -143,35 +143,130 @@
 <p class="tv-meta" id="kitchenWolInfo">Checking kitchen wake readiness…</p>
 <p class="tv-note">Pairing is independent of the lounge LG. Keep the kitchen TV on, press Pair, and accept the request on its screen. After pairing, Open Tivvy TV will launch the saved shortcut. Once its MAC is remembered, we can test wake from standby. Kitchen wake is experimental until verified on the physical screen.</p>
 </section>
-<section class="tv-panel" id="panel-pit" role="tabpanel" aria-labelledby="tab-pit" hidden>
+<section class="tv-panel extra-tv" id="panel-pit" data-extra-room="pit" data-media="true" role="tabpanel" aria-labelledby="tab-pit" hidden>
 <h2>Pit TV</h2>
-<p class="tv-description">LG webOS · <strong>10.0.0.47</strong> · IP reserved in DrayTek (user confirmed).</p>
-<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
-<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+<p class="tv-description">LG webOS · <strong>10.0.0.47</strong> · Reserved in DrayTek.</p>
+<div class="tv-status"><span class="tv-status-dot" data-extra-dot></span><strong data-extra-status>Checking pairing…</strong></div>
+<div class="tv-actions">
+<button type="button" data-extra-action="pair">Pair Pit TV with Bulldog</button>
+<button type="button" data-extra-action="refresh" class="secondary">Refresh status</button>
+<button type="button" data-extra-action="tivvy" disabled>📺 Open Tivvy TV</button>
+<button type="button" data-extra-action="hdmi1" disabled>Select SKY Q (HDMI 1)</button>
+<button type="button" data-extra-action="learn-mac" disabled>Remember TV for wake</button>
+<button type="button" data-extra-action="wake" disabled>Wake Pit TV</button>
+<button type="button" data-extra-action="wake-tivvy" disabled>Wake and load Tivvy TV</button>
+<button type="button" data-extra-action="wake-hdmi1" disabled>Wake and select SKY Q (HDMI 1)</button>
+</div>
+<h3>Basic LG remote</h3>
+<div class="tv-basic">
+<button type="button" data-extra-action="volume_down" disabled>Vol −</button>
+<button type="button" data-extra-action="volume_up" disabled>Vol +</button>
+<button type="button" data-extra-action="mute" disabled>Mute</button>
+<button type="button" data-extra-action="unmute" disabled>Unmute</button>
+<button type="button" data-extra-action="channel_down" disabled>CH −</button>
+<button type="button" data-extra-action="channel_up" disabled>CH +</button>
+</div>
+<div class="tv-confirm" data-extra-confirm hidden><p data-extra-confirm-text>Confirm action on Pit TV?</p><button type="button" data-extra-confirm-go>CONFIRM</button><button type="button" class="cancel" data-extra-confirm-cancel>Cancel</button></div>
+<div class="tv-feedback" data-extra-feedback role="status">Not yet paired or tested on this TV.</div>
+<p class="tv-meta" data-extra-wol>Wake not yet configured. Pair with TV on and remember its MAC before standby testing.</p>
+<p class="tv-note">Tivvy Live and HDMI 1 shortcuts will be enabled after pairing. Wake buttons require a separately verified MAC. Pairing credentials are stored privately on Bulldog, not shared with other rooms.</p>
 </section>
-<section class="tv-panel" id="panel-bedroom" role="tabpanel" aria-labelledby="tab-bedroom" hidden>
+<section class="tv-panel extra-tv" id="panel-bedroom" data-extra-room="bedroom" data-media="true" role="tabpanel" aria-labelledby="tab-bedroom" hidden>
 <h2>Main bedroom TV</h2>
-<p class="tv-description">LG webOS · <strong>10.0.0.45</strong> · IP reserved in DrayTek (user confirmed).</p>
-<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
-<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+<p class="tv-description">LG webOS · <strong>10.0.0.45</strong> · Reserved in DrayTek.</p>
+<div class="tv-status"><span class="tv-status-dot" data-extra-dot></span><strong data-extra-status>Checking pairing…</strong></div>
+<div class="tv-actions">
+<button type="button" data-extra-action="pair">Pair Main bedroom TV with Bulldog</button>
+<button type="button" data-extra-action="refresh" class="secondary">Refresh status</button>
+<button type="button" data-extra-action="tivvy" disabled>📺 Open Tivvy TV</button>
+<button type="button" data-extra-action="hdmi1" disabled>Select SKY Q (HDMI 1)</button>
+<button type="button" data-extra-action="learn-mac" disabled>Remember TV for wake</button>
+<button type="button" data-extra-action="wake" disabled>Wake Main bedroom TV</button>
+<button type="button" data-extra-action="wake-tivvy" disabled>Wake and load Tivvy TV</button>
+<button type="button" data-extra-action="wake-hdmi1" disabled>Wake and select SKY Q (HDMI 1)</button>
+</div>
+<h3>Basic LG remote</h3>
+<div class="tv-basic">
+<button type="button" data-extra-action="volume_down" disabled>Vol −</button>
+<button type="button" data-extra-action="volume_up" disabled>Vol +</button>
+<button type="button" data-extra-action="mute" disabled>Mute</button>
+<button type="button" data-extra-action="unmute" disabled>Unmute</button>
+<button type="button" data-extra-action="channel_down" disabled>CH −</button>
+<button type="button" data-extra-action="channel_up" disabled>CH +</button>
+</div>
+<div class="tv-confirm" data-extra-confirm hidden><p data-extra-confirm-text>Confirm action on Main bedroom TV?</p><button type="button" data-extra-confirm-go>CONFIRM</button><button type="button" class="cancel" data-extra-confirm-cancel>Cancel</button></div>
+<div class="tv-feedback" data-extra-feedback role="status">Not yet paired or tested on this TV.</div>
+<p class="tv-meta" data-extra-wol>Wake not yet configured. Pair with TV on and remember its MAC before standby testing.</p>
+<p class="tv-note">Tivvy Live and HDMI 1 shortcuts will be enabled after pairing. Wake buttons require a separately verified MAC. Pairing credentials are stored privately on Bulldog, not shared with other rooms.</p>
 </section>
-<section class="tv-panel" id="panel-jesse" role="tabpanel" aria-labelledby="tab-jesse" hidden>
+<section class="tv-panel extra-tv" id="panel-jesse" data-extra-room="jesse" data-media="false" role="tabpanel" aria-labelledby="tab-jesse" hidden>
 <h2>Jesse's TV</h2>
-<p class="tv-description">LG webOS · <strong>10.0.0.49</strong> · IP reserved in DrayTek (user confirmed).</p>
-<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
-<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+<p class="tv-description">LG webOS · <strong>10.0.0.49</strong> · Reserved in DrayTek.</p>
+<div class="tv-status"><span class="tv-status-dot" data-extra-dot></span><strong data-extra-status>Checking pairing…</strong></div>
+<div class="tv-actions">
+<button type="button" data-extra-action="pair">Pair Jesse's TV with Bulldog</button>
+<button type="button" data-extra-action="refresh" class="secondary">Refresh status</button>
+
+</div>
+<h3>Basic LG remote</h3>
+<div class="tv-basic">
+<button type="button" data-extra-action="volume_down" disabled>Vol −</button>
+<button type="button" data-extra-action="volume_up" disabled>Vol +</button>
+<button type="button" data-extra-action="mute" disabled>Mute</button>
+<button type="button" data-extra-action="unmute" disabled>Unmute</button>
+<button type="button" data-extra-action="channel_down" disabled>CH −</button>
+<button type="button" data-extra-action="channel_up" disabled>CH +</button>
+</div>
+<div class="tv-confirm" data-extra-confirm hidden><p data-extra-confirm-text>Confirm action on Jesse's TV?</p><button type="button" data-extra-confirm-go>CONFIRM</button><button type="button" class="cancel" data-extra-confirm-cancel>Cancel</button></div>
+<div class="tv-feedback" data-extra-feedback role="status">Not yet paired or tested on this TV.</div>
+
+<p class="tv-note">This room has pairing and basic LG remote controls only. Tivvy TV and HDMI shortcut actions are intentionally not available. Pairing credentials are stored privately on Bulldog, not shared with other rooms.</p>
 </section>
-<section class="tv-panel" id="panel-ella" role="tabpanel" aria-labelledby="tab-ella" hidden>
+<section class="tv-panel extra-tv" id="panel-ella" data-extra-room="ella" data-media="false" role="tabpanel" aria-labelledby="tab-ella" hidden>
 <h2>Ella's TV</h2>
-<p class="tv-description">LG webOS · <strong>10.0.0.40</strong> · IP reserved in DrayTek (user confirmed).</p>
-<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
-<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+<p class="tv-description">LG webOS · <strong>10.0.0.40</strong> · Reserved in DrayTek.</p>
+<div class="tv-status"><span class="tv-status-dot" data-extra-dot></span><strong data-extra-status>Checking pairing…</strong></div>
+<div class="tv-actions">
+<button type="button" data-extra-action="pair">Pair Ella's TV with Bulldog</button>
+<button type="button" data-extra-action="refresh" class="secondary">Refresh status</button>
+
+</div>
+<h3>Basic LG remote</h3>
+<div class="tv-basic">
+<button type="button" data-extra-action="volume_down" disabled>Vol −</button>
+<button type="button" data-extra-action="volume_up" disabled>Vol +</button>
+<button type="button" data-extra-action="mute" disabled>Mute</button>
+<button type="button" data-extra-action="unmute" disabled>Unmute</button>
+<button type="button" data-extra-action="channel_down" disabled>CH −</button>
+<button type="button" data-extra-action="channel_up" disabled>CH +</button>
+</div>
+<div class="tv-confirm" data-extra-confirm hidden><p data-extra-confirm-text>Confirm action on Ella's TV?</p><button type="button" data-extra-confirm-go>CONFIRM</button><button type="button" class="cancel" data-extra-confirm-cancel>Cancel</button></div>
+<div class="tv-feedback" data-extra-feedback role="status">Not yet paired or tested on this TV.</div>
+
+<p class="tv-note">This room has pairing and basic LG remote controls only. Tivvy TV and HDMI shortcut actions are intentionally not available. Pairing credentials are stored privately on Bulldog, not shared with other rooms.</p>
 </section>
-<section class="tv-panel" id="panel-thea" role="tabpanel" aria-labelledby="tab-thea" hidden>
+<section class="tv-panel extra-tv" id="panel-thea" data-extra-room="thea" data-media="false" role="tabpanel" aria-labelledby="tab-thea" hidden>
 <h2>Thea's TV</h2>
-<p class="tv-description">LG webOS · <strong>10.0.0.43</strong> · IP reserved in DrayTek (user confirmed).</p>
-<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
-<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+<p class="tv-description">LG webOS · <strong>10.0.0.43</strong> · Reserved in DrayTek.</p>
+<div class="tv-status"><span class="tv-status-dot" data-extra-dot></span><strong data-extra-status>Checking pairing…</strong></div>
+<div class="tv-actions">
+<button type="button" data-extra-action="pair">Pair Thea's TV with Bulldog</button>
+<button type="button" data-extra-action="refresh" class="secondary">Refresh status</button>
+
+</div>
+<h3>Basic LG remote</h3>
+<div class="tv-basic">
+<button type="button" data-extra-action="volume_down" disabled>Vol −</button>
+<button type="button" data-extra-action="volume_up" disabled>Vol +</button>
+<button type="button" data-extra-action="mute" disabled>Mute</button>
+<button type="button" data-extra-action="unmute" disabled>Unmute</button>
+<button type="button" data-extra-action="channel_down" disabled>CH −</button>
+<button type="button" data-extra-action="channel_up" disabled>CH +</button>
+</div>
+<div class="tv-confirm" data-extra-confirm hidden><p data-extra-confirm-text>Confirm action on Thea's TV?</p><button type="button" data-extra-confirm-go>CONFIRM</button><button type="button" class="cancel" data-extra-confirm-cancel>Cancel</button></div>
+<div class="tv-feedback" data-extra-feedback role="status">Not yet paired or tested on this TV.</div>
+
+<p class="tv-note">This room has pairing and basic LG remote controls only. Tivvy TV and HDMI shortcut actions are intentionally not available. Pairing credentials are stored privately on Bulldog, not shared with other rooms.</p>
 </section>
 </main>
 <script>
@@ -530,6 +625,133 @@ $('confirmKitchenWakeSkyGo').addEventListener('click',async()=>{
  try{await wakeAndSelectHdmi('kitchen');}
  finally{kitchenWolBusy=false;await kitchenWakeStatus();}
 });
+
+// Independent five-room LG controls: never reuse credentials, MAC or action entitlements.
+const extraRoomUI={};
+const extraRemoteActions=new Set(['volume_down','volume_up','mute','unmute','channel_down','channel_up']);
+const extraMediaActions=new Set(['tivvy','hdmi1','learn-mac','wake','wake-tivvy','wake-hdmi1']);
+function extraHideConfirm(room){
+ const c=extraRoomUI[room];if(!c)return;
+ c.panel.querySelector('[data-extra-confirm]').hidden=true;
+ c.pending=null;
+ if(c.confirmTimer){clearTimeout(c.confirmTimer);c.confirmTimer=null;}
+}
+async function extraGet(room,suffix){
+ const r=await fetch('/api/lg/room/'+room+'/'+suffix,{cache:'no-store'});
+ if(!r.ok)throw Error('HTTP '+r.status);
+ const data=await r.json();if(data.error)throw Error(data.error);
+ return data;
+}
+async function extraPost(room,action){
+ const r=await fetch('/api/lg/room/'+room+'/'+action,{
+  method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+ if(!r.ok)throw Error('HTTP '+r.status);
+ const data=await r.json();if(!data.ok)throw Error(data.detail||'Request not accepted');
+ return data;
+}
+async function extraRefresh(room){
+ const c=extraRoomUI[room];if(!c||c.busy)return;
+ const panel=c.panel,statusEl=panel.querySelector('[data-extra-status]');
+ try{
+  const data=await extraGet(room,'status');c.status=data;
+  panel.querySelector('[data-extra-dot]').classList.toggle('ok',!!data.paired);
+  statusEl.textContent=data.state==='waiting'?'Accept pairing on the TV…':
+   data.state==='connecting'?'Contacting LG securely…':
+   data.paired?'Paired with Bulldog · '+data.ip:'Not paired · '+data.ip;
+  panel.querySelector('[data-extra-action=pair]').disabled=['connecting','waiting'].includes(data.state);
+  if(data.state==='error')panel.querySelector('[data-extra-feedback]').textContent=data.detail||'Pairing failed';
+  else if(data.state==='paired')panel.querySelector('[data-extra-feedback]').textContent=data.detail||'Paired; commands ready';
+  for(const action of extraRemoteActions){
+   const button=panel.querySelector('[data-extra-action="'+action+'"]');
+   if(button)button.disabled=!data.paired;
+  }
+  if(c.media){
+   const w=await extraGet(room,'wol-status');c.wol=w;
+   const wolText=panel.querySelector('[data-extra-wol]');
+   wolText.textContent=(w.detail||'Wake status not available')+
+     (w.verification?.state==='responding'?' · Wake authentication succeeded':
+      w.verification?.state==='timeout'?' · Last wake test timed out':'');
+   for(const action of extraMediaActions){
+    const button=panel.querySelector('[data-extra-action="'+action+'"]');
+    if(button)button.disabled=!data.paired ||
+      ((action==='wake'||action==='wake-tivvy'||action==='wake-hdmi1')&&!w.ready);
+   }
+  }
+ }catch(e){statusEl.textContent='Cannot read LG pairing: '+e.message;
+  for(const b of panel.querySelectorAll('button[data-extra-action]'))if(b.dataset.extraAction!=='pair'&&b.dataset.extraAction!=='refresh')b.disabled=true;
+ }
+}
+async function extraRun(room,action){
+ const c=extraRoomUI[room];if(!c||c.busy)return;
+ const output=c.panel.querySelector('[data-extra-feedback]');
+ extraHideConfirm(room);c.busy=true;
+ for(const b of c.panel.querySelectorAll('[data-extra-action]'))b.disabled=true;
+ try{
+  if(action==='wake-tivvy'||action==='wake-hdmi1'){
+   output.textContent='1/3 · Sending wake packet to '+room+' TV…';
+   await extraPost(room,'wake');
+   output.textContent='2/3 · Waiting for authenticated LG wake reply (up to 45 seconds)…';
+   let awake=false,deadline=Date.now()+46000;
+   while(Date.now()<deadline){
+    await new Promise(resolve=>setTimeout(resolve,3000));
+    const w=await extraGet(room,'wol-status');
+    if(w.verification?.state==='responding'){awake=true;break;}
+    if(w.verification?.state==='timeout')throw Error('TV did not respond to wake packet');
+   }
+   if(!awake)throw Error('LG wake not verified before timeout');
+   output.textContent='3/3 · TV authenticated! Selecting '+(action==='wake-tivvy'?'Tivvy TV':'HDMI 1')+'…';
+   const result=await extraPost(room,action==='wake-tivvy'?'tivvy':'hdmi1');
+   output.textContent=result.detail||'Command accepted; check TV';
+  }else{
+   output.textContent=action==='pair'?'Connecting — accept pairing prompt on '+room+' TV…':
+     action==='learn-mac'?'Authenticating TV and reading its MAC…':'Sending '+action.replace(/_/g,' ')+' to '+room+' TV…';
+   const result=await extraPost(room,action);
+   output.textContent=result.detail||'Command accepted';
+  }
+ }catch(e){output.textContent='TV command stopped: '+e.message;}
+ finally{
+  c.busy=false;
+  if(action==='pair'){
+   let attempts=0;
+   if(c.poll)clearInterval(c.poll);
+   c.poll=setInterval(async()=>{
+    attempts++;await extraRefresh(room);
+    if(!['waiting','connecting'].includes(c.status?.state)||attempts>37){clearInterval(c.poll);c.poll=null;}
+   },2000);
+  }
+  await extraRefresh(room);
+ }
+}
+const extraActionLabels={
+ pair:'Start pairing',tivvy:'Open Tivvy TV',hdmi1:'Select Sky Q on HDMI 1',
+ 'learn-mac':'Remember this TV for wake',wake:'Send wake packet',
+ 'wake-tivvy':'Wake and load Tivvy TV','wake-hdmi1':'Wake and select Sky Q (HDMI 1)',
+ volume_down:'Lower volume',volume_up:'Raise volume',mute:'Mute',
+ unmute:'Unmute',channel_down:'Previous channel',channel_up:'Next channel'
+};
+for(const panel of document.querySelectorAll('[data-extra-room]')){
+ const room=panel.dataset.extraRoom,media=panel.dataset.media==='true';
+ const c=extraRoomUI[room]={panel,media,busy:false,status:{paired:false},pending:null,confirmTimer:null,poll:null};
+ const confirm=panel.querySelector('[data-extra-confirm]');
+ panel.querySelector('[data-extra-confirm-cancel]').addEventListener('click',()=>extraHideConfirm(room));
+ panel.querySelector('[data-extra-confirm-go]').addEventListener('click',()=>{if(c.pending)extraRun(room,c.pending);});
+ for(const button of panel.querySelectorAll('[data-extra-action]')){
+  button.addEventListener('click',()=>{
+   const action=button.dataset.extraAction;
+   if(action==='refresh'){extraRefresh(room);return;}
+   if(c.busy||button.disabled)return;
+   for(const other of Object.keys(extraRoomUI))extraHideConfirm(other);
+   cancelWake();cancelKitchenWake();cancelConfirm();
+   c.pending=action;
+   panel.querySelector('[data-extra-confirm-text]').textContent=(extraActionLabels[action]||action)+' on '+room+' LG?';
+   panel.querySelector('[data-extra-confirm-go]').textContent=action==='pair'?'PAIR TV':'CONFIRM';
+   confirm.hidden=false;
+   c.confirmTimer=setTimeout(()=>extraHideConfirm(room),15000);
+  });
+ }
+ extraRefresh(room);
+}
+setInterval(()=>{if(!document.hidden)for(const room of Object.keys(extraRoomUI))extraRefresh(room);},20000);
 async function checkTvVersion(){
  const status=$('tvVersionStatus');status.textContent='Checking Bulldog for latest page…';
  try{
@@ -539,7 +761,7 @@ async function checkTvVersion(){
   const match=html.match(/<meta name="eldoret-tv-build" content="([^"]+)">/);
   const server=match&&match[1];
   if(!server){status.textContent='Bulldog is still serving an older TVs page. Retry in 20 seconds.';return;}
-  const current='1.6.0';
+  const current='1.7.0';
   if(server!==current){status.textContent='New build v'+server+' found — reloading…';location.reload();return;}
   status.textContent='Latest TV build confirmed on Bulldog';
  }catch(e){status.textContent='Could not check version: '+e.message;}
