@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.7.0"><link rel="stylesheet" href="styles.css?v=56"><meta name="theme-color" content="#0b1018">
+<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.7.1"><link rel="stylesheet" href="styles.css?v=56"><meta name="theme-color" content="#0b1018">
 <style>
 .tv-version{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#a9c9d4;font-size:12px;margin:-7px 0 15px}.tv-version strong{color:#a5f0dd}.tv-version button{border:1px solid #487c90;background:#173b4a;color:#fff;padding:7px 11px;border-radius:9px;cursor:pointer;font:inherit;font-weight:700}
 .tv-wrap{max-width:1180px;margin:0 auto;padding:24px 24px 50px}
@@ -50,6 +50,10 @@
 .tv-basic select{background:#173b4a;color:#eefdf6;border:1px solid #79acaa;border-radius:9px;font:inherit;padding:9px}
 .tv-basic label{align-self:center;color:#c0dadc}
 @media(max-width:660px){.tv-readbacks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* iPad and narrow screens: keep TV control rows inside the panel. */
+.tv-actions,.tv-basic{max-width:100%;min-width:0}
+.tv-actions button,.tv-basic button{max-width:100%;white-space:normal;text-wrap:balance;overflow-wrap:anywhere}
+@media(max-width:1100px){.tv-actions button{flex:1 1 210px;min-width:0}.tv-basic button{flex:1 1 110px;min-width:0}.tv-panel{min-width:0}.tv-wrap{min-width:0}}
 </style></head>
 <body class="eldoret-dashboard eldoret-shell">
 <header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div><div class="shell-legacy-status" hidden></div></header>
@@ -57,7 +61,7 @@
 <main class="tv-wrap">
 <div class="tv-kicker">HOME ENTERTAINMENT · LG WEBOS</div><h1 class="tv-title">Your televisions</h1>
 <p class="tv-intro">Seven TVs. All seven network addresses are now recorded from the DrayTek. Lounge and Kitchen are paired and working. Pit, Bedroom, Jesse, Ella and Thea are ready for individual pairing.</p>
-<div class="tv-version" role="status"><strong>TV build v1.7.0</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
+<div class="tv-version" role="status"><strong>TV build v1.7.1</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
 <div class="tv-subtabs" role="tablist" aria-label="Television by room">
 <button type="button" id="tab-lounge" role="tab" aria-selected="true" aria-controls="panel-lounge" data-room="lounge">Lounge TV</button>
 <button type="button" id="tab-kitchen" role="tab" aria-selected="false" aria-controls="panel-kitchen" data-room="kitchen">Kitchen TV</button>
@@ -129,7 +133,7 @@
 <div class="tv-actions">
 <button type="button" id="kitchenPair">Pair kitchen LG</button>
 <button type="button" id="kitchenLaunch" class="secondary" disabled>📺 Open Tivvy TV on kitchen LG</button>
-<button type="button" id="kitchenRefresh" class="secondary">Refresh kitchen status</button>
+<button type="button" id="kitchenRefresh" class="secondary">Check Kitchen TV live</button>
 <button type="button" id="kitchenLearnMac" class="secondary">Remember kitchen TV for wake</button>
 <button type="button" id="kitchenWake" class="secondary" disabled>Wake kitchen TV</button>
 <button type="button" id="kitchenWakeTivvy" class="secondary" disabled>Wake kitchen TV and load Tivvy TV</button>
@@ -436,8 +440,11 @@ $('confirmWakeTivvyGo').addEventListener('click',async()=>{
 });
 let kitchenBusy=false,kitchenLast={paired:false},kitchenPollTimer=null;
 function kitchenConfirmation(show){$('confirmKitchenLaunch').hidden=!show;}
-async function kitchenRefresh(){
+async function kitchenRefresh(manual=false){
+ const feedback=$('kitchenFeedback'),refreshButton=$('kitchenRefresh');
+ if(manual){refreshButton.disabled=true;feedback.textContent='Checking Kitchen TV live network connection…';}
  try{
+  // Stored pairing state is not an online test. This lightweight call is always safe.
   const r=await fetch('/api/lg/kitchen/status',{cache:'no-store'});
   if(!r.ok)throw Error('HTTP '+r.status);
   const info=await r.json();kitchenLast=info;
@@ -445,13 +452,27 @@ async function kitchenRefresh(){
   $('kitchenStatus').textContent=info.paired?'Paired with Bulldog · 10.0.0.33':(info.state==='waiting'?'Waiting for kitchen TV approval…':'Kitchen LG not yet paired');
   $('kitchenPair').disabled=kitchenBusy||info.state==='connecting'||info.state==='waiting';
   $('kitchenLaunch').disabled=kitchenBusy||!info.paired;
-  if(!kitchenBusy)$('kitchenFeedback').textContent=info.detail||'Pairing status unavailable.';
+  if(manual){
+   const ctl=new AbortController(),timeout=setTimeout(()=>ctl.abort(),16000);
+   try{
+    const test=await fetch('/api/lg/kitchen/reachability',{cache:'no-store',signal:ctl.signal});
+    if(!test.ok)throw Error('HTTP '+test.status);
+    const result=await test.json();
+    const when=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    feedback.textContent=(result.reachable?'● LIVE · ':'● OFFLINE · ')+(result.detail||'No network response')+' · Checked '+when;
+   }catch(e){feedback.textContent='Kitchen live test failed: '+(e.name==='AbortError'?'Timed out':e.message);}
+   finally{clearTimeout(timeout);}
+  }else if(!kitchenBusy&&!feedback.dataset.manualChecked){
+   feedback.textContent=info.detail||'Pairing status unavailable.';
+  }
   if(info.state==='paired'||info.state==='error'){
    if(kitchenPollTimer){clearInterval(kitchenPollTimer);kitchenPollTimer=null;}
   }
  }catch(e){
-  $('kitchenFeedback').textContent='Kitchen status unavailable: '+e.message;
+  feedback.textContent='Kitchen status unavailable: '+e.message;
   $('kitchenLaunch').disabled=true;
+ }finally{
+  if(manual){feedback.dataset.manualChecked='true';refreshButton.disabled=false;}
  }
 }
 async function kitchenCommand(path){
@@ -475,7 +496,7 @@ $('kitchenPair').addEventListener('click',()=>kitchenCommand('/api/lg/kitchen/pa
 $('kitchenLaunch').addEventListener('click',()=>{if(kitchenLast.paired)kitchenConfirmation(true);});
 $('confirmKitchenGo').addEventListener('click',()=>kitchenCommand('/api/lg/kitchen/open-tivvy'));
 $('confirmKitchenCancel').addEventListener('click',()=>kitchenConfirmation(false));
-$('kitchenRefresh').addEventListener('click',kitchenRefresh);
+$('kitchenRefresh').addEventListener('click',()=>kitchenRefresh(true));
 kitchenRefresh();
 setInterval(()=>{if(!document.hidden&&!kitchenBusy)kitchenRefresh();},15000);
 let kitchenWolReady=false,kitchenWolBusy=false,kitchenWakeConfirmedTimer=null;
