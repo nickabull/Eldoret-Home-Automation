@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.7.2"><link rel="stylesheet" href="styles.css?v=56"><meta name="theme-color" content="#0b1018">
+<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.7.3"><link rel="stylesheet" href="styles.css?v=56"><meta name="theme-color" content="#0b1018">
 <style>
 .tv-version{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#a9c9d4;font-size:12px;margin:-7px 0 15px}.tv-version strong{color:#a5f0dd}.tv-version button{border:1px solid #487c90;background:#173b4a;color:#fff;padding:7px 11px;border-radius:9px;cursor:pointer;font:inherit;font-weight:700}
 .tv-wrap{max-width:1180px;margin:0 auto;padding:24px 24px 50px}
@@ -54,14 +54,29 @@
 .tv-actions,.tv-basic{max-width:100%;min-width:0}
 .tv-actions button,.tv-basic button{max-width:100%;white-space:normal;text-wrap:balance;overflow-wrap:anywhere}
 @media(max-width:1100px){.tv-actions button{flex:1 1 210px;min-width:0}.tv-basic button{flex:1 1 110px;min-width:0}.tv-panel{min-width:0}.tv-wrap{min-width:0}}
+
+/* Consistent visual hierarchy for all seven TV rooms. The Lounge's deeper
+   telemetry is preserved behind an optional expander, not removed. */
+.tv-panel>.tv-actions{margin:17px 0 12px}
+.tv-panel>.tv-actions button{background:#1d3f53;border-color:#4b8292}
+.tv-panel>.tv-actions button:is(#tivvyOpen,[data-extra-action="tivvy"]){background:#226356;border-color:#72b4a7}
+.tv-panel>.tv-actions button:is(#pairLounge,#kitchenPair,[data-extra-action="pair"]){background:#1c4b48;border-color:#539c91}
+.tv-panel>h3{font-size:16px;margin:18px 0 8px;color:#def7ef}
+.tv-panel .tv-basic{margin:11px 0 14px}
+.tv-lounge-advanced{margin-top:20px!important}
+.tv-lounge-advanced>summary{min-height:46px;display:flex;align-items:center;list-style:auto;font-size:14px}
+.tv-lounge-advanced-inner{padding:4px 8px 12px}
+.tv-lounge-advanced-inner h3{font-size:15px;color:#daeee9;margin:15px 0 9px}
+.tv-lounge-advanced-inner>.tv-diagnostics{margin-bottom:5px}
+.tv-panel .tv-feedback{overflow-wrap:anywhere}
 </style></head>
 <body class="eldoret-dashboard eldoret-shell">
 <header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div><div class="shell-legacy-status" hidden></div></header>
 <nav class="tabs dashboard-tabs eldoret-primary" aria-label="Primary navigation"><a href="index.html">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="tvs.html" class="active" aria-current="page">TVs</a><a href="av.html">Jesse / AV</a><a href="network.html">Network</a><a href="bulldog.html">Bulldog</a><a href="office.html">Epson</a><a href="appliances.html">Appliances</a><a href="radio.html">Radio</a></nav>
 <main class="tv-wrap">
 <div class="tv-kicker">HOME ENTERTAINMENT · LG WEBOS</div><h1 class="tv-title">Your televisions</h1>
-<p class="tv-intro">Seven TVs. All seven network addresses are now recorded from the DrayTek. Lounge and Kitchen are paired and working. Pit, Bedroom, Jesse, Ella and Thea are ready for individual pairing.</p>
-<div class="tv-version" role="status"><strong>TV build v1.7.2</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
+<p class="tv-intro">Seven televisions, each with its own pairing. Room status comes from Bulldog; saved pairing does not necessarily mean a TV is awake.</p>
+<div class="tv-version" role="status"><strong>TV build v1.7.3</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
 <div class="tv-subtabs" role="tablist" aria-label="Television by room">
 <button type="button" id="tab-lounge" role="tab" aria-selected="true" aria-controls="panel-lounge" data-room="lounge">Lounge TV</button>
 <button type="button" id="tab-kitchen" role="tab" aria-selected="false" aria-controls="panel-kitchen" data-room="kitchen">Kitchen TV</button>
@@ -76,8 +91,8 @@
 <div class="tv-status"><span class="tv-status-dot" id="loungeDot"></span><strong id="loungeStatus">Checking pairing with Bulldog…</strong></div>
 <div class="tv-actions">
 <button type="button" id="tivvyOpen" disabled>📺 Open Tivvy TV</button>
-<button type="button" id="pairLounge" class="secondary">Pair / reconnect LG</button>
-<button type="button" id="refreshLounge" class="secondary">Refresh status</button>
+<button type="button" id="pairLounge" class="secondary">Pair Lounge TV with Bulldog</button>
+<button type="button" id="refreshLounge" class="secondary">Refresh pairing status</button>
 <button type="button" id="learnMac" class="secondary">Remember TV for wake</button>
 <button type="button" id="wakeTv" class="secondary" disabled>Wake lounge TV</button>
 <button type="button" id="wakeAndTivvy" class="secondary" disabled>Wake up TV and load Tivvy TV</button>
@@ -89,6 +104,20 @@
 <div class="tv-confirm" id="confirmWake" hidden><p>Send a wake packet to the lounge LG now?</p><button id="confirmWakeGo" type="button">SEND WAKE PACKET</button><button id="confirmWakeCancel" type="button" class="cancel">Cancel</button></div>
 <div class="tv-confirm" id="confirmWakeTivvy" hidden><p>Wake the lounge LG, then launch Tivvy TV once it responds?</p><button id="confirmWakeTivvyGo" type="button">WAKE &amp; LOAD TIVVY</button><button id="confirmWakeTivvyCancel" type="button" class="cancel">Cancel</button></div>
 <div class="tv-confirm" id="confirmLoungeWakeSky" hidden><p>Wake lounge LG and select HDMI 1 (Sky Q)?</p><button type="button" id="confirmLoungeWakeSkyGo">WAKE &amp; SELECT HDMI 1</button><button type="button" id="confirmLoungeWakeSkyCancel" class="cancel">Cancel</button></div>
+<h3>Basic LG remote</h3>
+<p class="tv-note">The controls below send real LG commands. They do not assume success until the television acknowledges them. Some features may need additional TV permission.</p>
+<div class="tv-basic" id="tvRemote">
+<button data-tv-action="volume_down" type="button">Vol −</button>
+<button data-tv-action="volume_up" type="button">Vol +</button>
+<button data-tv-action="mute" type="button">Mute</button>
+<button data-tv-action="unmute" type="button">Unmute</button>
+<button data-tv-action="channel_down" type="button">CH −</button>
+<button data-tv-action="channel_up" type="button">CH +</button>
+</div>
+<div class="tv-basic"><label for="tvInputs">Source</label><select id="tvInputs" disabled><option value="">Checking TV inputs…</option></select><button type="button" id="tvSwitch" disabled>Switch source</button></div>
+<div class="tv-confirm" id="confirmRemote" hidden><p id="confirmRemoteText">Send this command to the lounge LG?</p><button type="button" id="confirmRemoteGo">CONFIRM</button><button type="button" class="cancel" id="confirmRemoteCancel">Cancel</button></div>
+<p class="tv-note" id="tvTelemetryDetail">Readings come directly from the television. Unknown means the TV did not provide that reading.</p>
+<details class="tv-lounge-advanced tv-diagnostics"><summary>Detailed LG readbacks and diagnostics</summary><div class="tv-lounge-advanced-inner">
 <h3>Live return information</h3>
 <div class="tv-readbacks" aria-live="polite">
 <div class="tv-metric"><small>Power / reachability</small><strong id="tvPower">Checking…</strong></div>
@@ -111,19 +140,8 @@
 <div class="tv-metric"><small>Connected inputs</small><strong id="tvConnectedInputs">Checking…</strong></div>
 </div>
 <details class="tv-diagnostics"><summary>LG readback diagnostics</summary><p class="tv-note">Each item shows whether that service answered. Some webOS models do not expose every service.</p><div id="tvServices">Waiting for response…</div></details>
-<h3>Basic remote controls · experimental</h3>
-<p class="tv-note">The controls below send real LG commands. They do not assume success until the television acknowledges them. Some features may need additional TV permission.</p>
-<div class="tv-basic" id="tvRemote">
-<button data-tv-action="volume_down" type="button">Vol −</button>
-<button data-tv-action="volume_up" type="button">Vol +</button>
-<button data-tv-action="mute" type="button">Mute</button>
-<button data-tv-action="unmute" type="button">Unmute</button>
-<button data-tv-action="channel_down" type="button">CH −</button>
-<button data-tv-action="channel_up" type="button">CH +</button>
-</div>
-<div class="tv-basic"><label for="tvInputs">Source</label><select id="tvInputs" disabled><option value="">Checking TV inputs…</option></select><button type="button" id="tvSwitch" disabled>Switch source</button></div>
-<div class="tv-confirm" id="confirmRemote" hidden><p id="confirmRemoteText">Send this command to the lounge LG?</p><button type="button" id="confirmRemoteGo">CONFIRM</button><button type="button" class="cancel" id="confirmRemoteCancel">Cancel</button></div>
-<p class="tv-note" id="tvTelemetryDetail">Readings come directly from the television. Unknown means the TV did not provide that reading.</p>
+
+</div></details>
 <p class="tv-meta">Saved shortcut: https://is.gd/TivvyTV26 · Lounge TV wake and launch from standby successfully tested.</p>
 </section>
 <section class="tv-panel" id="panel-kitchen" role="tabpanel" aria-labelledby="tab-kitchen" hidden>
