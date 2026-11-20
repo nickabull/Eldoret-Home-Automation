@@ -3304,6 +3304,7 @@ class Handler(BaseHTTPRequestHandler):
             "/lg-tivvy-test.html": ("lg-tivvy-test.html", "text/html; charset=utf-8"),
             "/lg-bulldog.html": ("lg-bulldog.html", "text/html; charset=utf-8"),
             "/av.html": ("av.html", "text/html; charset=utf-8"),
+            "/tvs.html": ("tvs.html", "text/html; charset=utf-8"),
             "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
             "/office.html": ("office.html", "text/html; charset=utf-8"),
             "/radio.html": ("radio.html", "text/html; charset=utf-8"),
