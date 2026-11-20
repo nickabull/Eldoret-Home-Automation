@@ -454,6 +454,131 @@ def lg_bulldog_launch():
 
 
 
+
+# Independent kitchen LG trial. Credentials stay on Bulldog, never in GitHub or browser.
+LG_KITCHEN_IP="10.0.0.33"
+LG_KITCHEN_KEY_FILE=os.path.expanduser("~/eldoret-connector/lg/kitchen.json")
+LG_KITCHEN_LOCK=threading.Lock()
+LG_KITCHEN_JOB={"state":"idle","detail":"Kitchen TV ready for pairing.","at":None}
+LG_KITCHEN_BUSY=False
+
+def _lg_kitchen_saved():
+    import stat
+    try:
+        st=os.stat(LG_KITCHEN_KEY_FILE)
+        if st.st_uid!=os.getuid() or stat.S_IMODE(st.st_mode)&0o077:
+            raise RuntimeError("Kitchen TV pairing permissions unsafe")
+        with open(LG_KITCHEN_KEY_FILE,encoding="utf-8") as f:return json.load(f)
+    except FileNotFoundError:
+        return None
+
+def _lg_kitchen_write(data):
+    import tempfile
+    folder=os.path.dirname(LG_KITCHEN_KEY_FILE)
+    os.makedirs(folder,mode=0o700,exist_ok=True)
+    os.chmod(folder,0o700)
+    fd,tmp=tempfile.mkstemp(prefix=".lg-kitchen-",dir=folder)
+    try:
+        os.fchmod(fd,0o600)
+        with os.fdopen(fd,"w",encoding="utf-8") as f:json.dump(data,f)
+        os.replace(tmp,LG_KITCHEN_KEY_FILE)
+    finally:
+        if os.path.exists(tmp):os.unlink(tmp)
+
+def _lg_kitchen_set(state,detail):
+    with LG_KITCHEN_LOCK:
+        LG_KITCHEN_JOB.update(state=state,detail=detail,at=datetime.now(timezone.utc).isoformat())
+
+def lg_kitchen_status():
+    with LG_KITCHEN_LOCK:result=dict(LG_KITCHEN_JOB)
+    try:result["paired"]=bool((_lg_kitchen_saved() or {}).get("client_key"))
+    except RuntimeError:
+        result["paired"]=False
+        result["detail"]="Kitchen TV credential storage permissions need checking."
+    result["ip"]=LG_KITCHEN_IP
+    return result
+
+def _lg_kitchen_pair_task():
+    global LG_KITCHEN_BUSY
+    ws=_LGWebSocket(LG_KITCHEN_IP)
+    try:
+        _lg_kitchen_set("connecting","Connecting securely to kitchen LG 10.0.0.33...")
+        saved=_lg_kitchen_saved()
+        ws.connect()
+        if saved and saved.get("fingerprint")!=ws.fingerprint:
+            raise RuntimeError("Kitchen LG identity changed. Pairing stopped.")
+        _lg_kitchen_set("waiting","Connection established. Accept the Eldoret pairing request on the KITCHEN TV.")
+        ws.send(json.dumps(_lg_register_message((saved or {}).get("client_key"))))
+        deadline=time.monotonic()+65
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(min(6,max(1,deadline-time.monotonic())))
+            try:message=ws.recv_json()
+            except socket.timeout:continue
+            if message.get("type")=="registered":
+                payload=message.get("payload") or {}
+                key=payload.get("client-key") or (saved or {}).get("client_key")
+                if not isinstance(key,str) or len(key)<10:
+                    raise RuntimeError("Kitchen LG did not grant a pairing key")
+                _lg_kitchen_write({"ip":LG_KITCHEN_IP,"client_key":key,"fingerprint":ws.fingerprint,
+                                  "paired_at":datetime.now(timezone.utc).isoformat()})
+                _lg_kitchen_set("paired","Kitchen TV paired successfully. Ready to open Tivvy TV.")
+                return
+            if message.get("type")=="error":
+                raise RuntimeError("Kitchen LG rejected the pairing request.")
+        raise RuntimeError("Timed out waiting for kitchen TV pairing approval (65 seconds).")
+    except Exception as exc:
+        _lg_kitchen_set("error",str(exc)[:180])
+    finally:
+        ws.close()
+        with LG_KITCHEN_LOCK:LG_KITCHEN_BUSY=False
+
+def lg_kitchen_pair_start():
+    global LG_KITCHEN_BUSY
+    with LG_KITCHEN_LOCK:
+        if LG_KITCHEN_BUSY:return False
+        LG_KITCHEN_BUSY=True
+    threading.Thread(target=_lg_kitchen_pair_task,daemon=True).start()
+    return True
+
+def lg_kitchen_launch():
+    saved=_lg_kitchen_saved()
+    if not saved or not saved.get("client_key"):
+        raise RuntimeError("Pair the kitchen LG before launching Tivvy TV")
+    if saved.get("ip")!=LG_KITCHEN_IP:
+        raise RuntimeError("Kitchen LG IP does not match stored identity")
+    ws=_LGWebSocket(LG_KITCHEN_IP)
+    try:
+        ws.connect()
+        if saved.get("fingerprint")!=ws.fingerprint:
+            raise RuntimeError("Kitchen TV identity changed. Refusing to connect.")
+        ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+        deadline=time.monotonic()+12
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(3)
+            try:message=ws.recv_json()
+            except socket.timeout:continue
+            if message.get("type")=="registered":break
+            if message.get("type")=="error":
+                raise RuntimeError("Kitchen LG rejected its pairing key")
+        else:raise RuntimeError("Kitchen LG did not confirm its pairing")
+        ws.send(json.dumps({"type":"request","id":"eldoret-kitchen-browser",
+                           "uri":"ssap://system.launcher/launch",
+                           "payload":{"id":"com.webos.app.browser",
+                                      "params":{"target":"https://is.gd/TivvyTV26"}}}))
+        deadline=time.monotonic()+6
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(max(.3,deadline-time.monotonic()))
+            try:message=ws.recv_json()
+            except socket.timeout:break
+            if message.get("id")!="eldoret-kitchen-browser":continue
+            if message.get("type")=="error" or (message.get("payload") or {}).get("returnValue") is False:
+                raise RuntimeError("Kitchen LG rejected browser launch")
+            return {"ok":True,"detail":"Kitchen LG accepted Tivvy TV browser launch. Check picture."}
+        return {"ok":True,"detail":"Kitchen LG browser launch sent; no confirmation received. Check picture."}
+    finally:
+        ws.close()
+
+
 # Experimental lounge LG telemetry. The TV is the source of truth; never infer state from our buttons.
 LG_LIVE_LOCK=threading.Lock()
 LG_LIVE_CACHE={"at":0,"data":None}
@@ -3763,6 +3888,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/lg/live":
             self.send_bytes(json.dumps(lg_lounge_live()).encode())
             return
+        if path == "/api/lg/kitchen/status":
+            self.send_bytes(json.dumps(lg_kitchen_status()).encode())
+            return
         if path == "/api/lg/control-status":
             self.send_bytes(json.dumps(lg_bulldog_status()).encode())
             return
@@ -3880,7 +4008,7 @@ class Handler(BaseHTTPRequestHandler):
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
         payload = json.loads(raw_body or b"{}")
-        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake"):
+        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy"):
             # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
             origin=self.headers.get("Origin","")
             host=self.headers.get("Host","")
@@ -3894,7 +4022,12 @@ class Handler(BaseHTTPRequestHandler):
             if self.path=="/api/lg/control" and (not isinstance(payload,dict) or set(payload)-{"action","input_id"}):
                 self.send_error(400); return
             try:
-                if self.path=="/api/lg/pair":
+                if self.path=="/api/lg/kitchen/pair":
+                    started=lg_kitchen_pair_start()
+                    result={"ok":started,"detail":"Kitchen LG pairing request starting — accept the prompt on the kitchen screen." if started else "Kitchen pairing is already in progress."}
+                elif self.path=="/api/lg/kitchen/open-tivvy":
+                    result=lg_kitchen_launch()
+                elif self.path=="/api/lg/pair":
                     started=lg_bulldog_pair_start()
                     result={"ok":started,"detail":"Pairing request starting; look at lounge LG." if started else "Already attempting pairing."}
                 elif self.path=="/api/lg/control":
