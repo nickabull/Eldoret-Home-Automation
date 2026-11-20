@@ -63,6 +63,13 @@ async function refreshSkyLive(){
   try{
     const res=await fetch("/api/sky/now",{cache:"no-store"});
     const data=await res.json();
+    if(data.isolated){
+      title.textContent="Sky Q diagnostic isolation active";
+      meta.textContent="Background reading is paused to investigate box freezes. Manual Sky Q remote buttons remain available.";
+      synopsis.textContent="";
+      badge.textContent="TEST MODE";
+      return;
+    }
     if(!data.available){
       title.textContent="Sky Q media unavailable";
       meta.textContent=data.error||"Unable to read current media.";
