@@ -18,25 +18,23 @@ async def main():
         pairing = controller.aliases.get("velux")
         if not pairing:
             raise RuntimeError("VELUX alias unavailable; pairing credentials were not loaded")
-        await pairing.async_populate_accessories()
-        accessories = pairing.accessories
-        if accessories is None:
-            raise RuntimeError("No HAP accessories returned")
+        accessories = await pairing.list_accessories_and_characteristics()
         result = {"connected": True, "source": "VELUX HomeKit local", "mode": "read-only",
                   "checked_at": datetime.now(timezone.utc).isoformat(), "windows": [], "climate": None}
-        # The first verified installation has AID 2 climate, AID 3/4 windows.
-        # Explicitly refuse unknown/missing values rather than defaulting to zero.
-        for aid, characteristic_map in ((2, {"temperature": 10, "humidity": 13, "co2_ppm": 17}),
-                                        (3, {"current_position": 10, "target_position": 11, "position_state": 12}),
-                                        (4, {"current_position": 10, "target_position": 11, "position_state": 12})):
-            values = {}
-            for key, iid in characteristic_map.items():
-                ch = accessories.aid(aid).characteristics.iid(iid)
-                values[key] = ch.value
-            if aid == 2:
-                result["climate"] = values
-            else:
-                result["windows"].append({"aid": aid, **values})
+        by_aid = {a["aid"]: a for a in accessories}
+        def read(aid, iid):
+            for service in by_aid.get(aid, {}).get("services", []):
+                for characteristic in service.get("characteristics", []):
+                    if characteristic.get("iid") == iid:
+                        return characteristic.get("value")
+            return None
+        if 2 in by_aid:
+            result["climate"] = {"temperature": read(2, 10), "humidity": read(2, 13),
+                                  "co2_ppm": read(2, 17)}
+        for aid in (3, 4):
+            if aid in by_aid:
+                result["windows"].append({"aid": aid, "current_position": read(aid, 10),
+                    "target_position": read(aid, 11), "position_state": read(aid, 12)})
         print(json.dumps(result))
 
 if __name__ == "__main__":
