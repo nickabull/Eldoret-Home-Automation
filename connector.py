@@ -2515,6 +2515,8 @@ def bulldog_health():
 # Home Connect: read-only, bounded API; credentials and tokens remain on Bulldog.
 HOME_CONNECT_LOCK = threading.Lock()
 HOME_CONNECT_CACHE = {"expires":0,"data":None}
+# On HTTP 429, pause new Home Connect cloud requests for one hour.
+HOME_CONNECT_RATE_LIMIT_UNTIL = 0
 HOME_CONNECT_CONFIG = os.path.expanduser("~/.config/home-connect.json")
 HOME_CONNECT_TOKENS = os.path.expanduser("~/.config/home-connect-tokens.json")
 HOME_CONNECT_ACCEPT = "application/vnd.bsh.sdk.v1+json"
@@ -2574,12 +2576,18 @@ def _hc_token():
 
 def _hc_get(token, endpoint):
     from urllib.error import HTTPError
+    global HOME_CONNECT_RATE_LIMIT_UNTIL
+    # A request during the cooldown must never hit Home Connect.
+    if time.monotonic()<HOME_CONNECT_RATE_LIMIT_UNTIL:
+        return {},429
     req=urllib.request.Request(HOME_CONNECT_BASE+endpoint,headers={
         "Authorization":"Bearer "+token, "Accept":HOME_CONNECT_ACCEPT})
     try:
         with urllib.request.urlopen(req,timeout=12) as response:
             return json.load(response).get("data",{}),None
     except HTTPError as exc:
+        if exc.code==429:
+            HOME_CONNECT_RATE_LIMIT_UNTIL=max(HOME_CONNECT_RATE_LIMIT_UNTIL,time.monotonic()+3600)
         # 404 is normal when no active programme is available.
         return {},exc.code
 
@@ -2655,7 +2663,9 @@ def home_connect_status():
             else:
                 result["error_code"]="unknown"
                 result["error"]="Home Connect temporarily unavailable"
-        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+(1800 if result.get("devices") else 120))
+        # Error 429 needs a long cooldown; browser refreshes must not create new cloud calls.
+        cooldown=3600 if result.get("error_code")=="cloud_http_429" else (1800 if result.get("devices") else 120)
+        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+cooldown)
         return result
 
 
@@ -2822,10 +2832,16 @@ def _hc_sse_event(kind, payload, appliance_id):
         HOME_CONNECT_LAST_EVENT_AT=now
 
 def _hc_event_loop():
-    global HOME_CONNECT_SSE_CONNECTED
+    global HOME_CONNECT_SSE_CONNECTED, HOME_CONNECT_RATE_LIMIT_UNTIL
     import urllib.error
     failures=0
     while True:
+        # The event stream shares the same cooldown as appliance polling.
+        remaining=HOME_CONNECT_RATE_LIMIT_UNTIL-time.monotonic()
+        if remaining>0:
+            HOME_CONNECT_SSE_CONNECTED=False
+            time.sleep(min(remaining,60))
+            continue
         try:
             with HOME_CONNECT_LOCK:
                 token=_hc_token()
@@ -2862,6 +2878,11 @@ def _hc_event_loop():
                         data.append(line[5:].lstrip())
             HOME_CONNECT_SSE_CONNECTED=False
             failures+=1
+        except urllib.error.HTTPError as exc:
+            HOME_CONNECT_SSE_CONNECTED=False
+            failures+=1
+            if exc.code==429:
+                HOME_CONNECT_RATE_LIMIT_UNTIL=max(HOME_CONNECT_RATE_LIMIT_UNTIL,time.monotonic()+3600)
         except Exception:
             HOME_CONNECT_SSE_CONNECTED=False
             failures+=1
