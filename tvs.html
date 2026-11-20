@@ -23,11 +23,13 @@
 .tv-feedback{border-left:3px solid #7cd6be;background:#0a2330;padding:12px 15px;min-height:45px;color:#cdebe6;line-height:1.45;white-space:pre-wrap}
 .tv-meta{color:#9fbaca;font-size:12px;margin-top:12px}
 .tv-note{color:#a6c1d0;font-size:13px;line-height:1.5}
-.tv-confirm{border:1px solid #d2b577;background:#302d22;border-radius:12px;padding:16px;margin:12px 0}
-.tv-confirm[hidden]{display:none}
-.tv-confirm p{margin:0 0 11px;color:#f5deb2}
-.tv-confirm button{background:#69552d;border:1px solid #edce87;border-radius:9px;color:#fff;font-weight:800;padding:10px 15px;min-height:42px;margin-right:8px;cursor:pointer}
-.tv-confirm button.cancel{background:#254454;border-color:#5e93a0}
+/* Match approved Sky Q / Hue confirmation chip. Fixed to the shell's top right. */
+.tv-confirm{position:fixed;top:18px;right:18px;z-index:10050;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border:1px solid rgba(255,59,48,.6);border-radius:14px;background:rgba(10,14,22,.96);box-shadow:0 12px 35px rgba(0,0,0,.42);color:#fff;font-weight:800;max-width:min(720px,calc(100% - 36px));margin:0}
+.tv-confirm[hidden]{display:none!important}
+.tv-confirm p{margin:0;color:#ffb3ae;font-size:14px;line-height:1.25;max-width:260px}
+.tv-confirm button{border:0;border-radius:10px;padding:11px 17px;background:#ff3b30;color:#fff;font:inherit;font-weight:900;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.tv-confirm button.cancel{display:none}
+@media(max-width:700px){.tv-confirm{top:10px;right:10px;left:10px;max-width:none;justify-content:space-between}.tv-confirm p{max-width:55vw}}
 @media(max-width:600px){.tv-wrap{padding:15px}.tv-panel{padding:16px}.tv-subtabs button{font-size:12px;padding:10px 13px}}
 .tv-readbacks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:15px 0}
 .tv-metric{border:1px solid #426277;border-radius:12px;background:#0d2737;padding:12px;min-width:0}
@@ -61,9 +63,13 @@
 <button type="button" id="tivvyOpen" disabled>📺 Open Tivvy TV</button>
 <button type="button" id="pairLounge" class="secondary">Pair / reconnect LG</button>
 <button type="button" id="refreshLounge" class="secondary">Refresh status</button>
+<button type="button" id="learnMac" class="secondary">Remember TV for wake</button>
+<button type="button" id="wakeTv" class="secondary" disabled>Wake lounge TV</button>
 </div>
-<div class="tv-confirm" id="confirmTivvy" hidden><p>Open <strong>Tivvy Live</strong> on the lounge TV now? This will switch its current app to the browser.</p><button type="button" id="confirmLaunch">Confirm — open on TV</button><button type="button" id="cancelLaunch" class="cancel">Cancel</button></div>
+<div class="tv-confirm" id="confirmTivvy" hidden><p>Open <strong>Tivvy Live</strong> on the lounge TV now? This will switch its current app to the browser.</p><button type="button" id="confirmLaunch">CONFIRM</button><button type="button" id="cancelLaunch" class="cancel">Cancel</button></div>
 <div class="tv-feedback" id="loungeFeedback" role="status">Waiting for live Bulldog status…</div>
+<p class="tv-meta" id="wolInfo">Wake-on-LAN not set up yet. Save the MAC while the TV is on.</p>
+<div class="tv-confirm" id="confirmWake" hidden><p>Wake lounge TV?</p><button id="confirmWakeGo" type="button">CONFIRM</button><button id="confirmWakeCancel" type="button" class="cancel">Cancel</button></div>
 <h3>Live return information</h3>
 <div class="tv-readbacks" aria-live="polite">
 <div class="tv-metric"><small>Power / reachability</small><strong id="tvPower">Checking…</strong></div>
@@ -84,7 +90,7 @@
 <button data-tv-action="channel_up" type="button">CH +</button>
 </div>
 <div class="tv-basic"><label for="tvInputs">Source</label><select id="tvInputs" disabled><option value="">Checking TV inputs…</option></select><button type="button" id="tvSwitch" disabled>Switch source</button></div>
-<div class="tv-confirm" id="confirmRemote" hidden><p id="confirmRemoteText">Send this command to the lounge LG?</p><button type="button" id="confirmRemoteGo">Confirm command</button><button type="button" class="cancel" id="confirmRemoteCancel">Cancel</button></div>
+<div class="tv-confirm" id="confirmRemote" hidden><p id="confirmRemoteText">Send this command to the lounge LG?</p><button type="button" id="confirmRemoteGo">CONFIRM</button><button type="button" class="cancel" id="confirmRemoteCancel">Cancel</button></div>
 <p class="tv-note" id="tvTelemetryDetail">Readings come directly from the television. Unknown means the TV did not provide that reading.</p>
 <p class="tv-meta">Saved shortcut: https://is.gd/TivvyTV26 · TV must currently be switched on. Standby wake-up is a future improvement.</p>
 </section>
@@ -100,6 +106,9 @@ const $=id=>document.getElementById(id);
 const tabs=[...document.querySelectorAll('[data-room]')];
 let last={},busy=false,confirmationTimeout=null;
 function cancelConfirm(){clearTimeout(confirmationTimeout);$('confirmTivvy').hidden=true;}
+let wolReady=false,wakePending=null;
+function cancelWake(){clearTimeout(wakePending);$('confirmWake').hidden=true;}
+
 function select(room){tabs.forEach(tab=>{let active=tab.dataset.room===room;tab.setAttribute('aria-selected',String(active));$(tab.getAttribute('aria-controls')).hidden=!active;});cancelConfirm();}
 tabs.forEach(tab=>tab.addEventListener('click',()=>select(tab.dataset.room)));
 async function refresh(){try{let r=await fetch('/api/lg/control-status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);last=await r.json();$('loungeDot').classList.toggle('ok',Boolean(last.paired));$('loungeStatus').textContent=last.paired?'Paired with Bulldog':'Not yet paired with Bulldog';$('tivvyOpen').disabled=busy||!last.paired;$('pairLounge').disabled=busy||last.state==='waiting'||last.state==='connecting';if(!busy)$('loungeFeedback').textContent=last.detail||'No status information available.';}catch(e){$('loungeFeedback').textContent='Unable to check Bulldog LG status: '+e.message;$('tivvyOpen').disabled=true;}}
@@ -161,6 +170,34 @@ $('tvInputs').addEventListener('change',()=>{$('tvSwitch').disabled=!liveStatus.
 $('tvSwitch').addEventListener('click',()=>requestRemote('input',$('tvInputs').value));
 $('confirmRemoteGo').addEventListener('click',executeRemote);
 $('confirmRemoteCancel').addEventListener('click',resetRemote);
+
+async function checkWol(){
+ try{
+ const res=await fetch('/api/lg/wol-status',{cache:'no-store'});
+ if(!res.ok)throw Error('HTTP '+res.status);
+ const v=await res.json();
+ wolReady=Boolean(v.ready);
+ $('wakeTv').disabled=!wolReady;
+ $('wolInfo').textContent=wolReady?'Wake-on-LAN MAC recorded for lounge LG. Put it into standby using the LG remote, then try Wake lounge TV.':'Wake not ready: '+(v.detail||'MAC unknown')+' Keep TV on while remembering MAC.';
+ }catch(e){wolReady=false;$('wakeTv').disabled=true;$('wolInfo').textContent='Wake setup unavailable: '+e.message;}
+}
+async function wolCall(path){
+ $('loungeFeedback').textContent=path.endsWith('wake')?'Sending wake packet to lounge LG…':'Checking paired LG and recording its LAN MAC…';
+ try{const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+ if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();
+ $('loungeFeedback').textContent=data.detail||'Request completed.';if(!data.ok)$('loungeFeedback').textContent='TV: '+(data.detail||'Request unsuccessful');
+ }catch(e){$('loungeFeedback').textContent='Wake test failed: '+e.message;}
+ await checkWol();
+}
+$('learnMac').addEventListener('click',()=>wolCall('/api/lg/learn-mac'));
+$('wakeTv').addEventListener('click',()=>{
+ if(!wolReady)return;
+ cancelConfirm();resetRemote();$('confirmWake').hidden=false;
+ clearTimeout(wakePending);wakePending=setTimeout(cancelWake,10000);
+});
+$('confirmWakeGo').addEventListener('click',()=>{cancelWake();wolCall('/api/lg/wake');});
+$('confirmWakeCancel').addEventListener('click',cancelWake);
+checkWol();
 readLive();setInterval(readLive,15000);
 refresh();setInterval(()=>{if(!document.hidden)refresh();},5000);
 })();
