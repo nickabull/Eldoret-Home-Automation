@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>VELUX · Eldoret</title><link rel="stylesheet" href="styles.css?v=56"><meta name="theme-color" content="#08131b">
+<style>
+body.velux-page{background:#06121d;color:#effbf7;min-height:100dvh;height:auto;overflow-y:auto;width:100%;display:block;font-family:inherit}
+.velux-wrap{width:min(1180px,calc(100% - 42px));margin:24px auto 45px}
+.velux-return{color:#a7e6d3;text-decoration:none;font-size:13px}.velux-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;margin:24px 0}
+.velux-kicker{color:#85cdbb;font-size:11px;letter-spacing:.22em;font-weight:700}
+.velux-heading h1{font-size:clamp(33px,5vw,60px);line-height:1.05;margin:12px 0;color:#f6fffc}
+.velux-heading p{color:#a9c1ca;font-size:14px}.velux-tag{padding:9px 15px;border-radius:100px;border:1px solid #98d5c05a;font-size:12px;color:#bce9dc}
+.velux-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.velux-panel{border-radius:24px;padding:25px;background:linear-gradient(145deg,#1b3440,#101f2d);border:1px solid #a2efce28;box-shadow:0 25px 50px #0002}
+.velux-panel h2{font-size:21px;margin:0 0 10px}.velux-panel p{color:#a2bdc6;font-size:13px;line-height:1.65}
+.velux-thermo{display:flex;align-items:baseline;gap:16px;padding:20px 0 11px}.velux-thermo strong{font-size:clamp(64px,9vw,104px);font-weight:400;letter-spacing:-.065em;line-height:1}.velux-thermo small{font-size:16px;color:#aad1c9}
+.velux-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.velux-metric{border:1px solid #b1e9d31f;border-radius:14px;padding:14px;background:#071b29a9}.velux-metric b{font-size:24px;display:block;font-weight:500}.velux-metric span{font-size:11px;color:#aac1c9}
+.velux-window{display:flex;justify-content:space-between;align-items:center;border:1px solid #b0deca29;border-radius:14px;padding:18px;margin-top:12px;gap:15px}
+.velux-window b{display:block;font-size:16px}.velux-window span{font-size:12px;color:#aac4ca}.velux-window strong{font-size:25px;font-weight:500}
+.velux-ruler{margin-top:24px}.velux-ruler label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px}.velux-ruler output{font-size:28px;font-variant-numeric:tabular-nums;color:#a8ecd4}
+.velux-ruler input{display:block;width:100%;height:36px;accent-color:#83e8c4;cursor:pointer;margin:13px 0}
+.velux-rule{background:#061725a8;border:1px solid #a3e4ce26;border-radius:15px;padding:16px;margin-top:19px;color:#d8ede8;font-size:13px;line-height:1.7}
+.velux-rule strong{color:#a8edd6}.velux-action{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+.velux-action button{border:1px solid #93e4c0;background:#a6f0d1;color:#0a2928;font-weight:700;padding:14px 19px;border-radius:12px;font-size:13px;cursor:pointer}
+.velux-action span{font-size:11px;color:#aec5c8}.velux-off{margin-top:20px;background:#211e22;border:1px solid #c5ab8355;border-radius:13px;color:#ead5ab;padding:13px 16px;font-size:12px;line-height:1.6}
+.velux-footer{padding:18px 0;color:#92abb2;font-size:12px}
+@media(max-width:820px){.velux-layout{grid-template-columns:1fr}.velux-heading{align-items:flex-start;flex-direction:column}.velux-wrap{width:min(100% - 25px,750px)}.velux-panel{padding:20px}}
+</style></head>
+<body class="eldoret-dashboard eldoret-shell velux-page">
+<header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div></header>
+<main class="velux-wrap">
+<a class="velux-return" href="index.html">← Back to Eldoret Home</a>
+<div class="velux-heading"><div><div class="velux-kicker">HOME CLIMATE · VELUX ACTIVE</div><h1>Fresh air, on your terms.</h1><p>Utility roof windows · local HomeKit readings from Bulldog</p></div><span id="velux-link" class="velux-tag">CONNECTING</span></div>
+<div class="velux-layout">
+<section class="velux-panel" aria-labelledby="climate-title"><h2 id="climate-title">Utility climate</h2><p id="velux-checked">Checking live climate readings…</p><div class="velux-thermo"><strong id="velux-temp">—</strong><small>°C indoors</small></div><div class="velux-metrics"><div class="velux-metric"><b id="velux-humidity">—</b><span>Humidity</span></div><div class="velux-metric"><b id="velux-co2">—</b><span>CO₂ · ppm</span></div></div><h2 style="margin-top:29px">Roof windows</h2><div class="velux-window"><div><b>Roof window A</b><span>HomeKit accessory 3 · physical position not yet mapped</span></div><strong id="velux-w3">—</strong></div><div class="velux-window"><div><b>Roof window B</b><span>HomeKit accessory 4 · physical position not yet mapped</span></div><strong id="velux-w4">—</strong></div><p id="velux-window-state">Read-only position monitoring. Manual movement controls will follow supervised testing.</p></section>
+<section class="velux-panel" aria-labelledby="rule-title"><div class="velux-kicker">AUTOMATION DESIGNER · PREVIEW</div><h2 id="rule-title" style="margin-top:10px">Lou's comfort zone</h2><p>Choose when the room should start cooling and when the windows should close again. The difference prevents constant opening and closing around one temperature.</p>
+<div class="velux-ruler"><label for="open-above">Open above <output id="open-above-value">24°C</output></label><input id="open-above" type="range" min="18" max="26" step="0.5" value="24"></div>
+<div class="velux-ruler"><label for="close-below">Close below <output id="close-below-value">20°C</output></label><input id="close-below" type="range" min="18" max="26" step="0.5" value="20"></div>
+<div id="velux-rule" class="velux-rule">Design a comfort range.</div>
+<div class="velux-action"><button id="velux-save" type="button">Save draft on this device</button><span id="velux-save-state" role="status">Not activated · no commands sent</span></div>
+<div class="velux-off"><b>AUTOMATIC MOVEMENT OFF</b><div>For now this is a design preview. Before activating we must test both physical windows, confirm rain lockout, guard against stale readings, and agree manual overrides. Bulldog cannot override VELUX rain safety.</div></div>
+</section></div>
+<div class="velux-footer">Local HomeKit polling every 30 seconds · no cloud dependency for these readings · no window movement commands enabled</div>
+</main><script src="remote.js?v=1"></script><script src="velux.js?v=1"></script><script src="kiosk.js?v=2"></script><script src="mobile.js?v=3"></script></body></html>
