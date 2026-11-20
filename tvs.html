@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.3.0"><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018">
+<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.4.0"><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018">
 <style>
 .tv-version{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#a9c9d4;font-size:12px;margin:-7px 0 15px}.tv-version strong{color:#a5f0dd}.tv-version button{border:1px solid #487c90;background:#173b4a;color:#fff;padding:7px 11px;border-radius:9px;cursor:pointer;font:inherit;font-weight:700}
 .tv-wrap{max-width:1180px;margin:0 auto;padding:24px 24px 50px}
@@ -31,11 +31,11 @@
 .tv-confirm button{border:0;border-radius:10px;padding:11px 17px;background:#ff3b30;color:#fff;font:inherit;font-weight:900;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
 .tv-confirm button.cancel{display:none}
 /* Keep wake confirmation in the lounge panel so it cannot be covered by the fixed header or other confirmations. */
-#confirmWake,#confirmWakeTivvy{position:relative;top:auto;right:auto;left:auto;margin:12px 0;max-width:100%;justify-content:flex-start;z-index:5}
-#confirmWake p,#confirmWakeTivvy p{max-width:none}
-#confirmWake .cancel,#confirmWakeTivvy .cancel{display:inline-flex;background:#354958;color:#fff}
+#confirmWake,#confirmWakeTivvy,#confirmKitchenLaunch{position:relative;top:auto;right:auto;left:auto;margin:12px 0;max-width:100%;justify-content:flex-start;z-index:5}
+#confirmWake p,#confirmWakeTivvy p,#confirmKitchenLaunch p{max-width:none}
+#confirmWake .cancel,#confirmWakeTivvy .cancel,#confirmKitchenLaunch .cancel{display:inline-flex;background:#354958;color:#fff}
 @media(max-width:700px){.tv-confirm{top:166px;right:18px;left:18px;max-width:none;justify-content:space-between}.tv-confirm p{max-width:55vw}}
-@media(max-width:700px){#confirmWake,#confirmWakeTivvy{position:relative;top:auto;right:auto;left:auto;max-width:100%}#confirmWake p,#confirmWakeTivvy p{max-width:none}}
+@media(max-width:700px){#confirmWake,#confirmWakeTivvy,#confirmKitchenLaunch{position:relative;top:auto;right:auto;left:auto;max-width:100%}#confirmWake p,#confirmWakeTivvy p,#confirmKitchenLaunch p{max-width:none}}
 @media(max-width:600px){.tv-wrap{padding:15px}.tv-panel{padding:16px}.tv-subtabs button{font-size:12px;padding:10px 13px}}
 .tv-readbacks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:15px 0}
 .tv-metric{border:1px solid #426277;border-radius:12px;background:#0d2737;padding:12px;min-width:0}
@@ -55,7 +55,7 @@
 <main class="tv-wrap">
 <div class="tv-kicker">HOME ENTERTAINMENT · LG WEBOS</div><h1 class="tv-title">Your televisions</h1>
 <p class="tv-intro">Seven TVs. All seven network addresses are now recorded from the DrayTek. The lounge is paired and fully operational; the other rooms are ready for individual LG pairing.</p>
-<div class="tv-version" role="status"><strong>TV build v1.3.0</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
+<div class="tv-version" role="status"><strong>TV build v1.4.0</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
 <div class="tv-subtabs" role="tablist" aria-label="Television by room">
 <button type="button" id="tab-lounge" role="tab" aria-selected="true" aria-controls="panel-lounge" data-room="lounge">Lounge TV</button>
 <button type="button" id="tab-kitchen" role="tab" aria-selected="false" aria-controls="panel-kitchen" data-room="kitchen">Kitchen TV</button>
@@ -120,9 +120,16 @@
 </section>
 <section class="tv-panel" id="panel-kitchen" role="tabpanel" aria-labelledby="tab-kitchen" hidden>
 <h2>Kitchen TV</h2>
-<p class="tv-description">LG webOS · <strong>10.0.0.33</strong> · IP reserved in DrayTek (user confirmed).</p>
-<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
-<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+<p class="tv-description">LG webOS · <strong>10.0.0.33</strong> · IP reserved in DrayTek.</p>
+<div class="tv-status"><span class="tv-status-dot" id="kitchenDot"></span><strong id="kitchenStatus">Checking kitchen LG pairing…</strong></div>
+<div class="tv-actions">
+<button type="button" id="kitchenPair">Pair kitchen LG</button>
+<button type="button" id="kitchenLaunch" class="secondary" disabled>📺 Open Tivvy TV on kitchen LG</button>
+<button type="button" id="kitchenRefresh" class="secondary">Refresh kitchen status</button>
+</div>
+<div class="tv-confirm" id="confirmKitchenLaunch" hidden><p>Open Tivvy TV on the <strong>kitchen LG</strong> at 10.0.0.33?</p><button type="button" id="confirmKitchenGo">CONFIRM</button><button type="button" class="cancel" id="confirmKitchenCancel">Cancel</button></div>
+<div class="tv-feedback" id="kitchenFeedback" role="status">Ready to check the kitchen TV.</div>
+<p class="tv-note">Pairing is independent of the lounge LG. Keep the kitchen TV on, press Pair, and accept the request on its screen. After pairing, Open Tivvy TV will launch the saved shortcut. Wake from standby is not yet enabled for this room.</p>
 </section>
 <section class="tv-panel" id="panel-pit" role="tabpanel" aria-labelledby="tab-pit" hidden>
 <h2>Pit TV</h2>
@@ -318,6 +325,50 @@ $('confirmWakeTivvyGo').addEventListener('click',async()=>{
   checkWol();
  }
 });
+let kitchenBusy=false,kitchenLast={paired:false},kitchenPollTimer=null;
+function kitchenConfirmation(show){$('confirmKitchenLaunch').hidden=!show;}
+async function kitchenRefresh(){
+ try{
+  const r=await fetch('/api/lg/kitchen/status',{cache:'no-store'});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  const info=await r.json();kitchenLast=info;
+  $('kitchenDot').classList.toggle('ok',Boolean(info.paired));
+  $('kitchenStatus').textContent=info.paired?'Paired with Bulldog · 10.0.0.33':(info.state==='waiting'?'Waiting for kitchen TV approval…':'Kitchen LG not yet paired');
+  $('kitchenPair').disabled=kitchenBusy||info.state==='connecting'||info.state==='waiting';
+  $('kitchenLaunch').disabled=kitchenBusy||!info.paired;
+  if(!kitchenBusy)$('kitchenFeedback').textContent=info.detail||'Pairing status unavailable.';
+  if(info.state==='paired'||info.state==='error'){
+   if(kitchenPollTimer){clearInterval(kitchenPollTimer);kitchenPollTimer=null;}
+  }
+ }catch(e){
+  $('kitchenFeedback').textContent='Kitchen status unavailable: '+e.message;
+  $('kitchenLaunch').disabled=true;
+ }
+}
+async function kitchenCommand(path){
+ if(kitchenBusy)return;
+ kitchenBusy=true;kitchenConfirmation(false);
+ $('kitchenPair').disabled=true;$('kitchenLaunch').disabled=true;
+ $('kitchenFeedback').textContent=path.endsWith('/pair')?'Requesting pairing — accept prompt on kitchen TV…':'Sending Tivvy TV browser launch to kitchen LG…';
+ try{
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  const data=await r.json();
+  if(!data.ok)throw Error(data.detail||'Kitchen TV did not accept command');
+  $('kitchenFeedback').textContent=data.detail||'Request accepted.';
+  if(path.endsWith('/pair')&&!kitchenPollTimer){
+   kitchenPollTimer=setInterval(()=>{if(!document.hidden)kitchenRefresh()},2000);
+  }
+ }catch(e){$('kitchenFeedback').textContent='Kitchen TV: '+e.message;}
+ finally{kitchenBusy=false;setTimeout(kitchenRefresh,1500);}
+}
+$('kitchenPair').addEventListener('click',()=>kitchenCommand('/api/lg/kitchen/pair'));
+$('kitchenLaunch').addEventListener('click',()=>{if(kitchenLast.paired)kitchenConfirmation(true);});
+$('confirmKitchenGo').addEventListener('click',()=>kitchenCommand('/api/lg/kitchen/open-tivvy'));
+$('confirmKitchenCancel').addEventListener('click',()=>kitchenConfirmation(false));
+$('kitchenRefresh').addEventListener('click',kitchenRefresh);
+kitchenRefresh();
+setInterval(()=>{if(!document.hidden&&!kitchenBusy)kitchenRefresh();},15000);
 async function checkTvVersion(){
  const status=$('tvVersionStatus');status.textContent='Checking Bulldog for latest page…';
  try{
@@ -327,7 +378,7 @@ async function checkTvVersion(){
   const match=html.match(/<meta name="eldoret-tv-build" content="([^"]+)">/);
   const server=match&&match[1];
   if(!server){status.textContent='Bulldog is still serving an older TVs page. Retry in 20 seconds.';return;}
-  const current='1.3.0';
+  const current='1.4.0';
   if(server!==current){status.textContent='New build v'+server+' found — reloading…';location.reload();return;}
   status.textContent='Latest TV build confirmed on Bulldog';
  }catch(e){status.textContent='Could not check version: '+e.message;}
