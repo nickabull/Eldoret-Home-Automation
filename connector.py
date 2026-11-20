@@ -1074,6 +1074,7 @@ UNIFI_SNMP_PRIVATE = os.path.expanduser("~/eldoret-connector/unifi/snmp.conf")
 UNIFI_SNMP_HISTORY = os.path.expanduser("~/eldoret-connector/unifi/direct-history.json")
 UNIFI_SNMP_CACHE = {"expires": 0, "data": None, "previous": {}, "last_save": 0}
 UNIFI_SNMP_LOCK = threading.Lock()
+UNIFI_CLIENT_COUNT_CACHE = {}  # per-AP SNMP results, refreshed at most once per 90s
 UNIFI_SNMP_OIDS = (
     "1.3.6.1.2.1.1.1.0",          # sysDescr
     "1.3.6.1.2.1.1.5.0",          # sysName
@@ -1205,6 +1206,40 @@ def unifi_client_count_pilot():
         result["reason"] = "SNMP client-count probe timed out or failed"
     return result
 
+
+def _unifi_snmp_station_count(ip):
+    """Read direct wireless station counts, retaining no unique device identities."""
+    import shutil
+    if not shutil.which("snmpwalk"):
+        return None
+    base = "1.3.6.1.4.1.41112.1.6.1.2.1.8"  # unifiVapNumStations
+    env = dict(os.environ)
+    env["SNMPCONFPATH"] = os.path.dirname(UNIFI_SNMP_PRIVATE)
+    try:
+        proc = subprocess.run(
+            ["snmpwalk", "-m", "", "-v3", "-l", "authPriv",
+             "-u", "eldoret-monitor", "-a", "SHA", "-x", "AES",
+             "-On", "-t", "2", "-r", "0", ip, base],
+            capture_output=True, text=True, timeout=6, env=env, check=False)
+        if proc.returncode != 0:
+            return None
+        values = []
+        for line in proc.stdout.splitlines():
+            oid, sep, raw = line.strip().partition(" = ")
+            if sep and oid.lstrip(".").startswith(base + ".") and raw.startswith("INTEGER:"):
+                try:
+                    count = int(raw.split(":", 1)[1].strip())
+                    if count >= 0:
+                        values.append(count)
+                except ValueError:
+                    pass
+        if not values:
+            return None
+        return {"clients": sum(values), "virtual_ap_count": len(values)}
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        return None
+
+
 def _unifi_snmp_status():
     with UNIFI_SNMP_LOCK:
         now = time.monotonic()
@@ -1213,6 +1248,27 @@ def _unifi_snmp_status():
         with ThreadPoolExecutor(max_workers=4) as pool:
             devices = list(pool.map(_unifi_snmp_probe, UNIFI_SNMP_APS))
         checked = datetime.now(timezone.utc).isoformat()
+        # Station counts are read directly from the APs, independently of UniFi on Mac.
+        # Cached for 90s to reduce CPU/network load on the Pi 3.
+        count_now = time.monotonic()
+        due = [d for d in devices if d["snmp_online"] and
+               count_now >= UNIFI_CLIENT_COUNT_CACHE.get(d["ip"], {}).get("expires", 0)]
+        if due:
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                counts = list(pool.map(_unifi_snmp_station_count, [d["ip"] for d in due]))
+            for d, count in zip(due, counts):
+                UNIFI_CLIENT_COUNT_CACHE[d["ip"]] = {
+                    "expires": time.monotonic() + 90,
+                    "checked_at": checked,
+                    "data": count
+                }
+        for d in devices:
+            cached = UNIFI_CLIENT_COUNT_CACHE.get(d["ip"], {})
+            count = cached.get("data") if d["snmp_online"] else None
+            if count is not None:
+                d.update(clients=count["clients"],
+                         virtual_ap_count=count["virtual_ap_count"],
+                         clients_checked_at=cached.get("checked_at"))
         previous = UNIFI_SNMP_CACHE["previous"]
         for device in devices:
             prior = previous.get(device["ip"])
