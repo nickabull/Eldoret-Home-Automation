@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TVs · Eldoret</title><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018">
+<style>
+.tv-wrap{max-width:1180px;margin:0 auto;padding:24px 24px 50px}
+.tv-kicker{font-size:11px;letter-spacing:.18em;color:#99e9d4;font-weight:800}
+.tv-title{font-size:clamp(34px,4vw,54px);font-weight:600;letter-spacing:-.035em;margin:6px 0 10px}
+.tv-intro{color:#a9c4d0;line-height:1.5;margin:0 0 20px}
+.tv-subtabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 20px}
+.tv-subtabs button{font:inherit;font-size:13px;font-weight:750;min-height:48px;border:1px solid #3e6279;border-radius:12px;background:#173249;color:#c9e1e5;padding:12px 18px;cursor:pointer}
+.tv-subtabs button[aria-selected=true]{background:#246257;color:white;border-color:#91e1c9}
+.tv-panel{border:1px solid #39596d;border-radius:19px;background:linear-gradient(135deg,#173346,#0c1d2b);padding:23px;min-height:255px}
+.tv-panel[hidden]{display:none}
+.tv-panel h2{margin:0 0 8px;font-size:26px}
+.tv-description{color:#adc7d1;line-height:1.55}
+.tv-status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:#b6d6d5;margin:16px 0}
+.tv-status-dot{height:9px;width:9px;display:inline-block;background:#b6a47b;border-radius:50%}
+.tv-status-dot.ok{background:#8fe0b5}
+.tv-actions{display:flex;align-items:center;flex-wrap:wrap;gap:11px;margin:22px 0 15px}
+.tv-actions button{border:1px solid #72b4a7;border-radius:12px;padding:15px 20px;color:#fff;background:#226356;font-size:14px;font-weight:800;cursor:pointer;min-height:48px}
+.tv-actions button.secondary{background:#1d3f53;border-color:#4b8292}
+.tv-actions button:disabled{opacity:.45;cursor:not-allowed}
+.tv-feedback{border-left:3px solid #7cd6be;background:#0a2330;padding:12px 15px;min-height:45px;color:#cdebe6;line-height:1.45;white-space:pre-wrap}
+.tv-meta{color:#9fbaca;font-size:12px;margin-top:12px}
+.tv-note{color:#a6c1d0;font-size:13px;line-height:1.5}
+.tv-confirm{border:1px solid #d2b577;background:#302d22;border-radius:12px;padding:16px;margin:12px 0}
+.tv-confirm[hidden]{display:none}
+.tv-confirm p{margin:0 0 11px;color:#f5deb2}
+.tv-confirm button{background:#69552d;border:1px solid #edce87;border-radius:9px;color:#fff;font-weight:800;padding:10px 15px;min-height:42px;margin-right:8px;cursor:pointer}
+.tv-confirm button.cancel{background:#254454;border-color:#5e93a0}
+@media(max-width:600px){.tv-wrap{padding:15px}.tv-panel{padding:16px}.tv-subtabs button{font-size:12px;padding:10px 13px}}
+</style></head>
+<body class="eldoret-dashboard eldoret-shell">
+<header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div><div class="shell-legacy-status" hidden></div></header>
+<nav class="tabs dashboard-tabs eldoret-primary" aria-label="Primary navigation"><a href="index.html">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="tvs.html" class="active" aria-current="page">TVs</a><a href="av.html">Jesse / AV</a><a href="network.html">Network</a><a href="bulldog.html">Bulldog</a><a href="office.html">Epson</a><a href="appliances.html">Appliances</a><a href="radio.html">Radio</a></nav>
+<main class="tv-wrap">
+<div class="tv-kicker">HOME ENTERTAINMENT · LG WEBOS</div><h1 class="tv-title">Your televisions</h1>
+<p class="tv-intro">Six rooms. One Eldoret control centre. The lounge is our working pilot; other rooms are reserved until we've identified and paired each television.</p>
+<div class="tv-subtabs" role="tablist" aria-label="Television by room">
+<button type="button" id="tab-lounge" role="tab" aria-selected="true" aria-controls="panel-lounge" data-room="lounge">Lounge TV</button>
+<button type="button" id="tab-kitchen" role="tab" aria-selected="false" aria-controls="panel-kitchen" data-room="kitchen">Kitchen TV</button>
+<button type="button" id="tab-pit" role="tab" aria-selected="false" aria-controls="panel-pit" data-room="pit">Pit TV</button>
+<button type="button" id="tab-bedroom" role="tab" aria-selected="false" aria-controls="panel-bedroom" data-room="bedroom">Main bedroom TV</button>
+<button type="button" id="tab-ella" role="tab" aria-selected="false" aria-controls="panel-ella" data-room="ella">Ella's TV</button>
+<button type="button" id="tab-thea" role="tab" aria-selected="false" aria-controls="panel-thea" data-room="thea">Thea's TV</button>
+</div>
+<section class="tv-panel" id="panel-lounge" role="tabpanel" aria-labelledby="tab-lounge">
+<h2>Lounge TV</h2><p class="tv-description">LG webOS · 10.0.0.51 · Tivvy Live browser launch successfully tested on the television.</p>
+<div class="tv-status"><span class="tv-status-dot" id="loungeDot"></span><strong id="loungeStatus">Checking pairing with Bulldog…</strong></div>
+<div class="tv-actions">
+<button type="button" id="tivvyOpen" disabled>📺 Open Tivvy TV</button>
+<button type="button" id="pairLounge" class="secondary">Pair / reconnect LG</button>
+<button type="button" id="refreshLounge" class="secondary">Refresh status</button>
+</div>
+<div class="tv-confirm" id="confirmTivvy" hidden><p>Open <strong>Tivvy Live</strong> on the lounge TV now? This will switch its current app to the browser.</p><button type="button" id="confirmLaunch">Confirm — open on TV</button><button type="button" id="cancelLaunch" class="cancel">Cancel</button></div>
+<div class="tv-feedback" id="loungeFeedback" role="status">Waiting for live Bulldog status…</div>
+<p class="tv-meta">Saved shortcut: https://is.gd/TivvyTV26 · TV must currently be switched on. Standby wake-up is a future improvement.</p>
+</section>
+<section class="tv-panel" id="panel-kitchen" role="tabpanel" aria-labelledby="tab-kitchen" hidden><h2>Kitchen TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">We will add secure pairing and Tivvy TV / browser controls once we identify this television. No commands are sent to this room yet.</p></section>
+<section class="tv-panel" id="panel-pit" role="tabpanel" aria-labelledby="tab-pit" hidden><h2>Pit TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">Controls will be enabled only after the correct LG is discovered and paired.</p></section>
+<section class="tv-panel" id="panel-bedroom" role="tabpanel" aria-labelledby="tab-bedroom" hidden><h2>Main bedroom TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">Controls will be enabled only after the correct LG is discovered and paired.</p></section>
+<section class="tv-panel" id="panel-ella" role="tabpanel" aria-labelledby="tab-ella" hidden><h2>Ella's TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">Controls will be enabled only after the correct LG is discovered and paired.</p></section>
+<section class="tv-panel" id="panel-thea" role="tabpanel" aria-labelledby="tab-thea" hidden><h2>Thea's TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">Controls will be enabled only after the correct LG is discovered and paired.</p></section>
+</main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const tabs=[...document.querySelectorAll('[data-room]')];
+let last={},busy=false,confirmationTimeout=null;
+function cancelConfirm(){clearTimeout(confirmationTimeout);$('confirmTivvy').hidden=true;}
+function select(room){tabs.forEach(tab=>{let active=tab.dataset.room===room;tab.setAttribute('aria-selected',String(active));$(tab.getAttribute('aria-controls')).hidden=!active;});cancelConfirm();}
+tabs.forEach(tab=>tab.addEventListener('click',()=>select(tab.dataset.room)));
+async function refresh(){try{let r=await fetch('/api/lg/control-status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);last=await r.json();$('loungeDot').classList.toggle('ok',Boolean(last.paired));$('loungeStatus').textContent=last.paired?'Paired with Bulldog':'Not yet paired with Bulldog';$('tivvyOpen').disabled=busy||!last.paired;$('pairLounge').disabled=busy||last.state==='waiting'||last.state==='connecting';if(!busy)$('loungeFeedback').textContent=last.detail||'No status information available.';}catch(e){$('loungeFeedback').textContent='Unable to check Bulldog LG status: '+e.message;$('tivvyOpen').disabled=true;}}
+async function command(path){if(busy)return;busy=true;cancelConfirm();$('tivvyOpen').disabled=true;$('pairLounge').disabled=true;$('loungeFeedback').textContent=path.includes('/pair')?'Requesting pairing — watch the lounge television for a prompt…':'Requesting Tivvy Live browser launch…';try{let r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!r.ok)throw Error('HTTP '+r.status);let p=await r.json();$('loungeFeedback').textContent=p.detail||'Request sent.';}catch(e){$('loungeFeedback').textContent='LG command failed: '+e.message}finally{busy=false;setTimeout(refresh,1100);}}
+$('pairLounge').addEventListener('click',()=>command('/api/lg/pair'));
+$('tivvyOpen').addEventListener('click',()=>{if(!last.paired)return;$('confirmTivvy').hidden=false;clearTimeout(confirmationTimeout);confirmationTimeout=setTimeout(cancelConfirm,10000);});
+$('cancelLaunch').addEventListener('click',cancelConfirm);
+$('confirmLaunch').addEventListener('click',()=>command('/api/lg/open-tivvy'));
+$('refreshLounge').addEventListener('click',refresh);
+refresh();setInterval(()=>{if(!document.hidden)refresh();},5000);
+})();
+</script><script src="kiosk.js?v=2"></script><script src="mobile.js?v=3"></script>
+</body></html>
