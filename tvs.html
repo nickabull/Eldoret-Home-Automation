@@ -35,6 +35,7 @@
 .tv-metric{border:1px solid #426277;border-radius:12px;background:#0d2737;padding:12px;min-width:0}
 .tv-metric small{display:block;color:#a4bbcb;font-size:11px;margin-bottom:5px}
 .tv-metric strong{display:block;color:#e4fbf4;font-size:15px;overflow-wrap:anywhere}
+.tv-diagnostics{margin:12px 0;color:#a9cbcc;font-size:12px}.tv-diagnostics summary{cursor:pointer;padding:11px;background:#0e2635;border:1px solid #37596a;border-radius:9px;font-weight:700}.tv-diagnostics #tvServices{white-space:pre-wrap;line-height:1.6;padding:10px 14px}
 .tv-basic{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0}
 .tv-basic button{border:1px solid #538c91;background:#1b4355;color:#f0fffa;border-radius:9px;font-size:14px;font-weight:800;padding:10px 15px;min-height:44px;cursor:pointer}
 .tv-basic button:disabled{opacity:.4}
@@ -79,6 +80,19 @@
 <div class="tv-metric"><small>Live channel</small><strong id="tvChannel">Checking…</strong></div>
 <div class="tv-metric"><small>Last readback</small><strong id="tvChecked">Checking…</strong></div>
 </div>
+<h3>Further LG return information</h3>
+<div class="tv-readbacks" aria-live="polite">
+<div class="tv-metric"><small>App title / name</small><strong id="tvAppName">Checking…</strong></div>
+<div class="tv-metric"><small>Channel number</small><strong id="tvChannelNumber">Checking…</strong></div>
+<div class="tv-metric"><small>Channel type</small><strong id="tvChannelType">Checking…</strong></div>
+<div class="tv-metric"><small>Mute</small><strong id="tvMute">Checking…</strong></div>
+<div class="tv-metric"><small>Audio output</small><strong id="tvAudio">Checking…</strong></div>
+<div class="tv-metric"><small>TV model</small><strong id="tvModel">Checking…</strong></div>
+<div class="tv-metric"><small>TV software</small><strong id="tvSoftware">Checking…</strong></div>
+<div class="tv-metric"><small>Device name</small><strong id="tvDeviceName">Checking…</strong></div>
+<div class="tv-metric"><small>Connected inputs</small><strong id="tvConnectedInputs">Checking…</strong></div>
+</div>
+<details class="tv-diagnostics"><summary>LG readback diagnostics</summary><p class="tv-note">Each item shows whether that service answered. Some webOS models do not expose every service.</p><div id="tvServices">Waiting for response…</div></details>
 <h3>Basic remote controls · experimental</h3>
 <p class="tv-note">The controls below send real LG commands. They do not assume success until the television acknowledges them. Some features may need additional TV permission.</p>
 <div class="tv-basic" id="tvRemote">
@@ -131,6 +145,18 @@ async function readLive(){
  $('tvVolume').textContent=p.volume===null||p.volume===undefined?'Unknown':p.volume+' / 100'+(p.muted===true?' · muted':'');
  $('tvChannel').textContent=val(p.channel);
  $('tvChecked').textContent=p.checked_at?new Date(p.checked_at).toLocaleTimeString('en-GB'):'Never';
+ $('tvAppName').textContent=val(p.app_name);
+ $('tvChannelNumber').textContent=val(p.channel_number);
+ $('tvChannelType').textContent=val(p.channel_type);
+ $('tvMute').textContent=p.muted===null||p.muted===undefined?'Unavailable':p.muted?'Muted':'Not muted';
+ $('tvAudio').textContent=val(p.audio_output);
+ $('tvModel').textContent=val(p.model);
+ $('tvSoftware').textContent=val(p.software);
+ $('tvDeviceName').textContent=val(p.device_name);
+ const inputs=Array.isArray(p.inputs)?p.inputs:[];
+ const connected=inputs.filter(x=>x.connected===true).map(x=>x.label||x.id);
+ $('tvConnectedInputs').textContent=connected.length?connected.join(', '):'Unavailable';
+ $('tvServices').textContent=Object.entries(p.service_results||{}).map(([name,state])=>name.replaceAll('_',' ')+': '+state).join('\n')||'No service results yet';
  $('tvTelemetryDetail').textContent=p.detail||'Read from LG webOS';
  const selector=$('tvInputs'),prior=selector.value;selector.replaceChildren();
  const opt=document.createElement('option');opt.value='';opt.textContent='Select HDMI / source';selector.append(opt);
