@@ -499,56 +499,91 @@ def _lg_ssap_request(ws, request_id, uri, payload=None):
     return None, False
 
 def lg_lounge_live():
+    """Read-only and bounded; measurements are from the TV, never command guesses."""
     now=time.monotonic()
     with LG_LIVE_LOCK:
         cached=LG_LIVE_CACHE["data"]
-        if cached is not None and now-LG_LIVE_CACHE["at"]<15:
+        if cached is not None and now-LG_LIVE_CACHE["at"]<20:
             return dict(cached)
-        # Keep UI responsive if another poll is underway (one probe per 15 s).
         if LG_LIVE_CACHE.get("busy"):
-            return dict(cached) if cached else {"online":None,"paired":True,"detail":"Reading live TV status...","ip":LG_LOUNGE_IP}
+            return dict(cached) if cached else {"online":None,"detail":"Reading lounge LG...","ip":LG_LOUNGE_IP}
         LG_LIVE_CACHE["busy"]=True
-    data={"ip":LG_LOUNGE_IP,"online":False,"source":"LG webOS SSAP readback",
+    data={"ip":LG_LOUNGE_IP,"online":False,"source":"LG webOS direct SSAP",
           "checked_at":datetime.now(timezone.utc).isoformat(),
-          "app":None,"input":None,"inputs":[],"volume":None,"muted":None,
-          "channel":None,"power":None,"detail":"Waiting for TV response"}
+          "app":None,"app_name":None,"app_type":None,"input":None,"inputs":[],
+          "volume":None,"muted":None,"audio_output":None,
+          "channel":None,"channel_number":None,"channel_id":None,"channel_type":None,
+          "power":None,"model":None,"software":None,"device_name":None,
+          "country":None,"service_results":{},"detail":"Waiting for LG response"}
     ws=None
+    def bounded(value,length=100):
+        if value is None:return None
+        text=str(value).strip()
+        return text[:length] if text else None
     try:
         ws=_lg_open_paired()
         data["online"]=True
         data["power"]="On (responding)"
-        calls=[("application","ssap://com.webos.applicationManager/getForegroundAppInfo"),
-               ("inputs","ssap://tv/getExternalInputList"),
-               ("volume","ssap://audio/getVolume"),
-               ("channel","ssap://tv/getCurrentChannel"),
-               ("power","ssap://com.webos.service.tvpower/power/getPowerState")]
-        supported=0
+        # Non-critical services may be missing on particular webOS generations.
+        calls=[
+            ("application","ssap://com.webos.applicationManager/getForegroundAppInfo"),
+            ("inputs","ssap://tv/getExternalInputList"),
+            ("volume","ssap://audio/getVolume"),
+            ("channel","ssap://tv/getCurrentChannel"),
+            ("power","ssap://com.webos.service.tvpower/power/getPowerState"),
+            ("system","ssap://com.webos.service.tv.systemproperty/getSystemInfo"),
+            ("audio_output","ssap://com.webos.service.apiadapter/audio/getSoundOutput"),
+        ]
         for key,uri in calls:
-            res,ok=_lg_ssap_request(ws,"eldoret-read-"+key,uri)
-            if not ok:continue
-            supported+=1
+            result,ok=_lg_ssap_request(ws,"eldoret-read-"+key,uri)
+            data["service_results"][key]="responded" if ok else "not available"
+            if not ok or not isinstance(result,dict):continue
             if key=="application":
-                app=res.get("appId") or res.get("id")
-                data["app"]=str(app)[:100] if app else None
-                data["input"]=str(res.get("appId"))[:100] if app and (".externalinput." in str(app) or app.startswith("com.webos.app.hdmi")) else None
+                app=bounded(result.get("appId") or result.get("id"))
+                data["app"]=app
+                data["app_name"]=bounded(result.get("appName") or result.get("title"))
+                data["app_type"]=bounded(result.get("processId") or result.get("windowType"))
+                if app and (".externalinput." in app or app.startswith("com.webos.app.hdmi")):
+                    data["input"]=app
             elif key=="inputs":
-                data["inputs"]=[{"id":str(v.get("id",""))[:80],"label":str(v.get("label") or v.get("id") or "")[:80],
-                                 "connected":v.get("connected")} for v in (res.get("devices") or [])[:16]
-                                if isinstance(v,dict) and v.get("id")]
+                devices=result.get("devices") or []
+                if not isinstance(devices,list):devices=[]
+                data["inputs"]=[{"id":bounded(v.get("id"),80),"label":bounded(v.get("label") or v.get("id"),80),
+                    "connected":v.get("connected") if isinstance(v.get("connected"),bool) else None}
+                    for v in devices[:16] if isinstance(v,dict) and v.get("id")]
             elif key=="volume":
-                v=res.get("volume")
+                v=result.get("volume")
                 data["volume"]=v if type(v) is int and 0<=v<=100 else None
-                data["muted"]=res.get("muted") if type(res.get("muted")) is bool else None
+                data["muted"]=result.get("muted") if type(result.get("muted")) is bool else None
+                data["audio_output"]=bounded(result.get("soundOutput") or result.get("output"))
             elif key=="channel":
-                value=res.get("channelName") or res.get("channelNumber")
-                data["channel"]=str(value)[:100] if value else None
+                data["channel"]=bounded(result.get("channelName"))
+                data["channel_number"]=bounded(result.get("channelNumber"))
+                data["channel_id"]=bounded(result.get("channelId"))
+                data["channel_type"]=bounded(result.get("channelType"))
             elif key=="power":
-                data["power"]=str(res.get("state") or "On (responding)")[:80]
-        data["detail"]="TV responded; "+str(supported)+" of 5 readback services available."
+                data["power"]=bounded(result.get("state")) or "On (responding)"
+            elif key=="system":
+                features=result.get("features") or {}
+                if not isinstance(features,dict):features={}
+                data["model"]=bounded(result.get("modelName") or result.get("model"))
+                data["software"]=bounded(result.get("firmwareVersion") or result.get("softwareVersion"))
+                data["device_name"]=bounded(result.get("deviceName"))
+                data["country"]=bounded(result.get("country"))
+            elif key=="audio_output":
+                data["audio_output"]=bounded(result.get("soundOutput") or result.get("output")) or data["audio_output"]
+        # External input list is authoritative for a matching foreground app.
+        if data["app"]:
+            for item in data["inputs"]:
+                if item["id"]==data["app"]:
+                    data["input"]=item["label"] or item["id"]
+                    break
+        count=sum(x=="responded" for x in data["service_results"].values())
+        data["detail"]="TV connected · "+str(count)+" of "+str(len(calls))+" readback services responded"
     except Exception:
-        data["detail"]="Lounge LG is unreachable or pairing must be renewed."
+        data["detail"]="Lounge LG not responding or pairing needs renewal."
     finally:
-        if ws: ws.close()
+        if ws:ws.close()
         with LG_LIVE_LOCK:
             LG_LIVE_CACHE.update(at=time.monotonic(),data=dict(data),busy=False)
     return data
