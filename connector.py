@@ -2630,9 +2630,31 @@ def home_connect_status():
             _hc_record_activity(result["devices"])
             result["events"]=HOME_CONNECT_EVENTS[-60:]
         except (OSError,ValueError,KeyError,RuntimeError,urllib.error.URLError) as exc:
-            # Never return raw server responses or token values to the web browser.
-            result["error"]=("Home Connect needs reauthorisation" if "authorisation" in str(exc).lower()
-                             else "Home Connect temporarily unavailable")
+            # Safe structured diagnostics. Never expose upstream bodies, URLs, keys or tokens.
+            message=str(exc)
+            import re
+            http_match=re.fullmatch(r"Home Connect appliance list HTTP ([1-5][0-9]{2})",message)
+            if http_match:
+                code=int(http_match.group(1))
+                result["error_code"]="cloud_http_"+str(code)
+                if code in (401,403):
+                    result["error"]="Home Connect rejected the appliance-list request (HTTP "+str(code)+"); check authorisation and API permissions"
+                elif code==429:
+                    result["error"]="Home Connect rate limit reached (HTTP 429); retry later"
+                else:
+                    result["error"]="Home Connect appliance-list request failed (HTTP "+str(code)+")"
+            elif isinstance(exc,urllib.error.URLError) or isinstance(exc,TimeoutError):
+                result["error_code"]="cloud_network"
+                result["error"]="Home Connect cloud network connection or timeout failed"
+            elif "authorisation" in message.lower() or "refresh token" in message.lower():
+                result["error_code"]="auth"
+                result["error"]="Home Connect needs reauthorisation"
+            elif "Unexpected Home Connect response" in message:
+                result["error_code"]="cloud_response"
+                result["error"]="Home Connect returned an unexpected appliance-list response"
+            else:
+                result["error_code"]="unknown"
+                result["error"]="Home Connect temporarily unavailable"
         HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+(1800 if result.get("devices") else 120))
         return result
 
