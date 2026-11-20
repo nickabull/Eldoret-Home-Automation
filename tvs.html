@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.7.1"><link rel="stylesheet" href="styles.css?v=56"><meta name="theme-color" content="#0b1018">
+<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.7.2"><link rel="stylesheet" href="styles.css?v=56"><meta name="theme-color" content="#0b1018">
 <style>
 .tv-version{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#a9c9d4;font-size:12px;margin:-7px 0 15px}.tv-version strong{color:#a5f0dd}.tv-version button{border:1px solid #487c90;background:#173b4a;color:#fff;padding:7px 11px;border-radius:9px;cursor:pointer;font:inherit;font-weight:700}
 .tv-wrap{max-width:1180px;margin:0 auto;padding:24px 24px 50px}
@@ -61,7 +61,7 @@
 <main class="tv-wrap">
 <div class="tv-kicker">HOME ENTERTAINMENT · LG WEBOS</div><h1 class="tv-title">Your televisions</h1>
 <p class="tv-intro">Seven TVs. All seven network addresses are now recorded from the DrayTek. Lounge and Kitchen are paired and working. Pit, Bedroom, Jesse, Ella and Thea are ready for individual pairing.</p>
-<div class="tv-version" role="status"><strong>TV build v1.7.1</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
+<div class="tv-version" role="status"><strong>TV build v1.7.2</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
 <div class="tv-subtabs" role="tablist" aria-label="Television by room">
 <button type="button" id="tab-lounge" role="tab" aria-selected="true" aria-controls="panel-lounge" data-room="lounge">Lounge TV</button>
 <button type="button" id="tab-kitchen" role="tab" aria-selected="false" aria-controls="panel-kitchen" data-room="kitchen">Kitchen TV</button>
@@ -782,9 +782,24 @@ async function checkTvVersion(){
   const match=html.match(/<meta name="eldoret-tv-build" content="([^"]+)">/);
   const server=match&&match[1];
   if(!server){status.textContent='Bulldog is still serving an older TVs page. Retry in 20 seconds.';return;}
-  const current='1.7.0';
-  if(server!==current){status.textContent='New build v'+server+' found — reloading…';location.reload();return;}
-  status.textContent='Latest TV build confirmed on Bulldog';
+  const current=document.querySelector('meta[name="eldoret-tv-build"]')?.content||'unknown';
+  const parse=v=>/^\d+\.\d+\.\d+$/.test(v)?v.split('.').map(Number):null;
+  const live=parse(server),loaded=parse(current);
+  // Reload only for an actually newer build. Never loop on stale cache or mixed deploys.
+  const newer=live&&loaded&&live.some((n,i)=>n>loaded[i]&&live.slice(0,i).every((x,j)=>x===loaded[j]));
+  if(newer){
+   const key='eldoret-tv-upgrade-'+server;
+   if(sessionStorage.getItem(key)==='tried'){
+    status.textContent='Bulldog has v'+server+'; refresh manually if this page stays on v'+current;
+    return;
+   }
+   sessionStorage.setItem(key,'tried');
+   status.textContent='New build v'+server+' found — updating once…';
+   location.replace('/tvs.html?build='+encodeURIComponent(server));
+   return;
+  }
+  status.textContent=server===current?'Latest TV build v'+current+' confirmed on Bulldog':
+    'This page is v'+current+'; Bulldog currently serves v'+server+'. No automatic reload required.';
  }catch(e){status.textContent='Could not check version: '+e.message;}
 }
 $('tvCheckUpdate').addEventListener('click',checkTvVersion);
