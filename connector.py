@@ -742,6 +742,56 @@ def _lg_ssap_request(ws, request_id, uri, payload=None):
         return data, True
     return None, False
 
+def lg_switch_sky_hdmi1(room):
+    """Select verified HDMI 1 on one paired LG; does not control/power on Sky Q."""
+    import re
+    if room=="lounge":
+        ws=_lg_open_paired()
+    elif room=="kitchen":
+        saved=_lg_kitchen_saved()
+        if not saved or not saved.get("client_key") or saved.get("ip")!=LG_KITCHEN_IP:
+            raise RuntimeError("Kitchen LG not paired")
+        ws=_LGWebSocket(LG_KITCHEN_IP)
+        try:
+            ws.connect()
+            if saved.get("fingerprint")!=ws.fingerprint:
+                raise RuntimeError("Kitchen LG identity mismatch")
+            ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+            deadline=time.monotonic()+10
+            while time.monotonic()<deadline:
+                ws.sock.settimeout(2)
+                try:reply=ws.recv_json()
+                except socket.timeout:continue
+                if reply.get("type")=="registered":break
+                if reply.get("type")=="error":raise RuntimeError("Kitchen LG rejected pairing")
+            else:raise RuntimeError("Kitchen LG did not confirm pairing")
+        except Exception:
+            ws.close()
+            raise
+    else:raise ValueError("Unknown TV room")
+    try:
+        data,ok=_lg_ssap_request(ws,"eldoret-hdmi-list",
+                                "ssap://tv/getExternalInputList")
+        if not ok or not isinstance(data,dict):
+            raise RuntimeError("TV did not provide its current input list; HDMI 1 not selected")
+        matches=[]
+        for item in (data.get("devices") or []):
+            if not isinstance(item,dict):continue
+            input_id=item.get("id")
+            if not isinstance(input_id,str) or not input_id:continue
+            # Prefer the TV's actual HDMI_1 ID; some models call it HDMI 1.
+            if re.search(r"(?i)(?:^|[^a-z0-9])hdmi[ _-]*1(?:$|[^0-9])",input_id):
+                matches.append(input_id)
+        if len(matches)!=1:
+            raise RuntimeError("Could not identify one unambiguous HDMI 1 from TV input list")
+        _,accepted=_lg_ssap_request(ws,"eldoret-hdmi-one",
+                  "ssap://tv/switchInput",{"inputId":matches[0]})
+        if not accepted:
+            raise RuntimeError("TV did not acknowledge HDMI 1 input switch")
+        return {"ok":True,"detail":room.capitalize()+" LG acknowledged HDMI 1 selection. Check Sky Q picture."}
+    finally:ws.close()
+
+
 def lg_lounge_live():
     """Read-only and bounded; measurements are from the TV, never command guesses."""
     now=time.monotonic()
@@ -4130,7 +4180,7 @@ class Handler(BaseHTTPRequestHandler):
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
         payload = json.loads(raw_body or b"{}")
-        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy","/api/lg/kitchen/learn-mac","/api/lg/kitchen/wake"):
+        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy","/api/lg/kitchen/learn-mac","/api/lg/kitchen/wake","/api/lg/kitchen/hdmi1","/api/lg/hdmi1"):
             # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
             origin=self.headers.get("Origin","")
             host=self.headers.get("Host","")
@@ -4144,7 +4194,11 @@ class Handler(BaseHTTPRequestHandler):
             if self.path=="/api/lg/control" and (not isinstance(payload,dict) or set(payload)-{"action","input_id"}):
                 self.send_error(400); return
             try:
-                if self.path=="/api/lg/kitchen/learn-mac":
+                if self.path=="/api/lg/kitchen/hdmi1":
+                    result=lg_switch_sky_hdmi1("kitchen")
+                elif self.path=="/api/lg/hdmi1":
+                    result=lg_switch_sky_hdmi1("lounge")
+                elif self.path=="/api/lg/kitchen/learn-mac":
                     result=lg_kitchen_learn_mac()
                 elif self.path=="/api/lg/kitchen/wake":
                     result=lg_kitchen_wake()
