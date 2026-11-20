@@ -77,7 +77,7 @@
 // One shared page frame across Eldoret. Landscape dashboards never scroll.
 (()=>{
  if(!document.body.classList.contains('eldoret-shell'))return;
- const wide=matchMedia('(min-aspect-ratio:4/3) and (min-width:760px)');
+ const wide=matchMedia('(min-aspect-ratio:4/3) and (min-width:1101px)');
  const main=document.querySelector('body>main');if(!main)return;
  const content=document.createElement('div');content.className='eldoret-content';
  while(main.firstChild)content.append(main.firstChild);main.append(content);
