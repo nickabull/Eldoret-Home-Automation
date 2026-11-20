@@ -87,7 +87,7 @@
 <button type="button" id="tab-thea" role="tab" aria-selected="false" aria-controls="panel-thea" data-room="thea">Thea's TV</button>
 </div>
 <section class="tv-panel" id="panel-lounge" role="tabpanel" aria-labelledby="tab-lounge">
-<h2>Lounge TV</h2><p class="tv-description">LG webOS · 10.0.0.51 · Tivvy Live browser launch successfully tested on the television.</p>
+<h2>Lounge TV</h2><p class="tv-description">LG webOS · 10.0.0.52 · Tivvy Live browser launch successfully tested on the television.</p>
 <div class="tv-status"><span class="tv-status-dot" id="loungeDot"></span><strong id="loungeStatus">Checking pairing with Bulldog…</strong></div>
 <div class="tv-actions">
 <button type="button" id="tivvyOpen" disabled>📺 Open Tivvy TV</button>
@@ -146,7 +146,7 @@
 </section>
 <section class="tv-panel" id="panel-kitchen" role="tabpanel" aria-labelledby="tab-kitchen" hidden>
 <h2>Kitchen TV</h2>
-<p class="tv-description">LG webOS · <strong>10.0.0.33</strong> · IP reserved in DrayTek.</p>
+<p class="tv-description">LG webOS · <strong>10.0.0.51</strong> · IP reserved in DrayTek.</p>
 <div class="tv-status"><span class="tv-status-dot" id="kitchenDot"></span><strong id="kitchenStatus">Checking kitchen LG pairing…</strong></div>
 <div class="tv-actions">
 <button type="button" id="kitchenPair">Pair kitchen LG</button>
@@ -157,7 +157,7 @@
 <button type="button" id="kitchenWakeTivvy" class="secondary" disabled>Wake kitchen TV and load Tivvy TV</button>
 <button type="button" id="kitchenWakeSky" class="secondary" disabled>Wake and select SKY Q (HDMI 1)</button>
 </div>
-<div class="tv-confirm" id="confirmKitchenLaunch" hidden><p>Open Tivvy TV on the <strong>kitchen LG</strong> at 10.0.0.33?</p><button type="button" id="confirmKitchenGo">CONFIRM</button><button type="button" class="cancel" id="confirmKitchenCancel">Cancel</button></div>
+<div class="tv-confirm" id="confirmKitchenLaunch" hidden><p>Open Tivvy TV on the <strong>kitchen LG</strong> at 10.0.0.51?</p><button type="button" id="confirmKitchenGo">CONFIRM</button><button type="button" class="cancel" id="confirmKitchenCancel">Cancel</button></div>
 <div class="tv-confirm" id="confirmKitchenWake" hidden><p>Send a wake packet to the kitchen TV?</p><button type="button" id="confirmKitchenWakeGo">SEND WAKE PACKET</button><button type="button" class="cancel" id="confirmKitchenWakeCancel">Cancel</button></div>
 <div class="tv-confirm" id="confirmKitchenWakeTivvy" hidden><p>Wake the kitchen TV, then load Tivvy TV when it responds?</p><button type="button" id="confirmKitchenWakeTivvyGo">WAKE &amp; LOAD TIVVY</button><button type="button" class="cancel" id="confirmKitchenWakeTivvyCancel">Cancel</button></div>
 <div class="tv-confirm" id="confirmKitchenWakeSky" hidden><p>Wake kitchen LG and select HDMI 1 (Sky Q)?</p><button type="button" id="confirmKitchenWakeSkyGo">WAKE &amp; SELECT HDMI 1</button><button type="button" id="confirmKitchenWakeSkyCancel" class="cancel">Cancel</button></div>
@@ -467,7 +467,7 @@ async function kitchenRefresh(manual=false){
   if(!r.ok)throw Error('HTTP '+r.status);
   const info=await r.json();kitchenLast=info;
   $('kitchenDot').classList.toggle('ok',Boolean(info.paired));
-  $('kitchenStatus').textContent=info.paired?'Paired with Bulldog · 10.0.0.33':(info.state==='waiting'?'Waiting for kitchen TV approval…':'Kitchen LG not yet paired');
+  $('kitchenStatus').textContent=info.paired?'Paired with Bulldog · 10.0.0.51':(info.state==='waiting'?'Waiting for kitchen TV approval…':'Kitchen LG not yet paired');
   $('kitchenPair').disabled=kitchenBusy||info.state==='connecting'||info.state==='waiting';
   $('kitchenLaunch').disabled=kitchenBusy||!info.paired;
   if(manual){
