@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Bulldog · Heartbeat 2.0</title><meta name="theme-color" content="#071321"><meta name="eldoret-heartbeat-build" content="2.1.0">
+<title>Bulldog · Heartbeat 2.2</title><meta name="theme-color" content="#071321"><meta name="eldoret-heartbeat-build" content="2.2.0">
 <style>
 :root{color-scheme:dark;--bg:#071321;--card:#122638;--border:#38546b;--mint:#9ce8ce;--muted:#a8c5d2;--amber:#f5c784;--red:#ff9ba6}
 *{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#edf7fb}
@@ -53,21 +53,90 @@ main{min-height:0;display:grid;grid-template-columns:1.13fr 1fr 1fr;grid-templat
 @media(max-width:700px){.header-ecg{min-width:35px}.header-ecg svg{height:22px}.group h2>span:first-child:after{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.ecg-sweep{animation:none;stroke-dasharray:none;opacity:.75}.group[data-health="good"] h2>span:first-child:after,.state.good .dot{animation:none}}
 
+
+
+/* Heartbeat 2.2: original Eldoret photographic artwork behind real telemetry */
+#app{gap:8px;padding:10px 12px 9px}
+header{min-height:48px}
+.header-ecg{max-width:none;min-width:210px;margin:0 10px}
+.header-ecg svg{height:50px}
+.ecg-sweep{stroke-width:2.6;filter:drop-shadow(0 0 8px #53ffe4)}
+.group{position:relative;isolation:isolate;border-color:#397c80;background-color:#102439;background-size:cover;background-position:center;box-shadow:inset 0 0 1px #74f8e9,0 0 14px #39c1aa18}
+.group:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgba(4,17,30,.94) 0%,rgba(6,24,37,.84) 48%,rgba(6,24,37,.42) 100%)}
+#network{background-image:url('/network-patchbay-background.webp');background-position:60% 45%}
+#lights{background-image:url('/eldoret-house-night.webp');background-position:center 55%}
+#lights:before{background:linear-gradient(90deg,rgba(3,17,30,.88) 0%,rgba(5,22,34,.52) 53%,rgba(3,19,34,.13) 100%),linear-gradient(0deg,rgba(1,13,29,.65),transparent 75%)}
+#appliances{background-image:url('/eldoret-home-dusk.webp');background-position:85% 50%}
+#tvs{background-image:url('/eldoret-home-dusk.webp');background-position:65% 60%}
+#sky{background-image:url('/sky-streaming-background.png');background-position:65% 54%}
+#misc{background-image:url('/epson-et3850-background.webp');background-position:76% 60%}
+.group h2>span:first-child:after{font-size:clamp(21px,2.2vw,34px);line-height:1;color:#8cf4cf}
+.group h2{flex-shrink:0}
+#lights h2{align-items:flex-start}#lights h2>span:first-child{font-size:12px;letter-spacing:.15em;color:#b3d3df}
+#lights h2>span:first-child:after{display:none}
+#lights:after{content:'♥';position:absolute;top:8px;right:13px;color:#8cf4cf;font-size:clamp(27px,2.65vw,40px);line-height:1;filter:drop-shadow(0 0 8px #4affc390)}
+#lights[data-health="good"]:after{animation:heartBeat 1.8s ease-in-out infinite}
+#lights[data-health="warn"]:after,#lights[data-health="bad"]:after{animation:none;color:#d6ae86}
+.lighting-copy{margin:auto 0 8px;display:flex;flex-direction:column;gap:5px;text-shadow:0 2px 6px #000}
+.lighting-kicker{font-size:clamp(13px,1.3vw,21px);font-weight:700;color:#c9dfeb}
+#lightingHeadline{font-size:clamp(19px,2vw,32px);line-height:1.1}
+#lightingSubtitle{font-size:clamp(12px,1.25vw,19px);font-weight:750;color:#a3ffe4}
+.lighting-details{display:flex;gap:10px;flex-wrap:wrap;font-size:10px}
+#hueRooms{font-size:10px;white-space:nowrap;text-overflow:ellipsis}
+#network .aprow>.block{padding:6px 0;border-top:1px solid #c2e7e522}
+#network .router-stats strong{font-size:clamp(22px,2vw,34px)}
+#network .spark{height:36px;max-height:none;min-height:24px;filter:drop-shadow(0 0 4px #4affb16b)}
+#misc{grid-column:1;grid-row:3;min-height:0;gap:7px}
+main{grid-template-rows:minmax(0,1fr) minmax(0,1fr) minmax(0,.65fr)}
+#network{grid-row:1 / span 2;grid-column:1}
+.other-grid{display:grid;grid-template-columns:1.05fr 1fr;min-height:0;flex:1;gap:15px}
+.other-status{display:flex;flex-direction:column;justify-content:space-evenly;gap:3px;min-width:0}
+#misc .row{font-size:clamp(10px,.85vw,14px)}
+.printer-heading{border-top:1px solid #c5e9e53f;padding-top:5px}
+.printer-inks{display:grid;grid-template-rows:repeat(4,1fr);gap:4px;min-height:0;align-content:center}
+.ink{display:grid;grid-template-columns:57px 1fr 35px;gap:5px;align-items:center;font-size:10px;min-width:0}
+.ink-name{overflow:hidden;text-overflow:ellipsis}
+.ink-track{height:7px;background:#90b6c03d;border-radius:10px;overflow:hidden}
+.ink-track i{display:block;width:0;height:100%;border-radius:10px;background:#d4e2e8}
+.ink[data-ink="Cyan"] i{background:#71d9eb}.ink[data-ink="Magenta"] i{background:#ed78cc}.ink[data-ink="Yellow"] i{background:#f6d660}
+.ink-value{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:800px){.header-ecg{min-width:65px;margin:0 3px}.header-ecg svg{height:30px}.other-grid{gap:6px}.ink{grid-template-columns:35px 1fr 22px;font-size:8px;gap:3px}.group h2>span:first-child:after{font-size:22px}#lights:after{font-size:26px}}
+@media(max-aspect-ratio:1.25){main{grid-template-rows:auto}#misc{grid-column:auto;grid-row:auto;min-height:220px}.group{background-size:cover}#network{grid-column:auto;grid-row:span 2}}
+@media(prefers-reduced-motion:reduce){#lights[data-health="good"]:after{animation:none}}
+
 </style></head>
-<body><div id="app"><header><div><strong>🐶 BULLDOG <span style="color:#99e6ca;font-weight:500">/ HEARTBEAT</span></strong><small>ELDORET · SYSTEM MONITOR · V2.1</small></div><div class="header-ecg" role="img" aria-label="Heartbeat indicator"><svg viewBox="0 0 340 36" preserveAspectRatio="none"><path class="ecg-rest" d="M0 18 H137 L145 13 L152 23 L159 5 L169 32 L180 18 H340"/><path class="ecg-sweep" d="M0 18 H137 L145 13 L152 23 L159 5 L169 32 L180 18 H340"/></svg></div><div class="headright"><span id="overall" class="overall">Checking house systems…</span><time id="clock" class="clock">--:--</time></div></header>
+<body><div id="app"><header><div><strong>🐶 BULLDOG <span style="color:#99e6ca;font-weight:500">/ HEARTBEAT</span></strong><small>ELDORET · SYSTEM MONITOR · V2.2</small></div><div class="header-ecg" role="img" aria-label="Heartbeat indicator"><svg viewBox="0 0 740 52" preserveAspectRatio="none"><path class="ecg-rest" d="M0 26 H155 L180 26 L197 21 L213 29 L225 6 L238 48 L250 26 H360 L378 26 L390 20 L406 31 L419 8 L432 46 L447 26 H575 L593 22 L606 27 L622 5 L637 47 L650 26 H740"/><path class="ecg-sweep" d="M0 26 H155 L180 26 L197 21 L213 29 L225 6 L238 48 L250 26 H360 L378 26 L390 20 L406 31 L419 8 L432 46 L447 26 H575 L593 22 L606 27 L622 5 L637 47 L650 26 H740"/></svg></div><div class="headright"><span id="overall" class="overall">Checking house systems…</span><time id="clock" class="clock">--:--</time></div></header>
 <main>
 <section class="group" id="network"><h2><span>🌐 INTERNET &amp; WI-FI</span><span id="netState" class="state"><i class="dot"></i><span>Checking</span></span></h2>
 <div class="block"><div class="row"><span class="label">Main router · DrayTek</span><span id="routerState" class="state"><i class="dot"></i><span>Checking</span></span></div><div class="router-stats"><span><small>DOWNLOAD</small><br><strong id="down">—</strong><small> Mbps</small></span><span><small>UPLOAD</small><br><strong id="up">—</strong><small> Mbps</small></span></div><svg class="spark" viewBox="0 0 120 28" preserveAspectRatio="none" aria-label="Recent measured router traffic"><path id="downLine"></path><path id="upLine" class="upload"></path></svg></div>
 <div class="divider"></div>
 <div class="aprow" id="aps"><span class="sub">Checking Wi-Fi access points…</span></div></section>
-<section class="group" id="lights"><h2><span>💡 HUE LIGHTS</span><span id="hueState" class="state"><i class="dot"></i><span>Checking</span></span></h2>
-<div class="row"><span class="label">House Hue</span><span class="state" id="houseHue"><i class="dot"></i><span>Checking</span></span></div>
-<div class="row"><span class="label">Utility Hue</span><span class="state" id="utilityHue"><i class="dot"></i><span>Checking</span></span></div>
-<div class="divider"></div><div id="hueRooms" class="textlist">Checking light groups…</div><footer>Room states reflect connected Hue groups.</footer></section>
+<section class="group" id="lights">
+<h2><span>LIGHTING</span><span id="hueState" class="state" aria-label="Lighting monitoring"><i class="dot"></i><span>Checking</span></span></h2>
+<div class="lighting-copy">
+<div class="lighting-kicker">House Hue</div>
+<strong id="lightingHeadline">Checking lights…</strong>
+<div id="lightingSubtitle">Waiting for lighting bridge</div>
+</div>
+<div class="lighting-details"><span id="houseHue" class="state"><i class="dot"></i><span>House: checking</span></span><span id="utilityHue" class="state"><i class="dot"></i><span>Utility: checking</span></span></div>
+<div id="hueRooms" class="textlist" aria-live="polite">Checking light groups…</div>
+</section>
 <section class="group" id="appliances"><h2><span>♨️ APPLIANCES</span><span id="appState" class="state"><i class="dot"></i><span>Checking</span></span></h2><div id="applianceRows" class="block" style="flex:1"></div></section>
 <section class="group" id="tvs"><h2><span>📺 TELEVISIONS</span><span class="sub">7 rooms</span></h2><div class="smallgrid" id="tvRows"></div><footer>Paired ≠ powered on. Reachability shown only when verified.</footer></section>
 <section class="group" id="sky"><h2><span>📡 SKY Q</span><span id="skyState" class="state"><i class="dot"></i><span>Checking</span></span></h2><div class="block"><strong id="skyChannel">Checking Sky Q…</strong><span id="skyDetail" class="sub">Channel / programme when available</span></div><div class="divider"></div><div class="textlist" id="skyNote">Sky Q diagnostics</div></section>
-<section class="group" id="misc"><h2><span>⚙️ OTHER SYSTEMS</span></h2><div class="row"><span class="label">Car charger</span><span class="state"><i class="dot"></i><span>Not connected</span></span></div><div class="row"><span class="label">Velux</span><span id="veluxState" class="state"><i class="dot"></i><span>Checking</span></span></div><div class="row"><span class="label">Bulldog engine</span><span id="bulldogState" class="state"><i class="dot"></i><span>Checking</span></span></div><div class="divider"></div><div class="sub">More services can join this group without cluttering the screen.</div></section>
+<section class="group" id="misc"><h2><span>⚙️ OTHER SYSTEMS</span></h2>
+<div class="other-grid"><div class="other-status">
+<div class="row"><span class="label">Car charger</span><span class="state"><i class="dot"></i><span>Not connected</span></span></div>
+<div class="row"><span class="label">Velux</span><span id="veluxState" class="state"><i class="dot"></i><span>Checking</span></span></div>
+<div class="row"><span class="label">Bulldog engine</span><span id="bulldogState" class="state"><i class="dot"></i><span>Checking</span></span></div>
+<div class="row printer-heading"><span class="label">Epson ET-3850</span><span id="printerState" class="state"><i class="dot"></i><span>Checking</span></span></div>
+</div><div class="printer-inks" id="printerInks" aria-label="Epson ink readings">
+<div class="ink" data-ink="Black"><span class="ink-name">Black</span><div class="ink-track"><i></i></div><span class="ink-value">—</span></div>
+<div class="ink" data-ink="Cyan"><span class="ink-name">Cyan</span><div class="ink-track"><i></i></div><span class="ink-value">—</span></div>
+<div class="ink" data-ink="Magenta"><span class="ink-name">Magenta</span><div class="ink-track"><i></i></div><span class="ink-value">—</span></div>
+<div class="ink" data-ink="Yellow"><span class="ink-name">Yellow</span><div class="ink-track"><i></i></div><span class="ink-value">—</span></div>
+</div></div>
+</section>
 </main><div class="bottom"><span id="lastUpdate">Waiting for live sources…</span><div class="buttons"><button id="sleep">☾ Sleep</button><button id="refresh">Refresh</button><a href="/heartbeats-legacy.html">Original Heartbeats</a></div></div></div><div id="sleepOverlay" role="dialog" aria-label="Screen sleep" aria-modal="true"><button id="wake" type="button">Tap to wake</button></div>
 <script>
 (()=>{'use strict';
@@ -84,10 +153,11 @@ async function get(url){const c=new AbortController();const t=setTimeout(()=>c.a
 const jobs=[
  async()=>{try{const p=await get('/api/router/status');if(!p.online||!recent(p.checked_at,40000))throw Error();status('routerState',p.link_up===false?'bad':'good',p.link_up===false?'Link down':'Connected');txt('down',val(p.download_mbps));txt('up',val(p.upload_mbps));plot(p.history); }catch(e){status('routerState','warn','No fresh reading');txt('down','—');txt('up','—');plot([]);}},
  async()=>{try{const p=await get('/api/unifi/status');const list=[['10.0.0.6','Office / Kitchen'],['10.0.0.7','Utility'],['10.0.0.8','Garden'],['10.0.0.9','Landing']];const holder=$('aps');holder.replaceChildren();for(const [ip,name]of list){const d=(p.devices||[]).find(x=>x.ip===ip);const state=d&&(d.snmp_online===true||d.online===true)&&recent(p.checked_at,120000)?'good':'warn';const row=document.createElement('div');row.className='block';const title=document.createElement('div');title.className='row';const label=document.createElement('span');label.className='apname';label.textContent=name;const tag=document.createElement('span');tag.className='state '+state;tag.innerHTML='<i class="dot"></i><span></span>';tag.lastElementChild.textContent=state==='good'?'Connected':'Not verified';title.append(label,tag);const meta=document.createElement('div');meta.className='apmeta';const clients=d&&known(d.clients)&&recent(d.clients_checked_at,180000)?d.clients+' devices':'devices —';const down=d&&known(d.rx_mbps)?'↓ '+val(d.rx_mbps)+' Mbps':'↓ —';const up=d&&known(d.tx_mbps)?'↑ '+val(d.tx_mbps)+' Mbps':'↑ —';meta.textContent=[down,up,clients].join(' · ');row.append(title,meta);holder.append(row);}status('netState','good','Monitoring');}catch(e){txt('aps','Wi-Fi monitoring unavailable');status('netState','warn','Partial');}},
- async()=>{let healthy=0;const summaries=[];for(const [name,id,bridge]of[['House','houseHue','house'],['Utility','utilityHue','utility']]){try{const p=await get('/api/hue/group?bridge='+bridge+'&group=0');if(!p.state||!Array.isArray(p.lights))throw Error();healthy++;status(id,'good','Connected');summaries.push(name+': '+(p.state.any_on===true?'lights on':p.state.any_on===false?'all off':'state unavailable'));}catch(e){status(id,'warn','No reply');summaries.push(name+': not reporting');}}status('hueState',healthy===2?'good':'warn',healthy+'/2 bridges');txt('hueRooms',summaries.join(' · '));},
+ async()=>{let healthy=0;const summaries=[];let house=null;for(const [name,id,bridge]of[['House','houseHue','house'],['Utility','utilityHue','utility']]){try{const p=await get('/api/hue/group?bridge='+bridge+'&group=0');if(!p.state||!Array.isArray(p.lights))throw Error();healthy++;if(bridge==='house')house=p;status(id,'good',name+': connected');summaries.push(name+': '+(p.state.any_on===true?'lights on':p.state.any_on===false?'all off':'state unavailable'));}catch(e){status(id,'warn',name+': no reply');summaries.push(name+': not reporting');}}status('hueState',healthy===2?'good':'warn',healthy+'/2 bridges');const lightOn=house?.state?.any_on;txt('lightingHeadline',house?(lightOn===true?'Lights are on':lightOn===false?'Lights are off':'Lights connected'):'Lighting status unavailable');const count=house&&Array.isArray(house.lights)?house.lights.length:null;txt('lightingSubtitle',house?(lightOn===true?'Lights on':lightOn===false?'All lights off':'Bridge connected')+(count!==null?' · '+count+' linked':''):'House Hue not reporting');txt('hueRooms',summaries.join(' · '));},
  async()=>{const names=['Hob','Left Oven','Right Oven','Hood','Main Kitchen Dishwasher','Back Kitchen Dishwasher'];const holder=$('applianceRows');try{const p=await get('/api/home-connect/status');const fresh=recent(p.checked_at,2700000)||(p.sse_connected===true&&recent(p.last_event_at,600000));if(!fresh)throw Error('Stale data');holder.replaceChildren();for(const name of names){const d=(p.devices||[]).find(x=>x.name===name);const ok=d&&d.connected;const state=ok?'good':'warn';const v=ok?(d.status?.OperationState||'Connected').split('.').pop():'Not reporting';const row=document.createElement('div');row.className='row';const label=document.createElement('span');label.className='label';label.textContent=name;const tag=document.createElement('span');tag.className='state '+state;tag.innerHTML='<i class="dot"></i><span></span>';tag.lastElementChild.textContent=v;row.append(label,tag);holder.append(row);}status('appState','good','Live source');}catch(e){holder.textContent='No fresh Home Connect readings';status('appState','warn','Unavailable');}},
  async()=>{const tvs=[['Lounge','10.0.0.51'],['Kitchen','10.0.0.33'],['Pit','10.0.0.47'],['Bedroom','10.0.0.45'],['Jesse','10.0.0.49'],['Ella','10.0.0.40'],['Thea','10.0.0.43']];const holder=$('tvRows');holder.replaceChildren();let lounge=null,kitchen=null;try{[lounge,kitchen]=await Promise.all([get('/api/lg/control-status'),get('/api/lg/kitchen/status')]);}catch(e){}for(const [name,ip]of tvs){const d=name==='Lounge'?lounge:name==='Kitchen'?kitchen:null;const el=document.createElement('div');el.className='device';const mark=document.createElement('i');mark.className='dot';if(d?.paired){mark.style.background='#f1cc83';mark.title='Paired; power state not checked';}const label=document.createElement('span');label.textContent=name+' · '+(d?.paired?'Paired':'Not paired');label.title=ip;el.append(mark,label);holder.append(el);} $('tvs').dataset.health=(lounge?.paired||kitchen?.paired)?'good':'warn';},
  async()=>{try{const p=await get('/api/sky/isolation');if(p.enabled){status('skyState','warn','Reads paused');txt('skyChannel','Channel readback suspended');txt('skyDetail','Manual Sky Q remote controls remain available');txt('skyNote','Diagnostic isolation active while investigating intermittent Sky Q freezes. No automatic channel probing.');return;}}catch(e){}try{const p=await get('/api/sky/now');if(p.isolated){status('skyState','warn','Reads paused');txt('skyChannel','Channel readback suspended');txt('skyDetail','Manual remote still works');txt('skyNote','Sky Q isolation active');}else if(p.available){status('skyState','good','Reporting');txt('skyChannel',p.channel||p.programme||'Sky Q active');txt('skyDetail',p.programme||p.playback||'Sky Q');txt('skyNote','Live from Sky Q when available');}else{status('skyState','warn','Unknown');txt('skyChannel','Channel unavailable');txt('skyNote','No valid programme readback');}}catch(e){status('skyState','warn','Unavailable');txt('skyChannel','No Sky Q reading');}},
+ async()=>{try{const p=await get('/api/printer/status');const online=p.online===true;status('printerState',online?'good':'warn',online?(p.state||'Online'):'No printer reply');const ink=Array.isArray(p.ink)?p.ink:[];for(const row of document.querySelectorAll('#printerInks [data-ink]')){const colour=row.dataset.ink;const item=ink.find(x=>String(x.colour||'').toLowerCase()===colour.toLowerCase());const percent=online&&item&&known(item.percent)&&item.percent<=100?Math.round(item.percent):null;row.querySelector('i').style.width=(percent===null?0:percent)+'%';row.querySelector('.ink-value').textContent=percent===null?'—':percent+'%';row.title=colour+': '+(percent===null?'not reported':percent+'%');}}catch(e){status('printerState','warn','Unavailable');for(const row of document.querySelectorAll('#printerInks [data-ink]')){row.querySelector('i').style.width='0%';row.querySelector('.ink-value').textContent='—';}}},
  async()=>{try{const p=await get('/api/velux/status');status('veluxState',p.online?'good':'warn',p.online?'Connected':'No reply');}catch(e){status('veluxState','warn','Not available');}},
  async()=>{try{const p=await get('/api/bulldog/status');status('bulldogState',recent(p.checked_at,45000)&&p.hostname?'good':'warn',recent(p.checked_at,45000)&&p.hostname?'Running':'No fresh reading');}catch(e){status('bulldogState','warn','Unavailable');}}
 ];
