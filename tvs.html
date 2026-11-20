@@ -197,6 +197,7 @@ $('tvSwitch').addEventListener('click',()=>requestRemote('input',$('tvInputs').v
 $('confirmRemoteGo').addEventListener('click',executeRemote);
 $('confirmRemoteCancel').addEventListener('click',resetRemote);
 
+let lastWolState="idle";
 async function checkWol(){
  try{
  const res=await fetch('/api/lg/wol-status',{cache:'no-store'});
@@ -204,7 +205,13 @@ async function checkWol(){
  const v=await res.json();
  wolReady=Boolean(v.ready);
  $('wakeTv').disabled=!wolReady;
- $('wolInfo').textContent=wolReady?'Wake-on-LAN MAC recorded for lounge LG. Put it into standby using the LG remote, then try Wake lounge TV.':'Wake not ready: '+(v.detail||'MAC unknown')+' Keep TV on while remembering MAC.';
+ const verify=v.verification||{};
+ const verifyText=verify.state==='checking'?' · Bulldog checking for TV response…':verify.state==='responding'?' · LG authenticated after wake request — check picture.':verify.state==='timeout'?' · No confirmed reply within 42 seconds.': '';
+ $('wolInfo').textContent=(wolReady?'Wake-on-LAN MAC recorded for lounge LG.':'Wake not ready: '+(v.detail||'MAC unknown'))+verifyText;
+ if(verify.state==='responding'||verify.state==='timeout'){
+  if(lastWolState!==verify.state)$('loungeFeedback').textContent=verify.detail||'Wake test finished';
+ }
+ lastWolState=verify.state||'idle';
  }catch(e){wolReady=false;$('wakeTv').disabled=true;$('wolInfo').textContent='Wake setup unavailable: '+e.message;}
 }
 async function wolCall(path){
@@ -223,7 +230,7 @@ $('wakeTv').addEventListener('click',()=>{
 });
 $('confirmWakeGo').addEventListener('click',()=>{cancelWake();wolCall('/api/lg/wake');});
 $('confirmWakeCancel').addEventListener('click',cancelWake);
-checkWol();
+checkWol();setInterval(()=>{if(!document.hidden)checkWol();},3500);
 readLive();setInterval(readLive,15000);
 refresh();setInterval(()=>{if(!document.hidden)refresh();},5000);
 })();
