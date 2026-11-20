@@ -29,6 +29,16 @@
 .tv-confirm button{background:#69552d;border:1px solid #edce87;border-radius:9px;color:#fff;font-weight:800;padding:10px 15px;min-height:42px;margin-right:8px;cursor:pointer}
 .tv-confirm button.cancel{background:#254454;border-color:#5e93a0}
 @media(max-width:600px){.tv-wrap{padding:15px}.tv-panel{padding:16px}.tv-subtabs button{font-size:12px;padding:10px 13px}}
+.tv-readbacks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:15px 0}
+.tv-metric{border:1px solid #426277;border-radius:12px;background:#0d2737;padding:12px;min-width:0}
+.tv-metric small{display:block;color:#a4bbcb;font-size:11px;margin-bottom:5px}
+.tv-metric strong{display:block;color:#e4fbf4;font-size:15px;overflow-wrap:anywhere}
+.tv-basic{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0}
+.tv-basic button{border:1px solid #538c91;background:#1b4355;color:#f0fffa;border-radius:9px;font-size:14px;font-weight:800;padding:10px 15px;min-height:44px;cursor:pointer}
+.tv-basic button:disabled{opacity:.4}
+.tv-basic select{background:#173b4a;color:#eefdf6;border:1px solid #79acaa;border-radius:9px;font:inherit;padding:9px}
+.tv-basic label{align-self:center;color:#c0dadc}
+@media(max-width:660px){.tv-readbacks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head>
 <body class="eldoret-dashboard eldoret-shell">
 <header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div><div class="shell-legacy-status" hidden></div></header>
@@ -54,6 +64,28 @@
 </div>
 <div class="tv-confirm" id="confirmTivvy" hidden><p>Open <strong>Tivvy Live</strong> on the lounge TV now? This will switch its current app to the browser.</p><button type="button" id="confirmLaunch">Confirm — open on TV</button><button type="button" id="cancelLaunch" class="cancel">Cancel</button></div>
 <div class="tv-feedback" id="loungeFeedback" role="status">Waiting for live Bulldog status…</div>
+<h3>Live return information</h3>
+<div class="tv-readbacks" aria-live="polite">
+<div class="tv-metric"><small>Power / reachability</small><strong id="tvPower">Checking…</strong></div>
+<div class="tv-metric"><small>Current app</small><strong id="tvApp">Checking…</strong></div>
+<div class="tv-metric"><small>Current source</small><strong id="tvSource">Checking…</strong></div>
+<div class="tv-metric"><small>Volume</small><strong id="tvVolume">Checking…</strong></div>
+<div class="tv-metric"><small>Live channel</small><strong id="tvChannel">Checking…</strong></div>
+<div class="tv-metric"><small>Last readback</small><strong id="tvChecked">Checking…</strong></div>
+</div>
+<h3>Basic remote controls · experimental</h3>
+<p class="tv-note">The controls below send real LG commands. They do not assume success until the television acknowledges them. Some features may need additional TV permission.</p>
+<div class="tv-basic" id="tvRemote">
+<button data-tv-action="volume_down" type="button">Vol −</button>
+<button data-tv-action="volume_up" type="button">Vol +</button>
+<button data-tv-action="mute" type="button">Mute</button>
+<button data-tv-action="unmute" type="button">Unmute</button>
+<button data-tv-action="channel_down" type="button">CH −</button>
+<button data-tv-action="channel_up" type="button">CH +</button>
+</div>
+<div class="tv-basic"><label for="tvInputs">Source</label><select id="tvInputs" disabled><option value="">Checking TV inputs…</option></select><button type="button" id="tvSwitch" disabled>Switch source</button></div>
+<div class="tv-confirm" id="confirmRemote" hidden><p id="confirmRemoteText">Send this command to the lounge LG?</p><button type="button" id="confirmRemoteGo">Confirm command</button><button type="button" class="cancel" id="confirmRemoteCancel">Cancel</button></div>
+<p class="tv-note" id="tvTelemetryDetail">Readings come directly from the television. Unknown means the TV did not provide that reading.</p>
 <p class="tv-meta">Saved shortcut: https://is.gd/TivvyTV26 · TV must currently be switched on. Standby wake-up is a future improvement.</p>
 </section>
 <section class="tv-panel" id="panel-kitchen" role="tabpanel" aria-labelledby="tab-kitchen" hidden><h2>Kitchen TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">We will add secure pairing and Tivvy TV / browser controls once we identify this television. No commands are sent to this room yet.</p></section>
@@ -77,6 +109,59 @@ $('tivvyOpen').addEventListener('click',()=>{if(!last.paired)return;$('confirmTi
 $('cancelLaunch').addEventListener('click',cancelConfirm);
 $('confirmLaunch').addEventListener('click',()=>command('/api/lg/open-tivvy'));
 $('refreshLounge').addEventListener('click',refresh);
+let liveStatus={},readBusy=false,remoteAction=null,remoteTimer=null;
+async function readLive(){
+ if(readBusy||document.hidden)return;readBusy=true;
+ try{
+ const r=await fetch('/api/lg/live',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
+ const p=await r.json();liveStatus=p;
+ const val=v=>v===null||v===undefined||v===''?'Unknown':String(v);
+ $('tvPower').textContent=p.online===true?val(p.power):p.online===false?'No response':'Checking…';
+ $('tvApp').textContent=val(p.app);
+ $('tvSource').textContent=val(p.input);
+ $('tvVolume').textContent=p.volume===null||p.volume===undefined?'Unknown':p.volume+' / 100'+(p.muted===true?' · muted':'');
+ $('tvChannel').textContent=val(p.channel);
+ $('tvChecked').textContent=p.checked_at?new Date(p.checked_at).toLocaleTimeString('en-GB'):'Never';
+ $('tvTelemetryDetail').textContent=p.detail||'Read from LG webOS';
+ const selector=$('tvInputs'),prior=selector.value;selector.replaceChildren();
+ const opt=document.createElement('option');opt.value='';opt.textContent='Select HDMI / source';selector.append(opt);
+ for(const item of (p.inputs||[])){
+  const option=document.createElement('option');option.value=item.id;
+  option.textContent=item.label+(item.connected===false?' · not connected':'');selector.append(option);
+ }
+ if((p.inputs||[]).some(x=>x.id===prior))selector.value=prior;
+ selector.disabled=!p.online||!p.inputs?.length;
+ $('tvSwitch').disabled=selector.disabled||!selector.value;
+ document.querySelectorAll('[data-tv-action]').forEach(b=>b.disabled=!p.online);
+ }catch(e){$('tvTelemetryDetail').textContent='Unable to retrieve LG readback: '+e.message;}
+ finally{readBusy=false;}
+}
+function resetRemote(){clearTimeout(remoteTimer);remoteAction=null;$('confirmRemote').hidden=true}
+function requestRemote(action,input_id){
+ if(!liveStatus.online){$('loungeFeedback').textContent='TV must be responding before sending controls.';return;}
+ remoteAction={action,input_id};
+ const labels={volume_up:'raise the volume',volume_down:'lower the volume',mute:'mute audio',unmute:'unmute audio',
+  channel_up:'go up one channel',channel_down:'go down one channel',input:'switch source to '+$('tvInputs').selectedOptions[0]?.textContent};
+ $('confirmRemoteText').textContent='Ask lounge LG to '+(labels[action]||action)+'?';
+ $('confirmRemote').hidden=false;
+ clearTimeout(remoteTimer);remoteTimer=setTimeout(resetRemote,10000);
+}
+async function executeRemote(){
+ const action=remoteAction;resetRemote();if(!action)return;
+ $('loungeFeedback').textContent='Sending '+action.action.replaceAll('_',' ')+' to lounge LG…';
+ try{
+ const r=await fetch('/api/lg/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(action)});
+ if(!r.ok)throw Error('HTTP '+r.status);
+ const data=await r.json();$('loungeFeedback').textContent=data.detail||'Command complete';
+ }catch(e){$('loungeFeedback').textContent='LG command failed: '+e.message}
+ setTimeout(readLive,900);
+}
+document.querySelectorAll('[data-tv-action]').forEach(b=>b.addEventListener('click',()=>requestRemote(b.dataset.tvAction)));
+$('tvInputs').addEventListener('change',()=>{$('tvSwitch').disabled=!liveStatus.online||!$('tvInputs').value});
+$('tvSwitch').addEventListener('click',()=>requestRemote('input',$('tvInputs').value));
+$('confirmRemoteGo').addEventListener('click',executeRemote);
+$('confirmRemoteCancel').addEventListener('click',resetRemote);
+readLive();setInterval(readLive,15000);
 refresh();setInterval(()=>{if(!document.hidden)refresh();},5000);
 })();
 </script><script src="kiosk.js?v=2"></script><script src="mobile.js?v=3"></script>
