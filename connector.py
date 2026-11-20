@@ -359,8 +359,8 @@ def _lg_write(data):
 def _lg_register_message(key=None):
     manifest={"manifestVersion":1,"appVersion":"1.0","signed":{"created":"20261120",
               "appId":"com.eldoret.remote","vendorId":"com.eldoret","localizedAppNames":{"":"Eldoret"},
-              "localizedVendorNames":{"":"Eldoret"},"permissions":["LAUNCH","READ_RUNNING_APPS"]},
-              "permissions":["LAUNCH","READ_RUNNING_APPS"]}
+              "localizedVendorNames":{"":"Eldoret"},"permissions":LG_LIVE_PERMISSIONS},
+              "permissions":LG_LIVE_PERMISSIONS}
     payload={"forcePairing":False,"pairingType":"PROMPT","manifest":manifest}
     if key: payload["client-key"]=key
     return {"type":"register","id":"eldoret-register","payload":payload}
@@ -452,6 +452,133 @@ def lg_bulldog_launch():
     finally:
         ws.close()
 
+
+
+# Experimental lounge LG telemetry. The TV is the source of truth; never infer state from our buttons.
+LG_LIVE_LOCK=threading.Lock()
+LG_LIVE_CACHE={"at":0,"data":None}
+LG_LIVE_PERMISSIONS=["LAUNCH","READ_RUNNING_APPS","READ_APP_STATUS","READ_INPUT_DEVICE_LIST",
+                     "READ_CURRENT_CHANNEL","READ_POWER_STATE","CONTROL_AUDIO","CONTROL_INPUT_TV",
+                     "CONTROL_POWER"]
+def _lg_open_paired():
+    saved=_lg_saved()
+    if not saved or not saved.get("client_key"):
+        raise RuntimeError("LG is not paired")
+    ws=_LGWebSocket(LG_LOUNGE_IP)
+    try:
+        ws.connect()
+        if saved.get("fingerprint") != ws.fingerprint:
+            raise RuntimeError("Paired LG certificate changed. Connection blocked.")
+        ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+        deadline=time.monotonic()+10
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(2)
+            try: msg=ws.recv_json()
+            except socket.timeout: continue
+            if msg.get("type")=="registered": return ws
+            if msg.get("type")=="error": raise RuntimeError("LG declined existing pairing")
+        raise RuntimeError("LG did not confirm pairing")
+    except Exception:
+        ws.close()
+        raise
+
+def _lg_ssap_request(ws, request_id, uri, payload=None):
+    obj={"type":"request","id":request_id,"uri":uri}
+    if payload is not None:obj["payload"]=payload
+    ws.send(json.dumps(obj))
+    deadline=time.monotonic()+2.5
+    while time.monotonic()<deadline:
+        ws.sock.settimeout(max(.2, deadline-time.monotonic()))
+        try: reply=ws.recv_json()
+        except socket.timeout: break
+        if reply.get("id") != request_id: continue
+        data=reply.get("payload") or {}
+        if reply.get("type")=="error" or data.get("returnValue") is False:
+            return None, False
+        return data, True
+    return None, False
+
+def lg_lounge_live():
+    now=time.monotonic()
+    with LG_LIVE_LOCK:
+        cached=LG_LIVE_CACHE["data"]
+        if cached is not None and now-LG_LIVE_CACHE["at"]<15:
+            return dict(cached)
+        # Keep UI responsive if another poll is underway (one probe per 15 s).
+        if LG_LIVE_CACHE.get("busy"):
+            return dict(cached) if cached else {"online":None,"paired":True,"detail":"Reading live TV status...","ip":LG_LOUNGE_IP}
+        LG_LIVE_CACHE["busy"]=True
+    data={"ip":LG_LOUNGE_IP,"online":False,"source":"LG webOS SSAP readback",
+          "checked_at":datetime.now(timezone.utc).isoformat(),
+          "app":None,"input":None,"inputs":[],"volume":None,"muted":None,
+          "channel":None,"power":None,"detail":"Waiting for TV response"}
+    ws=None
+    try:
+        ws=_lg_open_paired()
+        data["online"]=True
+        data["power"]="On (responding)"
+        calls=[("application","ssap://com.webos.applicationManager/getForegroundAppInfo"),
+               ("inputs","ssap://tv/getExternalInputList"),
+               ("volume","ssap://audio/getVolume"),
+               ("channel","ssap://tv/getCurrentChannel"),
+               ("power","ssap://com.webos.service.tvpower/power/getPowerState")]
+        supported=0
+        for key,uri in calls:
+            res,ok=_lg_ssap_request(ws,"eldoret-read-"+key,uri)
+            if not ok:continue
+            supported+=1
+            if key=="application":
+                app=res.get("appId") or res.get("id")
+                data["app"]=str(app)[:100] if app else None
+                data["input"]=str(res.get("appId"))[:100] if app and (".externalinput." in str(app) or app.startswith("com.webos.app.hdmi")) else None
+            elif key=="inputs":
+                data["inputs"]=[{"id":str(v.get("id",""))[:80],"label":str(v.get("label") or v.get("id") or "")[:80],
+                                 "connected":v.get("connected")} for v in (res.get("devices") or [])[:16]
+                                if isinstance(v,dict) and v.get("id")]
+            elif key=="volume":
+                v=res.get("volume")
+                data["volume"]=v if type(v) is int and 0<=v<=100 else None
+                data["muted"]=res.get("muted") if type(res.get("muted")) is bool else None
+            elif key=="channel":
+                value=res.get("channelName") or res.get("channelNumber")
+                data["channel"]=str(value)[:100] if value else None
+            elif key=="power":
+                data["power"]=str(res.get("state") or "On (responding)")[:80]
+        data["detail"]="TV responded; "+str(supported)+" of 5 readback services available."
+    except Exception:
+        data["detail"]="Lounge LG is unreachable or pairing must be renewed."
+    finally:
+        if ws: ws.close()
+        with LG_LIVE_LOCK:
+            LG_LIVE_CACHE.update(at=time.monotonic(),data=dict(data),busy=False)
+    return data
+
+def lg_lounge_control(action, input_id=None):
+    # No raw URI or arbitrary command passthrough from the browser.
+    actions={"volume_up":("ssap://audio/volumeUp",None),
+             "volume_down":("ssap://audio/volumeDown",None),
+             "mute":("ssap://audio/setMute",{"mute":True}),
+             "unmute":("ssap://audio/setMute",{"mute":False}),
+             "channel_up":("ssap://tv/channelUp",None),
+             "channel_down":("ssap://tv/channelDown",None)}
+    if action=="input":
+        info=lg_lounge_live()
+        choices=[x["id"] for x in info.get("inputs",[]) if x.get("id")]
+        if not input_id or input_id not in choices or not info.get("online"):
+            raise ValueError("Please select a currently reported LG input")
+        uri,payload="ssap://tv/switchInput",{"inputId":input_id}
+    elif action in actions:
+        uri,payload=actions[action]
+    else:raise ValueError("Unsupported TV control")
+    ws=_lg_open_paired()
+    try:
+        response,ok=_lg_ssap_request(ws,"eldoret-control",uri,payload)
+        if not ok:raise RuntimeError("LG did not confirm the requested control")
+    finally:
+        ws.close()
+    with LG_LIVE_LOCK:
+        LG_LIVE_CACHE["at"]=0
+    return {"ok":True,"detail":"LG acknowledged "+action.replace("_"," ")+". Await fresh readback."}
 
 def lg_tv_status(ip=None):
     ip=ip or _registry_ip("lg_tv_1","10.0.0.33")
@@ -3456,6 +3583,9 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 self.send_bytes(json.dumps({"candidates":[],"error":"LG discovery unavailable"}).encode())
             return
+        if path == "/api/lg/live":
+            self.send_bytes(json.dumps(lg_lounge_live()).encode())
+            return
         if path == "/api/lg/control-status":
             self.send_bytes(json.dumps(lg_bulldog_status()).encode())
             return
@@ -3573,7 +3703,7 @@ class Handler(BaseHTTPRequestHandler):
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
         payload = json.loads(raw_body or b"{}")
-        if self.path in ("/api/lg/pair","/api/lg/open-tivvy"):
+        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control"):
             # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
             origin=self.headers.get("Origin","")
             host=self.headers.get("Host","")
@@ -3582,12 +3712,16 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_error(403); return
             if self.headers.get("Content-Type","").split(";")[0].strip()!="application/json" or len(raw_body)>128:
                 self.send_error(400); return
-            if payload:
+            if self.path!="/api/lg/control" and payload:
+                self.send_error(400); return
+            if self.path=="/api/lg/control" and (not isinstance(payload,dict) or set(payload)-{"action","input_id"}):
                 self.send_error(400); return
             try:
                 if self.path=="/api/lg/pair":
                     started=lg_bulldog_pair_start()
                     result={"ok":started,"detail":"Pairing request starting; look at lounge LG." if started else "Already attempting pairing."}
+                elif self.path=="/api/lg/control":
+                    result=lg_lounge_control(payload.get("action"),payload.get("input_id"))
                 else:
                     result=lg_bulldog_launch()
                 self.send_bytes(json.dumps(result).encode())
