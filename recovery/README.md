@@ -44,7 +44,7 @@ An older archive made on **19 Nov 2026** is useful as a separate historical fall
 
 1. Use Raspberry Pi Imager on Mac to flash a compatible Raspberry Pi OS Desktop image onto a fresh SD or SSD. Configure normal user, hostname, network and SSH.
 2. Start the replacement Pi. Copy this `recovery/` folder plus the **verified** private archive onto its local storage (e.g. in `~/Bulldog-Recovery/`).
-3. From the Pi desktop, right-click `install-eldoret.sh` and select **Execute in Terminal**, or run `bash ~/Bulldog-Recovery/install-eldoret.sh` in Terminal.
+3. Copy the contents of this `recovery/` folder into `~/Bulldog-Recovery/` on the newly flashed Pi. Double-click `Install Eldoret.desktop` and approve the desktop's **Trust and Launch** prompt if shown. If that launcher is unavailable on your Pi OS version, run `bash ~/Bulldog-Recovery/install-eldoret.sh` in Terminal (or choose **Execute in Terminal** for the `.sh` file).
 4. When asked, paste the **full path** to the private archive (e.g. `/home/username/Downloads/bulldog-private-20261120.tar.gz`). The installer verifies all files before touching services.
 5. Type `INSTALL` to proceed. It installs Python/Net-SNMP dependencies, restores private files, downloads `manager.py` and `connector.py` (or uses same-folder copies), creates a user-owned systemd service and checks local HTTP.
 6. Open `http://NEW-PI-IP:8765/` and verify Hue, Sky remote, DrayTek WAN2, four UniFi APs, Home Connect, Sky artwork, PS5 and LG discovery. Reconfigure kiosk/browser, display rotation and DSI drivers as needed.
