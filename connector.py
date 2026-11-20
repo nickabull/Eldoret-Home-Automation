@@ -3094,6 +3094,7 @@ class Handler(BaseHTTPRequestHandler):
             "/network.html": ("network.html", "text/html; charset=utf-8"),
             "/bulldog.html": ("bulldog.html", "text/html; charset=utf-8"),
             "/heartbeats.html": ("heartbeats.html", "text/html; charset=utf-8"),
+            "/lg-tivvy-test.html": ("lg-tivvy-test.html", "text/html; charset=utf-8"),
             "/av.html": ("av.html", "text/html; charset=utf-8"),
             "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
             "/office.html": ("office.html", "text/html; charset=utf-8"),
