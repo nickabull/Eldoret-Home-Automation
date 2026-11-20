@@ -3916,6 +3916,7 @@ class Handler(BaseHTTPRequestHandler):
             "/network.html": ("network.html", "text/html; charset=utf-8"),
             "/bulldog.html": ("bulldog.html", "text/html; charset=utf-8"),
             "/heartbeats.html": ("heartbeats.html", "text/html; charset=utf-8"),
+            "/heartbeats-v2.html": ("heartbeats-v2.html", "text/html; charset=utf-8"),
             "/lg-tivvy-test.html": ("lg-tivvy-test.html", "text/html; charset=utf-8"),
             "/lg-bulldog.html": ("lg-bulldog.html", "text/html; charset=utf-8"),
             "/av.html": ("av.html", "text/html; charset=utf-8"),
