@@ -59,7 +59,7 @@ NETWORK_PROBES = [
  {"ip":"10.0.0.18","name":"Sky Q","ports":[49160,49153]},
  {"ip":"10.0.0.22","name":"VELUX Gateway","ports":[80,443]},
  {"ip":"10.0.0.27","name":"Eldoret Chromebook","ports":[8765]},
- {"ip":"10.0.0.33","name":"LG webOS TV","ports":[3000,3001,80]},
+ {"ip":"10.0.0.51","name":"LG webOS TV","ports":[3000,3001,80]},
  {"ip":"10.0.0.43","name":"LG device","ports":[3000,3001,80]},
  {"ip":"10.0.0.47","name":"LG device","ports":[3000,3001,80]},
  {"ip":"10.0.0.48","name":"PlayStation","ports":[80,443,9295,9304]}
@@ -201,11 +201,11 @@ def _tcp_open(ip, port, timeout=0.25):
 def lg_pair_page():
     return """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pair LG TV</title>
 <style>body{font-family:system-ui;background:#09111d;color:#eef5ff;padding:32px}button{font-size:20px;padding:16px 24px;border:0;border-radius:14px}pre{white-space:pre-wrap;background:#111d2c;padding:18px;border-radius:14px}</style></head>
-<body><h1>Pair Eldoret with LG TV</h1><p>TV: 10.0.0.33. Press Pair, then accept the prompt on the television.</p><button id="go">Pair TV</button><pre id="out">Ready.</pre>
+<body><h1>Pair Eldoret with LG TV</h1><p>TV: 10.0.0.51. Press Pair, then accept the prompt on the television.</p><button id="go">Pair TV</button><pre id="out">Ready.</pre>
 <script>
 const out=document.querySelector("#out");
 document.querySelector("#go").onclick=()=>{
- const ws=new WebSocket("ws://10.0.0.33:3000/");
+ const ws=new WebSocket("ws://10.0.0.51:3000/");
  ws.onopen=()=>{out.textContent="Connected. Sending pairing request…";
   ws.send(JSON.stringify({type:"register",id:"eldoret-register",payload:{forcePairing:false,pairingType:"PROMPT",manifest:{manifestVersion:1,permissions:["CONTROL_AUDIO","CONTROL_INPUT_TV","CONTROL_POWER","READ_APP_STATUS","READ_CURRENT_CHANNEL","READ_INPUT_DEVICE_LIST","READ_RUNNING_APPS","READ_POWER_STATE","READ_INSTALLED_APPS"]}}}));
  };
@@ -253,7 +253,7 @@ def lg_discovery_status():
 
 
 # Lounge webOS pilot: one fixed IP, explicit user-triggered control, private key only on Bulldog.
-LG_LOUNGE_IP = "10.0.0.51"
+LG_LOUNGE_IP = "10.0.0.52"
 LG_LOUNGE_KEY_FILE = os.path.expanduser("~/eldoret-connector/lg/lounge.json")
 LG_LOUNGE_LOCK = threading.Lock()
 LG_LOUNGE_JOB = {"state":"idle","detail":"Ready to request pairing.","at":None}
@@ -461,10 +461,10 @@ def lg_bulldog_launch():
 
 
 # Independent kitchen LG trial. Credentials stay on Bulldog, never in GitHub or browser.
-LG_KITCHEN_IP="10.0.0.33"
+LG_KITCHEN_IP="10.0.0.51"
 LG_KITCHEN_KEY_FILE=os.path.expanduser("~/eldoret-connector/lg/kitchen.json")
 LG_KITCHEN_LOCK=threading.Lock()
-LG_KITCHEN_JOB={"state":"idle","detail":"Kitchen TV ready for pairing.","at":None}
+LG_KITCHEN_JOB={"state":"idle","detail":"No live connection tested yet.","at":None}
 LG_KITCHEN_BUSY=False
 
 def _lg_kitchen_saved():
@@ -473,7 +473,12 @@ def _lg_kitchen_saved():
         st=os.stat(LG_KITCHEN_KEY_FILE)
         if st.st_uid!=os.getuid() or stat.S_IMODE(st.st_mode)&0o077:
             raise RuntimeError("Kitchen TV pairing permissions unsafe")
-        with open(LG_KITCHEN_KEY_FILE,encoding="utf-8") as f:return json.load(f)
+        with open(LG_KITCHEN_KEY_FILE,encoding="utf-8") as f:record=json.load(f)
+        # 20 Nov 2026: same physical kitchen LG moved from DHCP .33 to reserved .51.
+        # This is an in-memory compatibility mapping, not a credential rewrite.
+        if record.get("ip")=="10.0.0.33" and record.get("client_key") and record.get("fingerprint"):
+            record["ip"]=LG_KITCHEN_IP
+        return record
     except FileNotFoundError:
         return None
 
@@ -548,7 +553,7 @@ def _lg_kitchen_pair_task():
     global LG_KITCHEN_BUSY
     ws=_LGWebSocket(LG_KITCHEN_IP)
     try:
-        _lg_kitchen_set("connecting","Connecting securely to kitchen LG 10.0.0.33...")
+        _lg_kitchen_set("connecting","Connecting securely to kitchen LG 10.0.0.51...")
         saved=_lg_kitchen_saved()
         ws.connect()
         if saved and saved.get("fingerprint")!=ws.fingerprint:
@@ -1316,7 +1321,7 @@ def lg_lounge_wake():
     return {"ok":True,"detail":"Wake packet sent. Bulldog will check for a confirmed LG reply for up to 42 seconds."}
 
 def lg_tv_status(ip=None):
-    ip=ip or _registry_ip("lg_tv_1","10.0.0.33")
+    ip=ip or _registry_ip("lg_tv_1","10.0.0.51")
     ports=[p for p in (80,3000,3001) if _tcp_open(ip,p,timeout=0.5)]
     return {
         "ip":ip,
