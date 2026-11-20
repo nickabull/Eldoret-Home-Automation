@@ -684,7 +684,7 @@ def lg_kitchen_wake():
     mac=wol["mac"]
     if not re.fullmatch(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}",str(mac)):
         raise RuntimeError("Kitchen MAC format invalid")
-    packet=b"\\xff"*6+bytes.fromhex(mac.replace(":",""))*16
+    packet=bytes([255])*6+bytes.fromhex(mac.replace(":",""))*16
     sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     try:
         sock.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST,1)
