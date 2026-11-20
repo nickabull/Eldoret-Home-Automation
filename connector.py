@@ -619,6 +619,33 @@ def lg_lounge_control(action, input_id=None):
 # Lounge WOL pilot. MAC is learned from the LAN neighbour entry only after
 # authenticating to the ALREADY PAIRED TV; no guessed MAC or broadcast scanning.
 LG_WOL_FILE=os.path.expanduser("~/eldoret-connector/lg/lounge-wol.json")
+LG_WOL_VERIFY_LOCK=threading.Lock()
+LG_WOL_VERIFY={"state":"idle","detail":"No wake test has run.","checked_at":None}
+def _lg_wol_monitor():
+    # Distinguish "magic packet sent" from a TV verified through its existing pairing.
+    deadline=time.monotonic()+42
+    while time.monotonic()<deadline:
+        ws=None
+        try:
+            ws=_lg_open_paired()
+            reply,ok=_lg_ssap_request(ws,"eldoret-wol-verify",
+                "ssap://com.webos.applicationManager/getForegroundAppInfo")
+            if ok:
+                with LG_WOL_VERIFY_LOCK:
+                    LG_WOL_VERIFY.update(state="responding",detail=
+                        "LG authenticated and responded after the wake packet. Please visually confirm the picture.",
+                        checked_at=datetime.now(timezone.utc).isoformat())
+                return
+        except Exception:
+            pass
+        finally:
+            if ws:ws.close()
+        time.sleep(3)
+    with LG_WOL_VERIFY_LOCK:
+        LG_WOL_VERIFY.update(state="timeout",detail=
+            "No authenticated LG response within 42 seconds. Wake not verified; check LG standby network settings.",
+            checked_at=datetime.now(timezone.utc).isoformat())
+
 def _lg_mac_from_arp(ip):
     import re
     with open("/proc/net/arp",encoding="ascii") as f:
@@ -640,8 +667,10 @@ def lg_lounge_wol_status():
             raise RuntimeError("Wake configuration permissions unsafe")
         with open(LG_WOL_FILE,encoding="utf-8") as f:saved=json.load(f)
     except FileNotFoundError:pass
+    with LG_WOL_VERIFY_LOCK: verification=dict(LG_WOL_VERIFY)
     return {"ready":bool(saved and saved.get("mac") and saved.get("ip")==LG_LOUNGE_IP),
             "ip":LG_LOUNGE_IP,"mac":saved.get("mac") if saved else None,
+            "verification":verification,
             "detail":"MAC securely recorded from paired lounge LG" if saved else "TV MAC not recorded. Learn it while television is on."}
 
 def lg_lounge_learn_mac():
@@ -692,7 +721,11 @@ def lg_lounge_wake():
         sock.settimeout(2)
         sock.sendto(packet,("10.0.0.255",9))
     finally:sock.close()
-    return {"ok":True,"detail":"Wake-on-LAN magic packet sent to saved lounge TV. This does not prove it woke; check the screen and live status."}
+    with LG_WOL_VERIFY_LOCK:
+        LG_WOL_VERIFY.update(state="checking",detail="Wake packet sent. Waiting for authenticated LG response...",
+                             checked_at=datetime.now(timezone.utc).isoformat())
+    threading.Thread(target=_lg_wol_monitor,daemon=True).start()
+    return {"ok":True,"detail":"Wake packet sent. Bulldog will check for a confirmed LG reply for up to 42 seconds."}
 
 def lg_tv_status(ip=None):
     ip=ip or _registry_ip("lg_tv_1","10.0.0.33")
