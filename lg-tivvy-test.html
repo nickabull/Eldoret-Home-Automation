@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eldoret · LG lounge pilot</title><style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#091423;color:#eafaf7;font:16px system-ui,Arial,sans-serif;padding:24px}
+main{max-width:670px;margin:auto}h1{font-size:29px;margin-bottom:9px}p{line-height:1.55;color:#aecbcd}
+.panel{border:1px solid #4b837b;border-radius:16px;background:#142637;padding:20px;margin:20px 0}
+button{padding:15px 22px;border-radius:10px;border:1px solid #6bbfb0;background:#20594f;color:white;font:700 16px system-ui;cursor:pointer;margin:6px 8px 6px 0}
+button:disabled{opacity:.45;cursor:default}button:focus-visible{outline:3px solid #a9ffe4;outline-offset:3px}
+#status{background:#081523;border-left:3px solid #8adeca;padding:12px 14px;min-height:55px;white-space:pre-wrap}
+small{color:#a6c3c4}a{color:#aafce3}b{color:white}
+</style></head><body><main>
+<h1>📺 Lounge LG · Tivvy TV pilot</h1>
+<p>First TV candidate: <b>10.0.0.51</b> · currently assumed to be the lounge TV, not yet room-verified.</p>
+<div class="panel">
+<p><b>1. Pair the television</b></p>
+<p>Switch on the lounge LG and watch its screen. Press Pair, then <b>allow</b> Eldoret when the TV asks. Only pair if the prompt appears on your lounge television.</p>
+<button id="pair" type="button">Pair 10.0.0.51</button>
+<p><b>2. Open the Tivvy match screen</b></p>
+<p>After successful pairing, press the separate button to launch the LG browser at <a href="https://is.gd/TivvyTV26" target="_blank" rel="noopener noreferrer">is.gd/TivvyTV26</a>.</p>
+<button id="launch" type="button" disabled>Open Tivvy TV on LG</button>
+<p id="status" role="status">Ready. No TV commands have been sent.</p>
+<small>This is a one-TV, manual pilot. It does not wake the television, change volume, switch inputs, or affect the other four LGs. The private pairing key is held in this browser tab's session storage; it is never displayed, submitted to Eldoret or committed to GitHub. Close this tab when finished. Production pairing will require secure Bulldog-side storage.</small>
+</div></main>
+<script>
+(()=>{
+"use strict";
+const IP="10.0.0.51",URL="https://is.gd/TivvyTV26",KEY="eldoret-lg-lounge-pilot-"+IP;
+const status=document.getElementById("status"),pair=document.getElementById("pair"),launch=document.getElementById("launch");
+let ws=null,key=sessionStorage.getItem(KEY)||"",serial=0,launchPending=false;
+function tell(msg){status.textContent=msg}
+function buttons(){launch.disabled=!key||!ws||ws.readyState!==WebSocket.OPEN;}
+function send(obj){ws.send(JSON.stringify(obj))}
+function open(onReady){
+ if(ws&&ws.readyState===WebSocket.OPEN){onReady();return}
+ if(ws){try{ws.close()}catch(_){}}const token=++serial;
+ ws=new WebSocket("ws://"+IP+":3000/");
+ ws.onopen=()=>{if(token!==serial)return;onReady();buttons()};
+ ws.onmessage=event=>{
+  if(token!==serial)return;
+  let message={};try{message=JSON.parse(event.data)}catch(_){tell("Unexpected television response");return}
+  if(message.type==="registered"){
+   const privateKey=message.payload&&message.payload["client-key"];
+   if(typeof privateKey==="string"&&privateKey.length>10){key=privateKey;sessionStorage.setItem(KEY,key)}
+   tell("LG paired and responding. You can now press Open Tivvy TV.");
+   buttons();return;
+  }
+  if(message.id==="eldoret-launch"){
+   if(message.type==="error"){tell("LG rejected the browser launch. Try again or send the non-secret error description.");}
+   else{tell("LG accepted the browser launch request. Please check the television — URL loading is not independently verified.");}
+   return;
+  }
+  if(message.type==="error"){tell("TV returned a pairing/control error. Check permission on the screen. No private keys are shown.");}
+ };
+ ws.onerror=()=>{tell("Unable to connect to 10.0.0.51:3000 from this browser. Is the TV still on and on the same network?");buttons()};
+ ws.onclose=()=>{if(token===serial){buttons();if(key)tell("TV connection closed. Press Pair to reconnect, then try again.")}};
+ }
+ function register(){
+  const manifest={manifestVersion:1,permissions:["LAUNCH","READ_RUNNING_APPS"]};
+  send({type:"register",id:"eldoret-register",payload:{
+   forcePairing:false,pairingType:"PROMPT",...(key?{"client-key":key}:{}),
+   manifest
+  }});
+ }
+ pair.onclick=()=>{pair.disabled=true;tell("Connecting to LG 10.0.0.51… Watch the lounge television for a permission prompt.");
+  open(()=>{register();pair.disabled=false;tell("Registration sent. If a prompt appears, approve it on the lounge television.");});
+  setTimeout(()=>{pair.disabled=false},6000);
+ };
+ launch.onclick=()=>{
+  if(!key){tell("Pair the LG first.");return}
+  launch.disabled=true;
+  const go=()=>{register();setTimeout(()=>{
+    if(!ws||ws.readyState!==WebSocket.OPEN){tell("Connection lost before launch.");return}
+    send({type:"request",id:"eldoret-launch",uri:"ssap://system.launcher/launch",payload:{
+      id:"com.webos.app.browser",params:{target:URL}
+    }});
+    tell("Browser launch sent. Check the lounge TV.");
+    buttons();
+   },550);};
+  tell("Connecting to the previously paired TV…");
+  open(go);
+ };
+})();
+</script></body></html>
