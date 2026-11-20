@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.2.0"><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018">
+<title>TVs · Eldoret</title><meta name="eldoret-tv-build" content="1.3.0"><link rel="stylesheet" href="styles.css?v=55"><meta name="theme-color" content="#0b1018">
 <style>
 .tv-version{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#a9c9d4;font-size:12px;margin:-7px 0 15px}.tv-version strong{color:#a5f0dd}.tv-version button{border:1px solid #487c90;background:#173b4a;color:#fff;padding:7px 11px;border-radius:9px;cursor:pointer;font:inherit;font-weight:700}
 .tv-wrap{max-width:1180px;margin:0 auto;padding:24px 24px 50px}
@@ -54,13 +54,14 @@
 <nav class="tabs dashboard-tabs eldoret-primary" aria-label="Primary navigation"><a href="index.html">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="tvs.html" class="active" aria-current="page">TVs</a><a href="av.html">Jesse / AV</a><a href="network.html">Network</a><a href="bulldog.html">Bulldog</a><a href="office.html">Epson</a><a href="appliances.html">Appliances</a><a href="radio.html">Radio</a></nav>
 <main class="tv-wrap">
 <div class="tv-kicker">HOME ENTERTAINMENT · LG WEBOS</div><h1 class="tv-title">Your televisions</h1>
-<p class="tv-intro">Six rooms. One Eldoret control centre. The lounge is our working pilot; other rooms are reserved until we've identified and paired each television.</p>
-<div class="tv-version" role="status"><strong>TV build v1.2.0</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
+<p class="tv-intro">Seven TVs. All seven network addresses are now recorded from the DrayTek. The lounge is paired and fully operational; the other rooms are ready for individual LG pairing.</p>
+<div class="tv-version" role="status"><strong>TV build v1.3.0</strong><span id="tvVersionStatus">Loaded from Bulldog</span><button type="button" id="tvCheckUpdate">Check for update</button></div>
 <div class="tv-subtabs" role="tablist" aria-label="Television by room">
 <button type="button" id="tab-lounge" role="tab" aria-selected="true" aria-controls="panel-lounge" data-room="lounge">Lounge TV</button>
 <button type="button" id="tab-kitchen" role="tab" aria-selected="false" aria-controls="panel-kitchen" data-room="kitchen">Kitchen TV</button>
 <button type="button" id="tab-pit" role="tab" aria-selected="false" aria-controls="panel-pit" data-room="pit">Pit TV</button>
 <button type="button" id="tab-bedroom" role="tab" aria-selected="false" aria-controls="panel-bedroom" data-room="bedroom">Main bedroom TV</button>
+<button type="button" id="tab-jesse" role="tab" aria-selected="false" aria-controls="panel-jesse" data-room="jesse">Jesse's TV</button>
 <button type="button" id="tab-ella" role="tab" aria-selected="false" aria-controls="panel-ella" data-room="ella">Ella's TV</button>
 <button type="button" id="tab-thea" role="tab" aria-selected="false" aria-controls="panel-thea" data-room="thea">Thea's TV</button>
 </div>
@@ -115,13 +116,44 @@
 <div class="tv-basic"><label for="tvInputs">Source</label><select id="tvInputs" disabled><option value="">Checking TV inputs…</option></select><button type="button" id="tvSwitch" disabled>Switch source</button></div>
 <div class="tv-confirm" id="confirmRemote" hidden><p id="confirmRemoteText">Send this command to the lounge LG?</p><button type="button" id="confirmRemoteGo">CONFIRM</button><button type="button" class="cancel" id="confirmRemoteCancel">Cancel</button></div>
 <p class="tv-note" id="tvTelemetryDetail">Readings come directly from the television. Unknown means the TV did not provide that reading.</p>
-<p class="tv-meta">Saved shortcut: https://is.gd/TivvyTV26 · TV must currently be switched on. Standby wake-up is a future improvement.</p>
+<p class="tv-meta">Saved shortcut: https://is.gd/TivvyTV26 · Lounge TV wake and launch from standby successfully tested.</p>
 </section>
-<section class="tv-panel" id="panel-kitchen" role="tabpanel" aria-labelledby="tab-kitchen" hidden><h2>Kitchen TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">We will add secure pairing and Tivvy TV / browser controls once we identify this television. No commands are sent to this room yet.</p></section>
-<section class="tv-panel" id="panel-pit" role="tabpanel" aria-labelledby="tab-pit" hidden><h2>Pit TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">Controls will be enabled only after the correct LG is discovered and paired.</p></section>
-<section class="tv-panel" id="panel-bedroom" role="tabpanel" aria-labelledby="tab-bedroom" hidden><h2>Main bedroom TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">Controls will be enabled only after the correct LG is discovered and paired.</p></section>
-<section class="tv-panel" id="panel-ella" role="tabpanel" aria-labelledby="tab-ella" hidden><h2>Ella's TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">Controls will be enabled only after the correct LG is discovered and paired.</p></section>
-<section class="tv-panel" id="panel-thea" role="tabpanel" aria-labelledby="tab-thea" hidden><h2>Thea's TV</h2><p class="tv-description">Room saved. TV network identity and pairing not yet verified.</p><p class="tv-note">Controls will be enabled only after the correct LG is discovered and paired.</p></section>
+<section class="tv-panel" id="panel-kitchen" role="tabpanel" aria-labelledby="tab-kitchen" hidden>
+<h2>Kitchen TV</h2>
+<p class="tv-description">LG webOS · <strong>10.0.0.33</strong> · IP reserved in DrayTek (user confirmed).</p>
+<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
+<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+</section>
+<section class="tv-panel" id="panel-pit" role="tabpanel" aria-labelledby="tab-pit" hidden>
+<h2>Pit TV</h2>
+<p class="tv-description">LG webOS · <strong>10.0.0.47</strong> · IP reserved in DrayTek (user confirmed).</p>
+<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
+<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+</section>
+<section class="tv-panel" id="panel-bedroom" role="tabpanel" aria-labelledby="tab-bedroom" hidden>
+<h2>Main bedroom TV</h2>
+<p class="tv-description">LG webOS · <strong>10.0.0.45</strong> · IP reserved in DrayTek (user confirmed).</p>
+<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
+<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+</section>
+<section class="tv-panel" id="panel-jesse" role="tabpanel" aria-labelledby="tab-jesse" hidden>
+<h2>Jesse's TV</h2>
+<p class="tv-description">LG webOS · <strong>10.0.0.49</strong> · IP reserved in DrayTek (user confirmed).</p>
+<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
+<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+</section>
+<section class="tv-panel" id="panel-ella" role="tabpanel" aria-labelledby="tab-ella" hidden>
+<h2>Ella's TV</h2>
+<p class="tv-description">LG webOS · <strong>10.0.0.40</strong> · IP reserved in DrayTek (user confirmed).</p>
+<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
+<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+</section>
+<section class="tv-panel" id="panel-thea" role="tabpanel" aria-labelledby="tab-thea" hidden>
+<h2>Thea's TV</h2>
+<p class="tv-description">LG webOS · <strong>10.0.0.43</strong> · IP reserved in DrayTek (user confirmed).</p>
+<div class="tv-status"><span class="tv-status-dot"></span><strong>Network address recorded · LG pairing pending</strong></div>
+<p class="tv-note">This television has its own reserved IP address. Bulldog has not yet paired with this LG or verified its remote/wake controls. The lounge TV's working controls are not shared with other rooms.</p>
+</section>
 </main>
 <script>
 (()=>{'use strict';
@@ -295,7 +327,7 @@ async function checkTvVersion(){
   const match=html.match(/<meta name="eldoret-tv-build" content="([^"]+)">/);
   const server=match&&match[1];
   if(!server){status.textContent='Bulldog is still serving an older TVs page. Retry in 20 seconds.';return;}
-  const current='1.2.0';
+  const current='1.3.0';
   if(server!==current){status.textContent='New build v'+server+' found — reloading…';location.reload();return;}
   status.textContent='Latest TV build confirmed on Bulldog';
  }catch(e){status.textContent='Could not check version: '+e.message;}
