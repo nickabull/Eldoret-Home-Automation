@@ -27,7 +27,7 @@ body.eldoret-dashboard.home-page{width:100%;height:auto;min-height:100dvh;displa
 
 .home-page .home-footer{flex-wrap:wrap}.home-page .weather-credit{color:#a9c5cc;text-decoration:none;font-size:9px}.home-page .home-news{position:relative;z-index:1}.home-page #vital-car .vital-icon{font-size:24px}.home-page .home-news #news-headline{overflow-wrap:anywhere}.home-page .home-orbit{opacity:.25}
 @media(max-width:700px){.home-page .home-news{gap:12px;padding:15px;align-items:flex-start}.home-page .bbc-label{font-size:9px;padding:7px}.home-page .home-news #news-headline{font-size:12px}.home-page .home-news>span{display:none}.home-page .home-weather{font-size:11px;max-width:290px;line-height:1.5}.home-page .home-weather button{font-size:10px}.home-page dialog{max-width:calc(100vw - 30px)}}
-</style><meta name="theme-color" content="#08131b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="manifest.webmanifest"></head>
+#vital-sky{background-image:linear-gradient(135deg,#10202cf0,#091724d5),var(--live-sky-art,none);background-size:cover;background-position:center}</style><meta name="theme-color" content="#08131b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="manifest.webmanifest"></head>
 <body class="eldoret-dashboard home-page eldoret-shell">
 <div class="home-backdrop" aria-hidden="true"></div>
 <header class="eldoret-header"><a href="index.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>YOUR WORLD. CONNECTED.</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div></header><nav class="tabs dashboard-tabs eldoret-primary" aria-label="Primary navigation"><a href="index.html" class="active" aria-current="page">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="av.html">Jesse / AV</a><a href="network.html">Network</a><a href="bulldog.html">Bulldog</a><a href="office.html">Epson</a><a href="appliances.html">Appliances</a><a href="radio.html">Radio</a></nav>
@@ -77,7 +77,23 @@ body.eldoret-dashboard.home-page{width:100%;height:auto;min-height:100dvh;displa
   card('lights',online.length===2?'good':'unknown',online.length===2?'CONNECTED':'WAITING',online.length===2?'Your Hue bridges are connected.':'Waiting for Hue bridge readings',online.length+' / 2 bridges responding · '+total+' lights in their groups');
   $('homeLightsMeta').textContent=online.length===2?'House + utility · tap for room controls':'House and utility status not fully available.';
  }
+ let skyRequestedArt='';
+ function skyArt(p){
+  const tile=$('vital-sky');
+  const uuid=String(p.programmeuuid||'');
+  if(!p.live||!(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(uuid))){
+   skyRequestedArt='';tile.style.removeProperty('--live-sky-art');return;
+  }
+  const url='https://images.metadata.sky.com/pd-image/'+uuid+'/16-9';
+  if(url===skyRequestedArt)return;
+  skyRequestedArt=url;
+  const img=new Image();
+  img.onload=()=>{if(skyRequestedArt===url)tile.style.setProperty('--live-sky-art','url("'+url+'")');};
+  img.onerror=()=>{if(skyRequestedArt===url)tile.style.removeProperty('--live-sky-art');};
+  img.src=url;
+ }
  function sky(p){
+  skyArt(p);
   if(p.available){const title=p.programme||(p.playback==='recording'?'Playing a recording':p.live?(p.channel||'Live television'):'Sky Q is playing');card('sky','good',p.live?'WATCHING':'PLAYING',title,p.channel?['Sky Q',p.channel,p.channelno].filter(Boolean).join(' · '):'Programme details are not supplied for this playback.');$('homeSkyMeta').textContent=p.start&&p.end?new Date(p.start).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' – '+new Date(p.end).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'Live from Sky Q.';}
   else{card('sky','unknown','NO READING','A quiet moment on the sofa.','No current programme reported · Sky Q may be in standby.');$('homeSkyMeta').textContent='Tap to open Sky Q.';}
  }
@@ -87,39 +103,59 @@ body.eldoret-dashboard.home-page{width:100%;height:auto;min-height:100dvh;displa
   else card('jesse','unknown','NO REPLY','No word from the PlayStation.','It may be off or resting · no game is being reported.');
  }
  function devices(p){
-  const aps=(p.devices||[]).filter(x=>x&&x.ip&&['10.0.0.6','10.0.0.7','10.0.0.8','10.0.0.9'].includes(x.ip));
-  if(aps.length!==4)throw Error('Waiting for four UniFi access point readings');
+  const aps=(p.devices||[]).filter(x=>x&&['10.0.0.6','10.0.0.7','10.0.0.8','10.0.0.9'].includes(x.ip));
   const count=aps.filter(x=>x.online===true).length;
   const direct=p.source==='direct_snmp';
   const snmp=aps.filter(x=>x.snmp_online===true).length;
-  const total=aps.reduce((sum,ap)=>sum+(typeof ap.rx_mbps==='number'?ap.rx_mbps:0),0);
-  const detail=direct
-   ?(snmp===4?'Four encrypted UniFi SNMPv3 heartbeats reporting.':snmp+' of 4 encrypted SNMPv3 probes responding.')
-   :'UniFi controller readings. Configure direct SNMPv3 for independent monitoring.';
-  const note=direct&&snmp===4?'Direct from Bulldog · '+total.toFixed(2)+' Mbps received across AP Ethernet ports.':detail;
-  card('wifi',count===4&&(!direct||snmp===4)?'good':count>0?'warning':'unknown',
-    count===4?'ALL FOUR LIVE':count+' / 4 LIVE',
-    count===4?'Four access points, all responding.':count+' of 4 access points responding.',
-    note);
+  const fresh=t=>{const age=Date.now()-Date.parse(t||'');return Number.isFinite(age)&&age>=-5000&&age<180000;};
+  const clients=aps.filter(x=>x.online&&typeof x.clients==='number'&&fresh(x.clients_checked_at)).reduce((sum,x)=>sum+x.clients,0);
+  const reporting=aps.filter(x=>x.online&&typeof x.clients==='number'&&fresh(x.clients_checked_at)).length;
+  const total=aps.reduce((sum,x)=>sum+(typeof x.rx_mbps==='number'?x.rx_mbps:0),0);
+  const title=count===4?(reporting===4?clients+' devices on home Wi-Fi':'Four access points, all responding.'):count+' of 4 access points responding.';
+  const detail=(reporting?clients+' connected across '+reporting+'/4 APs · ':'Client counts unavailable · ')+total.toFixed(2)+' Mbps incoming';
+  card('wifi',count===4&&(!direct||snmp===4)?'good':count>0?'warning':'unknown',count===4?'ALL FOUR LIVE':count+' / 4 LIVE',title,detail);
   $('homeAps').replaceChildren(...aps.map(ap=>{
-   const span=document.createElement('span');
-   span.className='ap-pill'+(ap.online?' reachable':'');
-   span.textContent=String(ap.name||ap.device_name||ap.ip).replace(/^UniFi\s*/i,'');
-   span.title=(ap.name||ap.ip)+' · '+(ap.snmp_online?'secure SNMPv3':ap.online?'network reachable':'not responding')
-     +(typeof ap.latency_ms==='number'?' · '+ap.latency_ms.toFixed(1)+' ms':'');
+   const span=document.createElement('span');span.className='ap-pill'+(ap.online?' reachable':'');
+   const label=String(ap.name||ap.device_name||ap.ip).replace(/^UniFi\s*/i,'');
+   const known=typeof ap.clients==='number'&&fresh(ap.clients_checked_at);
+   span.textContent=label+(known?' · '+ap.clients:'');
+   span.title=label+(known?' · '+ap.clients+' clients (direct SNMP)':' · client count unavailable')+(ap.online?' · responding':' · no reply');
    return span;
   }));
  }
  card('car','unknown','NOT LINKED','One for another day.','Battery level, charging and range once connected.');
- card('dishwasher','unknown','NOT LINKED','Dishwasher, waiting to connect.','Wash cycle and time remaining are not connected yet.');
+ const hcName='Main Kitchen Dishwasher';
+ let lastDishwasher=null;
+ const hcFresh=t=>{const age=Date.now()-Date.parse(t||'');return Number.isFinite(age)&&age>=-60000&&age<2700000;};
+ function dishwasher(p){
+  lastDishwasher=p;
+  const d=(p.devices||[]).find(x=>x.name===hcName);
+  if(!d||!hcFresh(p.checked_at)){card('dishwasher','unknown','NO FRESH READING','Kitchen dishwasher status unavailable.','Waiting for Home Connect.');return;}
+  if(!d.connected){card('dishwasher','warning','OFFLINE','Dishwasher disconnected.','Home Connect last checked '+new Date(p.checked_at).toLocaleTimeString('en-GB'));return;}
+  const state=String(d.status?.OperationState||'').split('.').pop();
+  const cycle=d.active_program?String(d.active_program).split('.').pop().replace(/([a-z])([A-Z])/g,'$1 $2').replace(/_/g,'–'):null;
+  const remain=(d.program_options||[]).find(x=>/RemainingProgramTime$/.test(x.key||''));
+  const age=Date.now()-Date.parse(d.remaining_updated_at||'');
+  const minutes=remain&&typeof remain.value==='number'&&Number.isFinite(age)&&age>=-60000&&age<2700000?Math.max(0,Math.ceil((remain.value-Math.max(0,age/1000))/60)):null;
+  if(state==='Run'){
+    card('dishwasher','good','RUNNING',cycle||'Dishwasher is running.',minutes===null?'Remaining time not currently reported':minutes+' minutes remaining');
+    $('vital-dishwasher').querySelector('.vital-bottom').textContent='Live Home Connect monitoring · read only.';
+  }else{
+    const labels={Ready:'Ready for next cycle',Finished:'Programme finished',Inactive:'Not currently running',Pause:'Programme paused'};
+    card('dishwasher','good',state.toUpperCase()||'CONNECTED',labels[state]||'Dishwasher connected.',cycle||'No active programme');
+    $('vital-dishwasher').querySelector('.vital-bottom').textContent='Home Connect · read only.';
+  }
+ }
+
  function printer(p){
   const ink=(p.ink||[]).filter(x=>number(x.percent)&&x.percent<=100),low=ink.filter(x=>x.percent<=15);
   card('printer',!p.online?'unknown':low.length?'warning':'good',!p.online?'NO REPLY':low.length?'LOW INK':'AVAILABLE',p.online?(p.state||'Printer is connected.').replace(/\.$/,''):'Printer is taking a quiet moment.',p.online?(low.length?low.map(x=>x.colour).join(' / ')+' ink is running low.':'Your Epson is connected and reporting in.'):'No current reply · check power or connection.');
   const colours=[['Black','#000'],['Cyan','#14c6ee'],['Magenta','#f63c9b'],['Yellow','#f3cf36']];
   $('homeInks').replaceChildren(...colours.map(([name,colour])=>{const v=p.online?ink.find(x=>x.colour===name)?.percent:null,known=number(v);const el=document.createElement('div');el.className='mini-ink';el.style.setProperty('--colour',colour);el.title=name+': '+(known?v+'%':'not reported');const label=document.createElement('span');label.textContent=(name==='Black'?'BK':name[0])+' '+(known?v+'%':'—');const track=document.createElement('div'),fill=document.createElement('i');fill.style.width=(known?v:0)+'%';track.append(fill);el.append(label,track);return el;}));
  }
- const jobs=[{key:'router',url:'/api/router/status',period:5000,render:router,ids:['router']},{key:'lights',url:'/api/hue/group',period:20000,render:lights,ids:['lights']},{key:'sky',url:'/api/sky/now',period:20000,render:sky,ids:['sky']},{key:'jesse',url:'/api/playstation/status',period:20000,render:jesse,ids:['jesse']},{key:'devices',url:'/api/unifi/status',period:30000,render:devices,ids:['wifi']},{key:'printer',url:'/api/printer/status',period:30000,render:printer,ids:['printer']}];
+ const jobs=[{key:'router',url:'/api/router/status',period:5000,render:router,ids:['router']},{key:'lights',url:'/api/hue/group',period:20000,render:lights,ids:['lights']},{key:'sky',url:'/api/sky/now',period:20000,render:sky,ids:['sky']},{key:'jesse',url:'/api/playstation/status',period:20000,render:jesse,ids:['jesse']},{key:'devices',url:'/api/unifi/status',period:30000,render:devices,ids:['wifi']},{key:'dishwasher',url:'/api/home-connect/status',period:30000,render:dishwasher,ids:['dishwasher']},{key:'printer',url:'/api/printer/status',period:30000,render:printer,ids:['printer']}];
  async function refresh(job){if(busy.has(job.key)||document.hidden)return;busy.add(job.key);const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),20000);try{let p; if(job.key==='lights'){const bridges=await Promise.all(['house','utility'].map(async bridge=>{try{const r=await fetch('/api/hue/group?bridge='+bridge+'&group=0',{cache:'no-store',signal:abort.signal});if(!r.ok)throw Error();const g=await r.json();if(!g.state||!Array.isArray(g.lights))throw Error();return {online:true,total:g.lights.length};}catch(e){return {online:false};}}));p={bridges};}else{const r=await fetch(job.url,{cache:'no-store',signal:abort.signal});if(!r.ok)throw Error('No reading');p=await r.json();}job.render(p);checks.set(job.key,Date.now());$('homeChecked').textContent='Live checks · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(e){for(const id of job.ids){const el=$('vital-'+id);card(id,'unknown','NO READING','Waiting for a fresh reading.', 'Tap to open the detailed view.');if(id==='router'){setSpeed('homeDown',null);setSpeed('homeUp',null);plot([]);}if(id==='printer')$('homeInks').replaceChildren();if(id==='wifi')$('homeAps').replaceChildren();const meta=el.querySelector('.vital-bottom');if(meta&&id!=='jesse')meta.textContent='Live status is unavailable.';}}finally{clearTimeout(timer);busy.delete(job.key);}}
+ setInterval(()=>{if(!document.hidden&&lastDishwasher)dishwasher(lastDishwasher);},15000);
  jobs.forEach(job=>{refresh(job);setInterval(()=>refresh(job),job.period);});
  $('homeRefresh').addEventListener('click',async()=>{const button=$('homeRefresh');button.disabled=true;await Promise.allSettled(jobs.map(refresh));button.disabled=false;});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)jobs.forEach(refresh);});
