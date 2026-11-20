@@ -2518,27 +2518,53 @@ def sky_send_channel(channel):
 def _localname(tag):
     return tag.split("}", 1)[-1] if "}" in tag else tag.split(":", 1)[-1]
 
+SKY_SOAP_LOCK=threading.Lock()
+SKY_SOAP_DISCOVERY={"host":None,"url":None,"retry_at":0,"last_error":None}
+
 def sky_soap_control_url():
-    headers = {"User-Agent": "SKYPLUS_skyplus"}
+    # Sky Q's discovery service is fragile: never re-scan 50 URLs every 15 seconds.
+    host=sky_q_host()
+    now=time.monotonic()
+    with SKY_SOAP_LOCK:
+        if SKY_SOAP_DISCOVERY["host"]!=host:
+            SKY_SOAP_DISCOVERY.update(host=host,url=None,retry_at=0,last_error=None)
+        if SKY_SOAP_DISCOVERY["url"]:
+            return SKY_SOAP_DISCOVERY["url"]
+        if now < SKY_SOAP_DISCOVERY["retry_at"]:
+            return None
+        # One bounded discovery per three-minute failure window, shared by all clients.
+        SKY_SOAP_DISCOVERY["retry_at"]=now+180
+    headers={"User-Agent":"SKYPLUS_skyplus"}
+    # Stop early if the device is not providing valid XML; do not hammer it 50 times.
+    valid_xml=0
+    failures=0
     for idx in range(50):
-        url = f"http://{sky_q_host()}:49153/description{idx}.xml"
+        url=f"http://{host}:49153/description{idx}.xml"
         try:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=2) as response:
-                root = ET.fromstring(response.read())
-            device_type = next((el.text or "" for el in root.iter() if _localname(el.tag) == "deviceType"), "")
+            req=urllib.request.Request(url,headers=headers)
+            with urllib.request.urlopen(req,timeout=0.8) as response:
+                root=ET.fromstring(response.read(512*1024))
+            valid_xml+=1
+            failures=0
+            device_type=next((el.text or "" for el in root.iter() if _localname(el.tag)=="deviceType"),"")
             if "SkyControl" not in device_type:
                 continue
             for service in root.iter():
-                if _localname(service.tag) != "service":
-                    continue
-                values = {_localname(child.tag): (child.text or "") for child in list(service)}
-                if values.get("serviceId") == "urn:nds-com:serviceId:SkyPlay":
-                    control = values.get("controlURL")
-                    if control:
-                        return f"http://{sky_q_host()}:49153{control}"
+                if _localname(service.tag)!="service":continue
+                fields={_localname(child.tag):(child.text or "") for child in list(service)}
+                if fields.get("serviceId")=="urn:nds-com:serviceId:SkyPlay":
+                    path=fields.get("controlURL")
+                    if path:
+                        result=f"http://{host}:49153{path}"
+                        with SKY_SOAP_LOCK:
+                            SKY_SOAP_DISCOVERY.update(url=result,retry_at=0,last_error=None)
+                        return result
         except Exception:
-            continue
+            failures+=1
+            # No service response in first three probes: avoid 47 more requests.
+            if failures>=3 and valid_xml==0:break
+    with SKY_SOAP_LOCK:
+        SKY_SOAP_DISCOVERY["last_error"]="SkyPlay discovery unavailable; retry paused"
     return None
 
 def sky_get_media_uri():
