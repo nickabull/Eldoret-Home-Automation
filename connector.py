@@ -579,6 +579,125 @@ def lg_kitchen_launch():
         ws.close()
 
 
+# Kitchen wake-on-LAN: never reuse lounge MAC, identity or verification state.
+LG_KITCHEN_WOL_FILE=os.path.expanduser("~/eldoret-connector/lg/kitchen-wol.json")
+LG_KITCHEN_WOL_LOCK=threading.Lock()
+LG_KITCHEN_WOL_VERIFY={"state":"idle","detail":"No kitchen wake test has run.","checked_at":None}
+
+def lg_kitchen_wol_status():
+    import stat
+    saved=None
+    try:
+        st=os.stat(LG_KITCHEN_WOL_FILE)
+        if st.st_uid!=os.getuid() or stat.S_IMODE(st.st_mode)&0o077:
+            raise RuntimeError("Kitchen wake file has unsafe permissions")
+        with open(LG_KITCHEN_WOL_FILE,encoding="utf-8") as f:saved=json.load(f)
+    except FileNotFoundError:pass
+    paired=_lg_kitchen_saved()
+    ready=bool(saved and paired and saved.get("ip")==LG_KITCHEN_IP and
+               saved.get("mac") and saved.get("fingerprint")==paired.get("fingerprint"))
+    with LG_KITCHEN_WOL_LOCK:verification=dict(LG_KITCHEN_WOL_VERIFY)
+    return {"ready":ready,"ip":LG_KITCHEN_IP,
+            "verification":verification,
+            "detail":"Kitchen MAC verified and saved from paired LG" if ready else
+                     "Kitchen TV wake is not ready. Learn its MAC while TV is on."}
+
+def lg_kitchen_learn_mac():
+    ws=_LGWebSocket(LG_KITCHEN_IP)
+    try:
+        saved=_lg_kitchen_saved()
+        if not saved or not saved.get("client_key") or saved.get("ip")!=LG_KITCHEN_IP:
+            raise RuntimeError("Pair kitchen LG before learning its MAC")
+        ws.connect()
+        if ws.fingerprint!=saved.get("fingerprint"):
+            raise RuntimeError("Kitchen TV identity changed. Refusing MAC learning.")
+        ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+        deadline=time.monotonic()+10
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(2)
+            try:reply=ws.recv_json()
+            except socket.timeout:continue
+            if reply.get("type")=="registered":break
+            if reply.get("type")=="error":raise RuntimeError("Kitchen LG rejected pairing")
+        else:raise RuntimeError("Kitchen LG did not confirm pairing")
+        result,ok=_lg_ssap_request(ws,"eldoret-kitchen-wol-identify",
+                              "ssap://com.webos.applicationManager/getForegroundAppInfo")
+        if not ok:raise RuntimeError("Kitchen TV did not authenticate MAC learning request")
+        mac=_lg_mac_from_arp(LG_KITCHEN_IP)
+        if not mac:raise RuntimeError("Kitchen TV LAN MAC not found; keep TV on and retry")
+        import tempfile
+        folder=os.path.dirname(LG_KITCHEN_WOL_FILE)
+        os.makedirs(folder,mode=0o700,exist_ok=True);os.chmod(folder,0o700)
+        fd,tmp=tempfile.mkstemp(prefix=".kitchen-wol-",dir=folder)
+        try:
+            os.fchmod(fd,0o600)
+            with os.fdopen(fd,"w",encoding="utf-8") as f:
+                json.dump({"ip":LG_KITCHEN_IP,"mac":mac,"fingerprint":saved["fingerprint"],
+                           "learned_at":datetime.now(timezone.utc).isoformat()},f)
+            os.replace(tmp,LG_KITCHEN_WOL_FILE)
+        finally:
+            if os.path.exists(tmp):os.unlink(tmp)
+        return {"ok":True,"detail":"Kitchen TV MAC securely remembered. Ready to test wake from standby."}
+    finally:
+        ws.close()
+
+def _lg_kitchen_wol_monitor():
+    deadline=time.monotonic()+42
+    while time.monotonic()<deadline:
+        ws=None
+        try:
+            saved=_lg_kitchen_saved()
+            ws=_LGWebSocket(LG_KITCHEN_IP)
+            ws.connect()
+            if not saved or ws.fingerprint!=saved.get("fingerprint"):
+                raise RuntimeError("Kitchen LG certificate mismatch")
+            ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+            register_deadline=time.monotonic()+8
+            registered=False
+            while time.monotonic()<register_deadline:
+                ws.sock.settimeout(2)
+                try:reply=ws.recv_json()
+                except socket.timeout:continue
+                if reply.get("type")=="registered":registered=True;break
+                if reply.get("type")=="error":break
+            if registered:
+                _,ok=_lg_ssap_request(ws,"eldoret-kitchen-wol-verify",
+                    "ssap://com.webos.applicationManager/getForegroundAppInfo")
+                if ok:
+                    with LG_KITCHEN_WOL_LOCK:
+                        LG_KITCHEN_WOL_VERIFY.update(state="responding",detail="Kitchen LG authenticated after wake. Check picture.",
+                            checked_at=datetime.now(timezone.utc).isoformat())
+                    return
+        except Exception:pass
+        finally:
+            if ws:ws.close()
+        time.sleep(3)
+    with LG_KITCHEN_WOL_LOCK:
+        LG_KITCHEN_WOL_VERIFY.update(state="timeout",detail="Kitchen LG did not respond within 42 seconds.",
+                checked_at=datetime.now(timezone.utc).isoformat())
+
+def lg_kitchen_wake():
+    import re
+    state=lg_kitchen_wol_status()
+    if not state["ready"]:raise RuntimeError("Remember kitchen LG MAC while TV is on before waking it")
+    with open(LG_KITCHEN_WOL_FILE,encoding="utf-8") as f:wol=json.load(f)
+    mac=wol["mac"]
+    if not re.fullmatch(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}",str(mac)):
+        raise RuntimeError("Kitchen MAC format invalid")
+    packet=b"\\xff"*6+bytes.fromhex(mac.replace(":",""))*16
+    sock=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST,1)
+        sock.settimeout(2)
+        sock.sendto(packet,("10.0.0.255",9))
+    finally:sock.close()
+    with LG_KITCHEN_WOL_LOCK:
+        LG_KITCHEN_WOL_VERIFY.update(state="checking",detail="Kitchen wake packet sent; checking for authenticated TV response.",
+            checked_at=datetime.now(timezone.utc).isoformat())
+    threading.Thread(target=_lg_kitchen_wol_monitor,daemon=True).start()
+    return {"ok":True,"detail":"Kitchen wake packet sent. Checking response for up to 42 seconds."}
+
+
 # Experimental lounge LG telemetry. The TV is the source of truth; never infer state from our buttons.
 LG_LIVE_LOCK=threading.Lock()
 LG_LIVE_CACHE={"at":0,"data":None}
@@ -3888,6 +4007,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/lg/live":
             self.send_bytes(json.dumps(lg_lounge_live()).encode())
             return
+        if path == "/api/lg/kitchen/wol-status":
+            self.send_bytes(json.dumps(lg_kitchen_wol_status()).encode())
+            return
         if path == "/api/lg/kitchen/status":
             self.send_bytes(json.dumps(lg_kitchen_status()).encode())
             return
@@ -4008,7 +4130,7 @@ class Handler(BaseHTTPRequestHandler):
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
         payload = json.loads(raw_body or b"{}")
-        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy"):
+        if self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy","/api/lg/kitchen/learn-mac","/api/lg/kitchen/wake"):
             # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
             origin=self.headers.get("Origin","")
             host=self.headers.get("Host","")
@@ -4022,7 +4144,11 @@ class Handler(BaseHTTPRequestHandler):
             if self.path=="/api/lg/control" and (not isinstance(payload,dict) or set(payload)-{"action","input_id"}):
                 self.send_error(400); return
             try:
-                if self.path=="/api/lg/kitchen/pair":
+                if self.path=="/api/lg/kitchen/learn-mac":
+                    result=lg_kitchen_learn_mac()
+                elif self.path=="/api/lg/kitchen/wake":
+                    result=lg_kitchen_wake()
+                elif self.path=="/api/lg/kitchen/pair":
                     started=lg_kitchen_pair_start()
                     result={"ok":started,"detail":"Kitchen LG pairing request starting — accept the prompt on the kitchen screen." if started else "Kitchen pairing is already in progress."}
                 elif self.path=="/api/lg/kitchen/open-tivvy":
