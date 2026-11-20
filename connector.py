@@ -41,6 +41,11 @@ def sky_q_host():
     return _registry_ip("sky_q", SKY_Q_HOST)
 SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
 SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
+# Temporary diagnostic: prevent ALL passive Sky Q GET requests from reaching the box.
+# Manual Sky Q POST remote/channel commands remain enabled.
+SKY_PASSIVE_ISOLATION = True
+SKY_PASSIVE_BLOCKED = {}
+SKY_PASSIVE_LOCK = threading.Lock()
 NETWORK_PROBES = [
  {"ip":"10.0.0.1","name":"Main Router","ports":[80,443]},
  {"ip":"10.0.0.2","name":"House Hue Bridge","ports":[80]},
@@ -3864,6 +3869,22 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        if path == "/api/sky/isolation":
+            with SKY_PASSIVE_LOCK: blocked=dict(SKY_PASSIVE_BLOCKED)
+            self.send_bytes(json.dumps({"enabled":SKY_PASSIVE_ISOLATION,
+                "detail":"Passive Sky Q reads suspended; manual remote and channel commands still available." if SKY_PASSIVE_ISOLATION else "Sky Q read endpoints active.",
+                "blocked_get_counts":blocked}).encode())
+            return
+        if SKY_PASSIVE_ISOLATION and path.startswith("/api/sky/"):
+            with SKY_PASSIVE_LOCK:
+                SKY_PASSIVE_BLOCKED[path]=SKY_PASSIVE_BLOCKED.get(path,0)+1
+            # Return safe offline states without touching Sky Q at all.
+            result={"available":False,"live":False,"isolated":True,
+                "detail":"Sky Q readback temporarily suspended to diagnose box freezes.",
+                "error":"Diagnostic isolation: Sky Q reading paused; manual remote remains available.",
+                "channels":[],"apps":[],"results":[],"stations":[],"page":0,"pages":1}
+            self.send_bytes(json.dumps(result).encode())
+            return
         if path == "/login":
             self.send_bytes(_login_page(False).encode(),"text/html; charset=utf-8")
             return
