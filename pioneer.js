@@ -39,6 +39,8 @@ async function refresh(silent=false){
   el('source').textContent='Input: '+(j.input??'unknown');
   muted=j.mute==='Muted'?true:j.mute==='Not muted'?false:null;
   el('mute').textContent='Mute: '+(j.mute??'unknown');
+  const steps=Array.isArray(j.query_results)?j.query_results.map(x=>x.field+': '+x.status+(x.error?' ('+x.error+')':'')+(Number.isFinite(x.elapsed_ms)?' · '+x.elapsed_ms+'ms':'')).join(' · '):'';
+  el('queryDiagnostics').textContent=steps?('Individual reads: '+steps):'No per-query diagnostics supplied';
   if(!silent)notice(j.error||('Volume and status read from Pioneer at '+new Date().toLocaleTimeString('en-GB')));
  }catch(e){
   online=false;muted=null;setVolume(null);
