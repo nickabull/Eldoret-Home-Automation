@@ -4407,6 +4407,86 @@ def pioneer_monitor_summary():
             "outages_observed":sum(e["state"]=="unreachable" for e in events),
             "note":"Ping reachability changes may reflect link/network changes. They do not prove a Pioneer reboot. Logging starts when this version is deployed."}
 
+
+# Bulldog Design Centre: local, draft-only design store.
+# Saved JSON is independent of the deployed HTML and never executes code.
+DESIGN_CENTRE_DIR=os.path.join(os.path.expanduser("~/eldoret-connector"),"design-centre")
+DESIGN_CENTRE_LOCK=threading.RLock()
+DESIGN_CENTRE_PRESETS={"wide":(1920,1080),"ipad":(1024,768),"pi":(800,480)}
+DESIGN_CENTRE_TYPES={"text","button","panel","image"}
+
+def design_centre_key(query):
+    name=(query.get("name") or [""])[0]
+    preset=(query.get("preset") or [""])[0]
+    import re
+    if not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,39}",name) or preset not in DESIGN_CENTRE_PRESETS:
+        raise ValueError("Invalid page name or layout preset")
+    return name,preset
+
+def design_centre_file(name,preset):
+    return os.path.join(DESIGN_CENTRE_DIR,name+"-"+preset+".json")
+
+def design_centre_validate(value,name,preset):
+    if not isinstance(value,dict) or value.get("version")!=1 or value.get("page")!=name or value.get("preset")!=preset:
+        raise ValueError("Invalid design metadata")
+    width,height=DESIGN_CENTRE_PRESETS[preset]
+    if (value.get("width"),value.get("height"))!=(width,height):
+        raise ValueError("Invalid canvas dimensions")
+    bg=value.get("background")
+    import re
+    if not isinstance(bg,str) or not re.fullmatch(r"#[0-9a-fA-F]{6}",bg):
+        raise ValueError("Invalid background colour")
+    elems=value.get("elements")
+    if not isinstance(elems,list) or len(elems)>150:
+        raise ValueError("Too many layers")
+    names=set()
+    for e in elems:
+        if not isinstance(e,dict) or set(e)!={"id","type","name","label","src","x","y","w","h","size","radius","color","bg","opacity","locked","behaviour"}:
+            raise ValueError("Invalid layer structure")
+        if not isinstance(e["id"],str) or not 1<=len(e["id"])<=100 or e["id"] in names:
+            raise ValueError("Invalid or duplicate layer ID")
+        names.add(e["id"])
+        if e["type"] not in DESIGN_CENTRE_TYPES or not isinstance(e["locked"],bool):
+            raise ValueError("Invalid element type or lock")
+        for key,limit in (("name",160),("label",2000),("src",500),("behaviour",4000)):
+            if not isinstance(e[key],str) or len(e[key])>limit:
+                raise ValueError("Invalid layer text")
+        # Images can only point to same-origin static assets; never external URLs.
+        if e["src"] and (not re.fullmatch(r"/?[a-zA-Z0-9_./-]+",e["src"]) or ".." in e["src"]):
+            raise ValueError("Artwork URL must be a local static asset path")
+        for key in ("color","bg"):
+            if not re.fullmatch(r"#[0-9a-fA-F]{6}",e[key]):
+                raise ValueError("Invalid layer colour")
+        if not all(isinstance(e[k],(int,float)) and not isinstance(e[k],bool) and math.isfinite(e[k]) for k in ("x","y","w","h","size","radius","opacity")):
+            raise ValueError("Invalid layer dimension")
+        if (e["x"]<0 or e["y"]<0 or e["w"]<20 or e["h"]<20 or e["x"]+e["w"]>width+1 or
+            e["y"]+e["h"]>height+1 or not 8<=e["size"]<=500 or not 0<=e["radius"]<=1000 or not 0<=e["opacity"]<=100):
+            raise ValueError("Element out of canvas bounds")
+    return value
+
+def design_centre_read(name,preset):
+    path=design_centre_file(name,preset)
+    with DESIGN_CENTRE_LOCK:
+        try:
+            with open(path,"r",encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return None
+
+def design_centre_save(name,preset,design):
+    design_centre_validate(design,name,preset)
+    path=design_centre_file(name,preset)
+    with DESIGN_CENTRE_LOCK:
+        os.makedirs(DESIGN_CENTRE_DIR,mode=0o700,exist_ok=True)
+        tmp=path+".new"
+        with open(tmp,"w",encoding="utf-8") as f:
+            os.fchmod(f.fileno(),0o600)
+            json.dump(design,f,ensure_ascii=False,separators=(",",":"))
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp,path)
+    return {"ok":True,"saved_at":datetime.now(timezone.utc).isoformat()}
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -4427,6 +4507,13 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        if path == "/api/design-centre":
+            if _remote_request(self): self.send_error(403); return
+            try:
+                name,preset=design_centre_key(query)
+                self.send_bytes(json.dumps({"design":design_centre_read(name,preset)}).encode()); return
+            except ValueError:
+                self.send_error(400); return
         if path == "/api/zappi/status":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps({"configured":False,"mode":"read-only",
@@ -4471,6 +4558,8 @@ class Handler(BaseHTTPRequestHandler):
             "/velux.html": ("velux.html", "text/html; charset=utf-8"),
             "/pioneer.html": ("pioneer.html", "text/html; charset=utf-8"),
             "/engineering.html": ("engineering.html", "text/html; charset=utf-8"),
+            "/design-centre.html": ("design-centre.html", "text/html; charset=utf-8"),
+            "/design-centre.js": ("design-centre.js", "application/javascript; charset=utf-8"),
             "/zappi.html": ("zappi.html", "text/html; charset=utf-8"),
             "/pioneer.js": ("pioneer.js", "application/javascript; charset=utf-8"),
             "/velux.js": ("velux.js", "application/javascript; charset=utf-8"),
@@ -4796,6 +4885,24 @@ class Handler(BaseHTTPRequestHandler):
             return
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
+        if urllib.parse.urlparse(self.path).path == "/api/design-centre":
+            origin=self.headers.get("Origin","")
+            host=self.headers.get("Host","")
+            if (_remote_request(self) or
+                host not in ("10.0.0.34:8765","localhost:8765","127.0.0.1:8765") or
+                origin!="http://"+host or
+                self.headers.get("Content-Type","").split(";")[0].strip()!="application/json" or
+                length>200000):
+                self.send_error(403); return
+            try:
+                query=urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                name,preset=design_centre_key(query)
+                payload=json.loads(raw_body)
+                if not isinstance(payload,dict) or set(payload)!={"design"}:
+                    raise ValueError("Invalid save request")
+                self.send_bytes(json.dumps(design_centre_save(name,preset,payload["design"])).encode()); return
+            except (ValueError, TypeError, json.JSONDecodeError):
+                self.send_error(400); return
         if urllib.parse.urlparse(self.path).path == "/api/pioneer/control":
             origin=self.headers.get("Origin","")
             host=self.headers.get("Host","")
