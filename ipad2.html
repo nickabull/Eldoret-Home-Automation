@@ -105,6 +105,88 @@
 .device-drawer{width:100%;top:auto;bottom:0;max-height:92dvh;border-left:0;border-top:1px solid #508176;border-radius:23px 23px 0 0;padding:16px 14px 23px}.drawer-main{margin:15px 0}.drawer-main h2{font-size:24px}.drawer-action{min-height:74px;font-size:14px}
 }
 @media(max-width:360px){.family-cards{grid-template-columns:1fr}#telemetry{grid-template-columns:1fr}.device-drawer{max-height:97dvh}}
+
+/* Eldoret 2.0 luxury visual layer — purposely isolated from every legacy page. */
+:root{--bg:#090d14;--card:#141821;--line:#ffffff26;--muted:#b4aeb4;--bright:#ffe1bd;--good:#b3f0c5;--warn:#ffc875}
+body{background:#090d14;color:#fff3e6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:linear-gradient(100deg,#070911e8 0%,#0a0c15bd 55%,#13101d82 100%),linear-gradient(0deg,#080811c9 0%,transparent 65%),url("eldoret-house-night.webp?v=2") center center/cover no-repeat}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 90% 8%,#ff9f4a24,transparent 35%),radial-gradient(circle at 10% 100%,#9542c71c,transparent 45%)}
+.shell{max-width:1560px}
+.brand .logo{color:#fff0dc;background:linear-gradient(145deg,#a65d3b,#432b48);box-shadow:0 5px 25px #a25b3850}
+h1{letter-spacing:.20em;font-size:23px}h1 small{color:#f3c597;letter-spacing:.25em}
+.clock{font-weight:300;letter-spacing:-.025em;font-size:32px;color:#fff5e8}
+.clock small{color:#d3aaa0}
+.mode-btn{background:linear-gradient(115deg,#d49b58,#a85e52);border:1px solid #ffdfa9;color:#24140f;box-shadow:0 5px 20px #dd8b4933;font-weight:850}
+.refresh,.directory-trigger{background:#241b27b8;border-color:#f1c7a14a;color:#ffe2b8}
+.section strong{font-size:12px;letter-spacing:.15em;color:#f4c8a2}.section span{color:#d6b6ab}
+.alert-dock{background:#22171fd9;border-color:#ca795f75;box-shadow:0 11px 28px #0007}
+.alert-dock[data-clear="true"]{background:#161b22d9;border-color:#8ec5ac6b}
+.alert-head{color:#ffc69a}
+.alert-dock[data-clear="true"] .alert-head{color:#cbebd6}
+.alert-empty{color:#dbd1c5}
+.alert-item{background:#4c292c;border-color:#d18761;color:#fff0c9}
+#telemetry{gap:11px}
+#telemetry .tile{position:relative;isolation:isolate;overflow:hidden;border-radius:19px;min-height:126px;border:1px solid #ffffff40;box-shadow:0 10px 28px #0008;background:#181820c2;grid-template-columns:minmax(0,1fr) auto;align-content:space-between;align-items:start;padding:14px}
+#telemetry .tile::before{content:"";position:absolute;z-index:-1;inset:0;opacity:.85;background:radial-gradient(ellipse at 100% 0%,var(--shine,#ce915b55),transparent 67%),linear-gradient(115deg,var(--tone,#251b2cbb),#101018c7 90%);transition:opacity .2s,transform .2s}
+#telemetry .tile::after{content:var(--art,"✦");position:absolute;z-index:-1;right:12px;top:10px;font-size:70px;line-height:1;color:#ffffff17;filter:drop-shadow(0 9px 8px #0006);transform:rotate(-11deg)}
+#telemetry .tile:hover::before{opacity:1;transform:scale(1.05)}
+#telemetry .tile:hover{border-color:#f5d3ad}
+#telemetry .tile-ident{grid-column:1/-1;align-items:flex-start;gap:9px}
+#telemetry .tile .symbol{font-size:23px;filter:drop-shadow(0 3px 8px #0008)}
+#telemetry .tile-namegroup{gap:5px}
+#telemetry .tile .name{font-size:14px;font-weight:830;text-shadow:0 2px 6px #000a;color:#ffeddc}
+#telemetry .tile .hint{color:#e6c7b7;font-size:9px;letter-spacing:.09em}
+#telemetry .tile-data{grid-column:1/-1;align-items:flex-start;text-align:left;margin-top:10px}
+#telemetry .tile .primary{font-size:clamp(18px,1.95vw,28px);font-weight:760;color:#fff7ef;text-shadow:0 2px 9px #000d}
+#telemetry .tile .secondary{font-size:11px;color:#e5d4d0}
+#telemetry .tile .state{font-size:9px;color:#c4c6d2;font-weight:750}
+#telemetry .tile[data-status="ok"] .state{color:#9aefbf}
+#telemetry .tile .chevron{position:absolute;right:13px;bottom:12px;color:#e7bd9d;opacity:.8}
+#telemetry #energy{--tone:#442d1c;--shine:#ffa53a86;--art:"⚡"}
+#telemetry #ps5{--tone:#281d57;--shine:#9067ff7a;--art:"◈"}
+#telemetry #pioneer{--tone:#31192d;--shine:#db59b67d;--art:"♫"}
+#telemetry #hue{--tone:#35271a;--shine:#ffc25e7c;--art:"☀"}
+#telemetry #sky{--tone:#331c40;--shine:#c973e37d;--art:"◉"}
+#telemetry #tvs{--tone:#1b2546;--shine:#6893ed7d;--art:"▣"}
+#telemetry #appliances{--tone:#3b231b;--shine:#dc835981;--art:"◌"}
+#telemetry #velux{--tone:#1c3331;--shine:#68d4bb7f;--art:"☼"}
+#telemetry #network{--tone:#27232c;--shine:#ac95d77f;--art:"⌁"}
+#telemetry #printer{--tone:#2d2837;--shine:#eab3a27d;--art:"▤"}
+.family-heading small{color:#d69fa2}.family-heading h2{font-size:clamp(24px,3vw,37px);font-weight:730;letter-spacing:-.04em;text-shadow:0 5px 25px #000b}
+.family-nav{gap:9px}
+.family-tab{min-height:54px;background:#281f2cbf;border-color:#e2b28b45;color:#e7d2cb;box-shadow:0 7px 18px #0005;letter-spacing:.08em}
+.family-tab.active{background:linear-gradient(110deg,#bd7856,#724970);border-color:#f6cca6;color:white;box-shadow:0 8px 25px #d3875944}
+.family-search{min-height:50px;border-color:#e7a97851;background:#211b25d9;color:#f2c7a0}
+.family-search input::placeholder{color:#cfaeac}
+.family-cards{gap:12px}
+.family-card{position:relative;overflow:hidden;isolation:isolate;border-radius:20px;min-height:145px;border:1px solid #ffffff47;background:linear-gradient(130deg,#403040de,#17151cde);box-shadow:0 9px 25px #0008;padding:18px;gap:11px}
+.family-card::before{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 100% 3%,var(--item-shine,#f7af7954),transparent 74%),linear-gradient(130deg,var(--item-tone,#3b2838a8),transparent 85%)}
+.family-card::after{content:"";position:absolute;z-index:-1;right:4px;top:-7px;width:110px;height:110px;opacity:.24;border-radius:35% 65% 40% 60%;border:1px solid #ffeadf66;box-shadow:inset 0 0 30px #ffdcc83c;transform:rotate(35deg)}
+.family-card:nth-child(6n+1){--item-tone:#8e4d29bb;--item-shine:#ffa84e87}
+.family-card:nth-child(6n+2){--item-tone:#513668bb;--item-shine:#bb7aff70}
+.family-card:nth-child(6n+3){--item-tone:#744427bb;--item-shine:#ffd36b66}
+.family-card:nth-child(6n+4){--item-tone:#205e5cbb;--item-shine:#54e3cd73}
+.family-card:nth-child(6n+5){--item-tone:#773a62bb;--item-shine:#ee73ca74}
+.family-card:nth-child(6n){--item-tone:#393f75bb;--item-shine:#86a1ff70}
+.family-card:hover,.family-card:focus-visible{background:#432f38;transform:translateY(-1px);border-color:#fff0cf}
+.family-card .family-icon{font-size:36px;filter:drop-shadow(0 6px 12px #0008)}
+.family-card strong{font-size:19px;font-weight:780;text-shadow:0 2px 9px #0009}
+.family-card small{color:#e5c7c3;font-size:11px}
+.small-btn,.nerd-toggle{background:#281f2bd9;border-color:#ca9a8d66;color:#f2d9cb}
+.nerd-toggle[aria-pressed="true"]{background:#6c4166}
+.drawer-scrim{background:#08040ac9}
+.device-drawer{background:linear-gradient(165deg,#3a2838,#17121d 55%,#0b1019);border-color:#d5988166}
+.drawer-icon{background:linear-gradient(140deg,#b67c5b,#65426f);box-shadow:0 9px 24px #0008}
+.drawer-heading #drawerBadge{color:#f5c79f}
+.drawer-main h2{color:#fff4e6}
+.drawer-main p,.drawer-meta{color:#dfc2bc}
+.drawer-action{border-color:#cf97745e;background:linear-gradient(120deg,#513544,#292335);color:#fff2e1}
+.drawer-action:hover,.drawer-action:focus-visible{border-color:#f7d3a4;background:#664653}
+.drawer-nerd{border-color:#c7977a66;background:#2e2430;color:#f0cba8}
+.drawer-advanced a{background:#2b2332;border-color:#9b7c81;color:#ffe9d5}
+.directory-panel{background:#1e1724f7;border-color:#c7927c77}.directory-grid a{background:#322733;border-color:#946f78}.directory-grid a:hover{background:#574050}
+@media(max-width:850px){#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}#telemetry .tile{min-height:119px}.family-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){#telemetry .tile{min-height:108px;padding:11px}#telemetry .tile .hint{display:none}#telemetry .tile .primary{font-size:17px}.family-card{min-height:123px;padding:13px}.family-card .family-icon{font-size:28px}.family-card strong{font-size:16px}.family-heading h2{font-size:23px}.mode-btn{font-size:10px}.drawer-action{min-height:84px}}
 </style></head>
 <body><main class="shell">
 <header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>HOME 2.0</small></h1></a><div class="top-right"><button class="mode-btn" id="modeBtn" type="button" aria-label="Open family controls">CONTROLS</button><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="directory-trigger" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open Eldoret directory" title="All Eldoret pages">H</button><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
