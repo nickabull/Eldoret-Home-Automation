@@ -4439,6 +4439,81 @@ def pioneer_monitor_summary():
             "note":"Ping reachability changes may reflect link/network changes. They do not prove a Pioneer reboot. Logging starts when this version is deployed."}
 
 
+# Read-only myenergi Zappi telemetry. The secret exists ONLY in Bulldog's
+# private ~/.config/eldoret/myenergi.json (0600), never in GitHub.
+MYENERGI_CONFIG=os.path.expanduser("~/.config/eldoret/myenergi.json")
+MYENERGI_CACHE={"updated":0,"value":None}
+MYENERGI_LOCK=threading.Lock()
+
+def _myenergi_config():
+    import stat
+    try:
+        st=os.stat(MYENERGI_CONFIG)
+        if st.st_uid!=os.getuid() or stat.S_IMODE(st.st_mode)!=0o600:
+            raise ValueError("Myenergi config must be owned by Bulldog user with chmod 600")
+        with open(MYENERGI_CONFIG,encoding="utf-8") as fp:
+            conf=json.load(fp)
+        if not isinstance(conf,dict) or not str(conf.get("gateway_serial","")).isdigit() or not str(conf.get("api_key","")):
+            raise ValueError("Myenergi gateway serial/API key missing")
+        return conf
+    except FileNotFoundError:
+        return None
+
+def myenergi_status():
+    conf=None
+    try:
+        conf=_myenergi_config()
+    except (ValueError,OSError,TypeError) as exc:
+        return {"configured":False,"mode":"read-only","error":"Local key file problem: "+type(exc).__name__,
+                "detail":"Check Bulldog's private myenergi.json setup and permissions"}
+    if conf is None:
+        return {"configured":False,"mode":"read-only","charging_state":None,"charge_power_kw":None,
+                "session_energy_kwh":None,"checked_at":None,
+                "detail":"Awaiting gateway serial number and API key in Bulldog's private config. No network request sent."}
+    now=time.monotonic()
+    with MYENERGI_LOCK:
+        if MYENERGI_CACHE["value"] is not None and now-MYENERGI_CACHE["updated"]<120:
+            return dict(MYENERGI_CACHE["value"])
+        try:
+            import urllib.error
+            # Only myenergi-owned HTTPS endpoints; no arbitrary cloud URL supplied by configuration.
+            serial=str(conf["gateway_serial"])
+            key=str(conf["api_key"])
+            class NoRedirect(urllib.request.HTTPRedirectHandler):
+                def redirect_request(self,*args,**kwargs):
+                    return None
+            # Stable documented community telemetry endpoint. Redirects blocked.
+            server="https://s18.myenergi.net"
+            manager=urllib.request.HTTPPasswordMgrWithDefaultRealm()
+            manager.add_password(None,server+"/",serial,key)
+            auth=urllib.request.HTTPDigestAuthHandler(manager)
+            opener=urllib.request.build_opener(auth,NoRedirect())
+            req=urllib.request.Request(server+"/cgi-jstatus-Z",
+                headers={"Accept":"application/json","User-Agent":"Eldoret-Bulldog/1.0"})
+            with opener.open(req,timeout=8) as response:
+                payload=json.loads(response.read(200000).decode("utf-8"))
+            items=payload.get("zappi") if isinstance(payload,dict) else None
+            if not isinstance(items,list) or not items or not isinstance(items[0],dict):
+                raise ValueError("Unexpected Zappi status response; no zappi entries")
+            z=items[0]
+            # Raw fields are deliberately retained with clear naming until
+            # unit semantics are verified against the actual charger.
+            result={"configured":True,"connected":True,"mode":"read-only",
+                    "charging_state":None,"charge_power_kw":None,
+                    "session_energy_kwh":None,
+                    "raw_status_code":z.get("sta"),"raw_mode_code":z.get("zmo"),
+                    "raw_diversion":z.get("div"),"raw_charge_energy":z.get("che"),
+                    "checked_at":datetime.now(timezone.utc).isoformat(),
+                    "device_time":str(z.get("dat",""))+" "+str(z.get("tim","")),
+                    "detail":"Live myenergi status received. Raw energy/power codes shown until units are calibrated."}
+            MYENERGI_CACHE.update(updated=now,value=result)
+            return dict(result)
+        except (OSError,ValueError,TypeError,urllib.error.URLError) as exc:
+            return {"configured":True,"connected":False,"mode":"read-only",
+                    "charging_state":None,"charge_power_kw":None,
+                    "session_energy_kwh":None,"error":type(exc).__name__,
+                    "detail":"myenergi API request failed. Check account key, gateway serial or server availability; no charger changes made."}
+
 # Bulldog Design Centre: local, draft-only design store.
 # Saved JSON is independent of the deployed HTML and never executes code.
 DESIGN_CENTRE_DIR=os.path.join(os.path.expanduser("~/eldoret-connector"),"design-centre")
@@ -4568,8 +4643,7 @@ class Handler(BaseHTTPRequestHandler):
             }).encode()); return
         if path == "/api/zappi/status":
             if _remote_request(self): self.send_error(403); return
-            self.send_bytes(json.dumps({"configured":False,"mode":"read-only",
-                "detail":"Awaiting secure myenergi gateway serial and API key setup on Bulldog. No charger readings or commands enabled."}).encode()); return
+            self.send_bytes(json.dumps(myenergi_status()).encode()); return
         if path == "/api/pioneer/connection":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps(pioneer_connection_diagnostics()).encode()); return
