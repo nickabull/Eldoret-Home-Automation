@@ -4447,6 +4447,7 @@ class Handler(BaseHTTPRequestHandler):
             "/home.js": ("home.js", "application/javascript; charset=utf-8"),
             "/velux.html": ("velux.html", "text/html; charset=utf-8"),
             "/pioneer.html": ("pioneer.html", "text/html; charset=utf-8"),
+            "/engineering.html": ("engineering.html", "text/html; charset=utf-8"),
             "/pioneer.js": ("pioneer.js", "application/javascript; charset=utf-8"),
             "/velux.js": ("velux.js", "application/javascript; charset=utf-8"),
             "/home.css": ("home.css", "text/css; charset=utf-8"),
