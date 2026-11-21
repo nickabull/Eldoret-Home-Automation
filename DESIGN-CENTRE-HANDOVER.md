@@ -36,3 +36,11 @@ Open `http://10.0.0.34:8765/design-centre.html`, select `pioneer` and `wide`, ad
 - Pi dimensions provisional; no automatic measurement of Raspberry Pi display.
 - No editor-managed binary upload, device data widgets or automated publish yet.
 - Pointer manipulation and saving have been committed but **not yet tested live on Bulldog or across browsers**.
+
+## V1.1 Tivvy-style toolbar — 21 November 2026
+- Based on the actual `PROGRAMME-DESIGNER-V3-PLAN.md` in `nickabull/Tiverton-Town-Control-Centre`; migrated common controls, not all of the entire editor.
+- Added layer-level bold, italic, underline, strikethrough, left/centre/right text alignment, font selection; selected formatting buttons highlighted gold.
+- Added editable font-size and opacity sliders, zoom Fit/25–400%, canvas centring/alignment controls, layer lock toggle, arrow-key 1px nudging, Shift+arrow 10px nudging, Ctrl/Cmd+D duplicate, Delete remove.
+- Existing draft JSON remains backwards-compatible; optional formatting fields validated server-side. Source JSON cannot run JavaScript.
+- Not yet ported: rich text formatting of *individual words within one box*, multi-selection, snapping guides, native tables, stroke/outline, crop and protected artwork replacement, keyboard shortcuts for copy/paste, asset library, one-click publish. These require further work and separate tests.
+- JS syntax compilation checked. Full browser/runtime verification remains pending.
