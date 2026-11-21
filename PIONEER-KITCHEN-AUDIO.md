@@ -103,3 +103,17 @@
 - Confirmed `myenergi_decode_zappi()` uses `math.isfinite`, but `math` was only imported inside unrelated UniFi helper, not at module scope. This leads to an unhandled `NameError` when real numeric `div` or `che` fields are processed, causing HTTP connection to terminate without a JSON response.
 - Fixed by adding global `import math` to `connector.py`; committed `9f4bb2c8917bb2a7afac24241c19e2f616d4b072`. Credentials, cache, read-only mode and Sky isolation unchanged.
 - Not yet verified on live Bulldog after its auto-update: user should reload Car Charging and press Refresh both statuses. If error persists, check `/api/zappi/status` locally before troubleshooting credentials.
+
+
+## 21 November 2026 evening — PSN presence added to Eldoret
+- User tested local PS5 discovery from Bulldog: `online=true`, `host_type=PS5`, `host_name=PS5-086`, IP `10.0.0.48`, but `running_app_name` and `running_app_titleid` were null while PlayStation App showed Fortnite.
+- User obtained NPSSO secret and stored it privately; **never paste or commit the secret**.
+- Created `psn-bridge.py` read-only PSN presence helper using `PSNAWP`: private `~/.config/eldoret/psn.json` mode 0600, interactive masked token entry and local PSN online ID (default Jesse_Dub_Dub); only returns online status, current title, title ID, artwork, platform, timestamp. No friends list or personal activity history ingested.
+- `connector.py` starts the private bridge via `~/psn-test/venv/bin/python` on user-facing read requests, caches at least 120 seconds and restricts PSN results to LAN. Existing local PS5 activity collection continues once per minute.
+- `av.html` now prefers PSN game/title image and falls back to local discovery. `index.html` Jesse home tile also prefers PSN game. No fake games or artwork if PSN returns none.
+- Bulldog setup required **once**, within private terminal:
+  `python3 -m venv ~/psn-test/venv && ~/psn-test/venv/bin/python -m pip install PSNAWP`
+  `curl -fsSL https://raw.githubusercontent.com/nickabull/Eldoret-Home-Automation/main/psn-bridge.py -o ~/eldoret-connector/psn-bridge.py && chmod 700 ~/eldoret-connector/psn-bridge.py`
+  `~/psn-test/venv/bin/python ~/eldoret-connector/psn-bridge.py --setup`
+  Then check `http://10.0.0.34:8765/api/playstation/psn` and `av.html`.
+- **Not yet installed/configured or live-verified on Bulldog**. PSN privacy may block Jesse's presence when authenticated with a different account. PSNAWP is unofficial and rate limited; avoid frequent calls, no broad friends scraping. Installation should be verified before considering further controls.
