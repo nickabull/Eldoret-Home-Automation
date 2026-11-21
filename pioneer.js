@@ -100,4 +100,29 @@ knob.addEventListener('keydown',e=>{
 el('refresh').addEventListener('click',()=>refresh());
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.action)));
 el('host').textContent='Configured in Bulldog (check receiver to confirm)';
+
+async function showMonitor(){
+ const button=el('monitorRefresh');
+ button.disabled=true;
+ const root=el('monitorEvents');
+ root.replaceChildren();
+ try{
+  const r=await fetch('/api/pioneer/monitor',{cache:'no-store'});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  const j=await r.json(),events=(j.events||[]).slice().reverse(),live=j.live||{};
+  const fmt=t=>t?new Date(t).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
+  el('monitorSummary').textContent='Latest: '+(live.state||'unknown')+' · '+fmt(live.observed_at)+' · '+j.outages_observed+' network-loss events logged (last 200 events examined)';
+  if(!events.length){const p=document.createElement('p');p.className='mini';p.textContent='No changes recorded yet. Logging begins with the updated connector.';root.append(p);}
+  for(const e of events.slice(0,12)){
+   const row=document.createElement('div');row.className='stability-event '+(e.state==='reachable'?'up':'');
+   const time=document.createElement('span');time.textContent=fmt(e.at);
+   const state=document.createElement('b');state.textContent=e.state==='reachable'?'Connected':'Connection lost';
+   row.append(time,state);root.append(row);
+  }
+ }catch(e){const p=document.createElement('p');p.className='mini';p.textContent='Monitor unavailable: '+e.message;root.append(p)}
+ finally{button.disabled=false}
+}
+el('monitorRefresh').addEventListener('click',showMonitor);
+showMonitor();
+
 })();
