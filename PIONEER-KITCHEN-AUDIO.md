@@ -64,3 +64,8 @@
 - Updated `pioneer_status()` in `connector.py` to open **one bounded TCP session** and send `?P`, `?V`, `?M`, `?F` sequentially, parsing line-terminated replies with a socket file reader. Added `connection_mode: single_socket` to its response and retained per-query status/timing.
 - No retry loops and no added background polling; PIONEER control commands remain untouched.
 - Commit `de8cf886492ad6c962dd37bd34250df0cce372ba`. **User has not yet tested this protocol change on Bulldog**. If the receiver closes the first session after one command, the new detailed readback may show `no_reply` or `socket_failed` for volume. In that case investigate a short cooldown between separate connections rather than rapid connection churn. Avoid continuously probing the receiver during instability.
+
+## 21 November 2026, approximately 12:08 GMT — user-observed spontaneous reboot
+- User reported: **"it has just rebooted"** at approximately **12:08 GMT**. This was an observed physical Pioneer reboot, not merely a ping failure. Network route at this point was previously stated to be via the PoE switch; no confirmation whether topology changed since.
+- This event occurred close to the update of the one-socket readback implementation, but **no evidence that the new connector version was loaded or that a query was in progress at the instant of reboot**. Do not ascribe causation. Correlate with ping monitor records if available.
+- Known user-observed reboot timestamps today: approximately **11:07 GMT** and **12:08 GMT**, ~61 minutes between reports (not a proven interval or comprehensive count). Preserve all reported events, even if IP remains reachable in passive log.
