@@ -4310,6 +4310,22 @@ def pioneer_status():
     finally:
         PIONEER_LOCK.release()
 
+def pioneer_connection_diagnostics():
+    """User-triggered bounded checks. Do not send Pioneer control commands."""
+    result={"host":PIONEER_HOST,"checked_at":datetime.now(timezone.utc).isoformat(),
+            "ping":pioneer_monitor_summary().get("live",{}),
+            "control_port":8102,"control_port_open":False,
+            "web_port_open":False,"power_query":"not_sent"}
+    for port,key in ((8102,"control_port_open"),(80,"web_port_open")):
+        try:
+            with socket.create_connection((PIONEER_HOST,port),timeout=1.2):
+                result[key]=True
+        except OSError as exc:
+            result[key+"_error"]=type(exc).__name__
+    result["diagnosis"]=("Control port accepts connections" if result["control_port_open"]
+                         else "No TCP control connection: receiver may be rebooting, in standby, or rejecting port 8102")
+    return result
+
 def pioneer_control(action):
     global PIONEER_LAST_COMMAND
     if action not in PIONEER_COMMANDS:
@@ -4411,6 +4427,9 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        if path == "/api/pioneer/connection":
+            if _remote_request(self): self.send_error(403); return
+            self.send_bytes(json.dumps(pioneer_connection_diagnostics()).encode()); return
         if path == "/api/pioneer/monitor":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps(pioneer_monitor_summary()).encode()); return
