@@ -24,3 +24,11 @@
 4. Try single volume step with explicit double confirmation and physically observe.
 5. Identify HM82-specific Digital In code safely from documentation or observed source changes before enabling direct input selection.
 6. Continue stability monitoring with firmware S9784.5032.1010.
+
+## 21 November 2026: validated controls and rotary knob
+- User confirmed live Pioneer power status, and both volume step and mute commands operating correctly from Eldoret on wired Ethernet after firmware update.
+- Physical Pioneer volume was **17** at ~11:04 UK time: baseline for comparing `?V` readback (may show a padded raw code, not necessarily displayed user scale).
+- Mute combined into a single button, red when muted; single-tap controls requested and committed.
+- Rotary knob now handles clockwise/anticlockwise drag, one volume step per gesture (12 degree threshold), arrow key support; **not** an absolute volume-set slider.
+- Following a successful manual action, UI performs one user-triggered status read to synchronise actual displayed volume; no background polling.
+- Confirm displayed code matches the physical receiver's level before mapping a full dial scale. If raw code differs from 17, establish the transformation, do not guess.
