@@ -42,10 +42,20 @@
 .alert-dock{margin-bottom:8px;padding:8px 12px}
 .footer{padding-top:7px}
 @media(max-width:620px){.tile{min-height:80px;padding:10px 11px}.tile .primary{font-size:18px}.alert-dock{padding:9px}}
+.directory-trigger{min-width:28px;width:28px;height:30px;padding:0;border:1px solid #355d66;border-radius:8px;background:#112a39;color:#a8dacd;font-size:12px;font-weight:850;cursor:pointer;line-height:1}
+.directory-trigger[aria-expanded="true"]{color:#03191b;background:#a8e8cf}
+.directory-panel{position:fixed;z-index:70;top:72px;right:14px;width:min(420px,calc(100vw - 28px));max-height:calc(100dvh - 86px);overflow:auto;background:#0d2230f7;border:1px solid #477269;border-radius:14px;box-shadow:0 18px 55px #000b;padding:13px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.directory-panel[hidden]{display:none}
+.directory-head{display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:.12em;color:#a1d6c7;margin-bottom:10px}
+.directory-head button{color:#e1f9ed;background:#1a3842;border:1px solid #46736d;border-radius:7px;width:32px;height:30px;font-size:22px;cursor:pointer}
+.directory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.directory-grid a{display:flex;align-items:center;min-height:39px;background:#173445;border:1px solid #345869;border-radius:9px;color:#e0f8f1;text-decoration:none;padding:8px 10px;font-size:12px;font-weight:600}
+.directory-grid a:focus-visible,.directory-grid a:hover{background:#27514f;border-color:#80bdac}
+@media(max-width:620px){.directory-panel{top:55px;right:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 65px)}}
 </style></head>
 <body><main class="shell">
-<header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>LIVE CONTROL</small></h1></a><div class="top-right"><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="refresh" id="refresh" type="button">↻</button></div></header>
-<div class="section"><strong>SYSTEMS</strong><span id="health">Checking devices…</span></div>
+<header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>LIVE CONTROL</small></h1></a><div class="top-right"><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="directory-trigger" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open Eldoret directory" title="All Eldoret pages">H</button><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
+<nav class="directory-panel" id="directoryPanel" aria-label="All Eldoret controls" hidden><div class="directory-head"><strong>ELDORET DIRECTORY</strong><button type="button" id="directoryClose" aria-label="Close directory">×</button></div><div class="directory-grid"><a href="ipad.html">Home</a><a href="zappi.html">Nissan + Zappi</a><a href="av.html#ps5Panel">PlayStation</a><a href="pioneer.html">Kitchen Audio</a><a href="lights.html">Lights</a><a href="house.html">House Hue</a><a href="utility.html">Utility Hue</a><a href="sky.html">Sky Q</a><a href="tvs.html">Televisions</a><a href="appliances.html">Appliances</a><a href="velux.html">VELUX</a><a href="network.html">Network</a><a href="office.html">Printer / Office</a><a href="bulldog.html">Bulldog</a><a href="radio.html">Radio</a><a href="engineering.html">Diagnostics</a><a href="index.html">Desktop View</a></div></nav><div class="section"><strong>SYSTEMS</strong><span id="health">Checking devices…</span></div>
 <aside class="alert-dock" id="alertsDock" aria-labelledby="alertsTitle"><div class="alert-head"><strong id="alertsTitle">⚠ HOME ALERTS</strong><span id="alertCount" aria-live="polite">Checking…</span></div><div class="alert-list" id="alertsList"><span class="alert-empty">Scanning…</span></div></aside>
 <section class="tiles" aria-label="Devices and home systems">
 <a class="tile highlight" href="zappi.html" id="energy"><div class="tile-ident"><span class="symbol" aria-hidden="true">🚗</span><div class="tile-namegroup"><span class="name">Nissan + Zappi</span><span class="hint">BATTERY · kW · RANGE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
@@ -70,6 +80,13 @@ const num=v=>typeof v==='number'&&Number.isFinite(v);
 const label=v=>v===null||v===undefined||v===''?'—':String(v);
 const clock=()=>{const d=new Date();$('clock').textContent=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});$('today').textContent=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});};
 clock();setInterval(clock,30000);
+const dirButton=$('directoryTrigger'),dirPanel=$('directoryPanel');
+function toggleDirectory(open){dirPanel.hidden=!open;dirButton.setAttribute('aria-expanded',String(open));}
+dirButton.addEventListener('click',()=>toggleDirectory(dirPanel.hidden));
+$('directoryClose').addEventListener('click',()=>{toggleDirectory(false);dirButton.focus()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!dirPanel.hidden){toggleDirectory(false);dirButton.focus()}});
+document.addEventListener('pointerdown',e=>{if(!dirPanel.hidden&&!dirPanel.contains(e.target)&&!dirButton.contains(e.target))toggleDirectory(false)});
+
 function paint(id,state,primary,secondary,stamp){
  const e=$(id);if(!e)return;
  e.dataset.status=state;
