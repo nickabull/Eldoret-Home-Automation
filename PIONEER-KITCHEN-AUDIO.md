@@ -32,3 +32,11 @@
 - Rotary knob now handles clockwise/anticlockwise drag, one volume step per gesture (12 degree threshold), arrow key support; **not** an absolute volume-set slider.
 - Following a successful manual action, UI performs one user-triggered status read to synchronise actual displayed volume; no background polling.
 - Confirm displayed code matches the physical receiver's level before mapping a full dial scale. If raw code differs from 17, establish the transformation, do not guess.
+
+## 21 November 2026 ~11:08: repeat reboot and monitoring
+- User observed Pioneer spontaneously reboot at approximately **11:07 UK** after firmware S9784.5032.1010. Wired Ethernet had been moved via a PoE switch. This is a **user-observed reboot**, not collected automatically.
+- This confirms the previous firmware release did not eliminate the fault; neither Wi-Fi nor wired via PoE switch has conclusively solved it. Root cause not known.
+- New built-in ICMP monitor checks 10.0.0.78 every 30 seconds, logs transition only after two consistent samples, storing UTC timestamps in `~/eldoret-connector/pioneer-connectivity.jsonl`. No TCP 8102 commands or automatic discovery; timeline available at GET `/api/pioneer/monitor` and from the Kitchen Audio page.
+- **ICMP reachability loss is not proof of a reboot**. If user removes Ethernet intentionally, resulting loss should not be counted as device fault; correlate with reported front-panel shutdowns and equipment power.
+- Log starts only when updated connector restarts and user confirms the host matches wired Pioneer IP. If ping is blocked, this monitor is not reliable. No historical 11:07 ping event is retroactively recorded.
+- Suggested later: compare router/switch port link flap and Pioneer power behavior, inspect thermal/ventilation and hardware fault.
