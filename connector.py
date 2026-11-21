@@ -3824,7 +3824,7 @@ def sanitise_agent_result(value):
     result=value.get("result") or {}
     safe={"status":value.get("status"),"task":task,"task_id":value.get("task_id"),
           "finished_at":value.get("finished_at"),"error":value.get("error")}
-    elif task=="engineering_runtime":
+    if task=="engineering_runtime":
         safe["result"]={"checked_at":result.get("checked_at"),"connector_running":result.get("connector_running"),
                         "uptime_seconds":result.get("uptime_seconds"),"sky_passive_isolation":result.get("sky_passive_isolation"),
                         "pioneer_host":result.get("pioneer_host"),
@@ -3838,7 +3838,7 @@ def sanitise_agent_result(value):
                         "uptime_seconds":runtime.get("uptime_seconds"),
                         "sky_passive_isolation":runtime.get("sky_passive_isolation"),
                         "pioneer":{k:pioneer.get(k) for k in ("connected","power","volume","mute","input","error")}}
-    if task=="printer_status":
+    elif task=="printer_status":
         safe["result"]={k:result.get(k) for k in ("online","model","state","ink","detail","sources") if k in result}
     elif task=="playstation_status":
         safe["result"]={k:result.get(k) for k in ("online","host_type","host_name","system_version",
