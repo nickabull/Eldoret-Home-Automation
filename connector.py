@@ -4526,6 +4526,15 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps({"design":design_centre_read(name,preset)}).encode()); return
             except ValueError:
                 self.send_error(400); return
+        if path == "/api/ariya/status":
+            if _remote_request(self): self.send_error(403); return
+            self.send_bytes(json.dumps({
+                "model":"Nissan Ariya","provider":"NissanConnect Services EU",
+                "configured":False,"battery_percent":None,"range_miles":None,
+                "plugged_in":None,"climate_active":None,"climate_command_enabled":False,
+                "last_vehicle_update":None,
+                "detail":"Nissan account authentication has not been configured on Bulldog. No vehicle polling or climate commands enabled."
+            }).encode()); return
         if path == "/api/zappi/status":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps({"configured":False,"mode":"read-only",
