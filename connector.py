@@ -4441,8 +4441,13 @@ def design_centre_validate(value,name,preset):
         raise ValueError("Too many layers")
     names=set()
     for e in elems:
-        if not isinstance(e,dict) or not {"id","type","name","label","src","x","y","w","h","size","radius","color","bg","opacity","locked","behaviour"}.issubset(set(e)) or not set(e).issubset({"id","type","name","label","src","x","y","w","h","size","radius","color","bg","opacity","locked","behaviour","font","bold","italic","underline","strike","align"}):
+        if not isinstance(e,dict) or not {"id","type","name","label","src","x","y","w","h","size","radius","color","bg","opacity","locked","behaviour"}.issubset(set(e)) or not set(e).issubset({"id","type","name","label","src","x","y","w","h","size","radius","color","bg","opacity","locked","behaviour","font","bold","italic","underline","strike","align","scale","rotation","hidden"}):
             raise ValueError("Invalid layer structure")
+        if "hidden" in e and not isinstance(e["hidden"],bool):
+            raise ValueError("Invalid layer visibility")
+        for key,minimum,maximum in (("scale",20,300),("rotation",-180,180)):
+            if key in e and (not isinstance(e[key],(int,float)) or isinstance(e[key],bool) or not math.isfinite(e[key]) or not minimum<=e[key]<=maximum):
+                raise ValueError("Invalid layer transform")
         if "font" in e and e["font"] not in ("Arial","Georgia","Verdana","Tahoma","Impact","Trebuchet MS","Courier New"):
             raise ValueError("Unsupported font")
         if "align" in e and e["align"] not in ("left","center","right"):
