@@ -4278,6 +4278,69 @@ def pioneer_control(action):
     finally:
         PIONEER_LOCK.release()
 
+
+# Pioneer stability observation: ICMP only (never opens the control socket).
+# A loss of ping is not proof of an amplifier reboot.
+PIONEER_MONITOR_FILE = os.path.join(os.path.expanduser("~/eldoret-connector"),"pioneer-connectivity.jsonl")
+PIONEER_MONITOR_LOCK = threading.Lock()
+PIONEER_MONITOR_LIVE = {"state":"unknown","observed_at":None,"since":None,"host":PIONEER_HOST}
+PIONEER_MONITOR_INTERVAL = 30
+
+def pioneer_monitor_log(event):
+    with PIONEER_MONITOR_LOCK:
+        os.makedirs(os.path.dirname(PIONEER_MONITOR_FILE),exist_ok=True)
+        with open(PIONEER_MONITOR_FILE,"a",encoding="utf-8") as out:
+            out.write(json.dumps(event,separators=(",",":"))+"\n")
+
+def pioneer_monitor_loop():
+    previous=None
+    misses=0
+    successes=0
+    while True:
+        now=datetime.now(timezone.utc).isoformat()
+        try:
+            check=subprocess.run(["ping","-n","-c","1","-W","1",PIONEER_HOST],
+                                 capture_output=True,timeout=3,check=False)
+            alive=check.returncode==0
+        except (OSError,subprocess.TimeoutExpired):
+            alive=False
+        misses=0 if alive else misses+1
+        successes=successes+1 if alive else 0
+        confirmed=("reachable" if successes>=2 else "unreachable" if misses>=2 else None)
+        with PIONEER_MONITOR_LOCK:
+            PIONEER_MONITOR_LIVE["observed_at"]=now
+            PIONEER_MONITOR_LIVE["last_probe_reachable"]=alive
+        if confirmed and confirmed!=previous:
+            event={"at":now,"state":confirmed,"host":PIONEER_HOST,
+                   "method":"ICMP ping; two consecutive samples",
+                   "note":"Connectivity transition, not verified power reboot"}
+            pioneer_monitor_log(event)
+            with PIONEER_MONITOR_LOCK:
+                PIONEER_MONITOR_LIVE.update(state=confirmed,since=now)
+            previous=confirmed
+        time.sleep(PIONEER_MONITOR_INTERVAL)
+
+def pioneer_monitor_summary():
+    with PIONEER_MONITOR_LOCK:
+        live=dict(PIONEER_MONITOR_LIVE)
+        try:
+            with open(PIONEER_MONITOR_FILE,"r",encoding="utf-8") as f:
+                lines=f.readlines()[-200:]
+        except OSError:
+            lines=[]
+    events=[]
+    for line in lines:
+        try:
+            record=json.loads(line)
+            if record.get("state") in ("reachable","unreachable"):
+                events.append(record)
+        except (ValueError,TypeError):
+            continue
+    return {"host":PIONEER_HOST,"live":live,"interval_seconds":PIONEER_MONITOR_INTERVAL,
+            "events":events[-25:],
+            "outages_observed":sum(e["state"]=="unreachable" for e in events),
+            "note":"Ping reachability changes may reflect link/network changes. They do not prove a Pioneer reboot. Logging starts when this version is deployed."}
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -4298,6 +4361,9 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        if path == "/api/pioneer/monitor":
+            if _remote_request(self): self.send_error(403); return
+            self.send_bytes(json.dumps(pioneer_monitor_summary()).encode()); return
         if path == "/api/pioneer/status":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps(pioneer_status()).encode()); return
@@ -4817,6 +4883,7 @@ if __name__ == '__main__':
             sys.exit(1)
         sys.exit(0)
 
+threading.Thread(target=pioneer_monitor_loop, daemon=True).start()
 threading.Thread(target=agent_loop, daemon=True).start()
 threading.Thread(target=device_registry_loop, daemon=True).start()
 threading.Thread(target=_bulldog_history_loop, daemon=True).start()
