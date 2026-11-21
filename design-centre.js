@@ -18,7 +18,12 @@ function render(){format();$('page').value=doc.page;$('preset').value=doc.preset
  if(e.id===selected&&!e.locked){const h=document.createElement('div');h.className='handle';h.addEventListener('pointerdown',evt=>startDrag(evt,e.id,true));node.append(h)}
  stage.append(node)});
  const layers=$('layers');layers.replaceChildren();[...doc.elements].reverse().forEach(e=>{const btn=document.createElement('button');btn.className='layer'+(e.id===selected?' current':'');const name=document.createElement('span');name.textContent=e.name;const kind=document.createElement('small');kind.textContent=e.locked?'🔒':e.type;btn.append(name,kind);btn.addEventListener('click',()=>select(e.id));layers.append(btn)});
- const e=get();$('empty').hidden=!!e;$('inspector').hidden=!e;if(e){fields.forEach(id=>{$(id).value=id==='locked'?String(e[id]):e[id]??''});for(const [id,key] of [['boldToggle','bold'],['italicToggle','italic'],['underlineToggle','underline'],['strikeToggle','strike'],['textLeft','left'],['textCenter','center'],['textRight','right']]){$(id).classList.toggle('active',key==='left'||key==='center'||key==='right'?e.align===key:!!e[key]);}}resizeStage();
+ const e=get();$('empty').hidden=!!e;$('inspector').hidden=!e;if(e){fields.forEach(id=>{$(id).value=id==='locked'?String(e[id]):e[id]??''});$('sizeSlider').value=Math.max(8,Math.min(160,e.size));$('opacitySlider').value=e.opacity;
+for(const [slider,field] of [['sizeSlider','size'],['opacitySlider','opacity']]){
+ $(slider).addEventListener('input',()=>{const e=get();if(!e)return;const v=Number($(slider).value);e[field]=v;$(field).value=v;const node=document.querySelector('.element.selected');if(node){if(field==='size')node.style.fontSize=v+'px';else node.style.background=cssRGB(e.bg,v)}dirty=true;notice('Unsaved changes')});
+ $(slider).addEventListener('change',()=>{render();notice('Unsaved changes')});
+}
+for(const [id,key] of [['boldToggle','bold'],['italicToggle','italic'],['underlineToggle','underline'],['strikeToggle','strike'],['textLeft','left'],['textCenter','center'],['textRight','right']]){$(id).classList.toggle('active',key==='left'||key==='center'||key==='right'?e.align===key:!!e[key]);}}resizeStage();
 }
 function select(id){selected=id;render()}
 $('stage').addEventListener('click',()=>select(null));
