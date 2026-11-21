@@ -75,3 +75,7 @@
 - This validates the manual one-TCP-session strategy for all four queries. Previous immediate per-command reconnect was refused at second (volume) query. Reboot fault is separate and remains unresolved.
 - **Do not convert raw volume 089 to a physical displayed number or percentage until verified.** **Do not assign meaning to source 59 without verification.**
 - User-confirmed working status data can now underpin Eldoret Design Centre component bindings; no increase in background control polling.
+
+## Volume calibration — 21 November 2026, 12:12 GMT
+- At approximately 12:11 the API reported `VOL089` (displayed by Eldoret as raw code `089`). At 12:12 the user confirmed the physical amplifier volume display was **16**.
+- First observed calibration point: **raw `089` ↔ physical display `16`**. Do not infer a conversion formula from one sample, and do not assume the value was unchanged if the user adjusted it in the intervening minute. Ask for one adjacent point after a single volume step to establish direction/step size.
