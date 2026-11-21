@@ -3824,6 +3824,20 @@ def sanitise_agent_result(value):
     result=value.get("result") or {}
     safe={"status":value.get("status"),"task":task,"task_id":value.get("task_id"),
           "finished_at":value.get("finished_at"),"error":value.get("error")}
+    elif task=="engineering_runtime":
+        safe["result"]={"checked_at":result.get("checked_at"),"connector_running":result.get("connector_running"),
+                        "uptime_seconds":result.get("uptime_seconds"),"sky_passive_isolation":result.get("sky_passive_isolation"),
+                        "pioneer_host":result.get("pioneer_host"),
+                        "pioneer_state":(result.get("pioneer_monitor") or {}).get("live",{}).get("state")}
+    elif task=="engineering_pioneer":
+        safe["result"]={k:result.get(k) for k in ("connected","power","volume","mute","input","error","checked_at")}
+    elif task=="engineering_snapshot":
+        runtime=result.get("runtime") or {}
+        pioneer=result.get("pioneer") or {}
+        safe["result"]={"checked_at":runtime.get("checked_at"),
+                        "uptime_seconds":runtime.get("uptime_seconds"),
+                        "sky_passive_isolation":runtime.get("sky_passive_isolation"),
+                        "pioneer":{k:pioneer.get(k) for k in ("connected","power","volume","mute","input","error")}}
     if task=="printer_status":
         safe["result"]={k:result.get(k) for k in ("online","model","state","ink","detail","sources") if k in result}
     elif task=="playstation_status":
@@ -3878,9 +3892,45 @@ def agent_relay(value):
     except Exception:
         return False
 
+
+# Read-only engineering tasks. No shell, sudo, process restarts, or secrets.
+def engineering_runtime_diagnostics():
+    uptime=None
+    try:
+        with open("/proc/uptime",encoding="ascii") as f:
+            uptime=int(float(f.readline().split()[0]))
+    except (OSError,ValueError,IndexError):
+        pass
+    return {
+        "checked_at":datetime.now(timezone.utc).isoformat(),
+        "host":socket.gethostname(),
+        "uptime_seconds":uptime,
+        "python":platform.python_version(),
+        "connector_running":True,
+        "active_threads":threading.active_count(),
+        "sky_passive_isolation":SKY_PASSIVE_ISOLATION,
+        "pioneer_host":PIONEER_HOST,
+        "pioneer_monitor":pioneer_monitor_summary(),
+        "disruptive_actions_enabled":False,
+        "credential_access_enabled":False,
+    }
+
+def engineering_pioneer_diagnostics():
+    result=pioneer_status()
+    result["monitor"]=pioneer_monitor_summary()
+    result["checked_at"]=datetime.now(timezone.utc).isoformat()
+    return result
+
+def engineering_snapshot():
+    return {"runtime":engineering_runtime_diagnostics(),
+            "pioneer":engineering_pioneer_diagnostics()}
+
 def run_agent_task(task):
     # Deliberately allow-listed. No arbitrary commands or shell execution.
     allowed = {
+        "engineering_runtime": engineering_runtime_diagnostics,
+        "engineering_pioneer": engineering_pioneer_diagnostics,
+        "engineering_snapshot": engineering_snapshot,
         "network_inventory": lan_inventory,
         "network_status": network_status,
         "velux_discovery": velux_active_discovery,
