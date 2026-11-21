@@ -4427,6 +4427,10 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        if path == "/api/zappi/status":
+            if _remote_request(self): self.send_error(403); return
+            self.send_bytes(json.dumps({"configured":False,"mode":"read-only",
+                "detail":"Awaiting secure myenergi gateway serial and API key setup on Bulldog. No charger readings or commands enabled."}).encode()); return
         if path == "/api/pioneer/connection":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps(pioneer_connection_diagnostics()).encode()); return
@@ -4467,6 +4471,7 @@ class Handler(BaseHTTPRequestHandler):
             "/velux.html": ("velux.html", "text/html; charset=utf-8"),
             "/pioneer.html": ("pioneer.html", "text/html; charset=utf-8"),
             "/engineering.html": ("engineering.html", "text/html; charset=utf-8"),
+            "/zappi.html": ("zappi.html", "text/html; charset=utf-8"),
             "/pioneer.js": ("pioneer.js", "application/javascript; charset=utf-8"),
             "/velux.js": ("velux.js", "application/javascript; charset=utf-8"),
             "/home.css": ("home.css", "text/css; charset=utf-8"),
