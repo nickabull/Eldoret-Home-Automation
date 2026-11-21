@@ -4215,6 +4215,69 @@ def velux_homekit_readonly():
         _VELUX_READ_CACHE.update(at=now, data=data)
         return dict(data)
 
+
+# Pioneer XC-HM82D-K - manually initiated LAN control only.
+PIONEER_HOST = os.environ.get("PIONEER_HOST", "10.0.0.78")
+PIONEER_PORT = 8102
+PIONEER_LOCK = threading.Lock()
+PIONEER_LAST_COMMAND = 0.0
+PIONEER_COMMANDS = {"volume_up":"VU", "volume_down":"VD", "mute_on":"MO",
+                    "mute_off":"MF", "power_off":"PF", "power_on":"PO",
+                    "source_next":"FU"}
+
+def pioneer_exchange(command, timeout=1.5):
+    with socket.create_connection((PIONEER_HOST,PIONEER_PORT), timeout=timeout) as sock:
+        sock.settimeout(timeout)
+        sock.sendall((command + "\r").encode("ascii"))
+        try:
+            return sock.recv(256).decode("ascii", errors="replace").strip()
+        except socket.timeout:
+            return ""
+
+def pioneer_status():
+    result={"host":PIONEER_HOST,"connected":False,"power":None,
+            "volume":None,"mute":None,"input":None}
+    if not PIONEER_LOCK.acquire(blocking=False):
+        result["error"]="Another Pioneer request is in progress"
+        return result
+    try:
+        for command,key,prefix in (("?P","power","PWR"),("?V","volume","VOL"),
+                                   ("?M","mute","MUT"),("?F","input","FN")):
+            reply=pioneer_exchange(command)
+            if key=="power" and reply.startswith("PWR"):
+                result["connected"]=True
+                result[key]="On" if reply=="PWR0" else ("Standby" if reply=="PWR2" else reply)
+            elif reply.startswith(prefix):
+                code=reply[len(prefix):]
+                result[key]=("Muted" if code=="0" else "Not muted") if key=="mute" and code in ("0","1") else code
+            elif not result["connected"]:
+                result["error"]="No recognised response from Pioneer"
+                break
+        return result
+    except (OSError, ValueError) as exc:
+        result["error"]="Pioneer unavailable: "+type(exc).__name__
+        return result
+    finally:
+        PIONEER_LOCK.release()
+
+def pioneer_control(action):
+    global PIONEER_LAST_COMMAND
+    if action not in PIONEER_COMMANDS:
+        return {"ok":False,"error":"Unsupported command"}
+    if not PIONEER_LOCK.acquire(blocking=False):
+        return {"ok":False,"error":"Receiver busy"}
+    try:
+        now=time.monotonic()
+        if now-PIONEER_LAST_COMMAND<1.2:
+            return {"ok":False,"error":"Please wait before sending another command"}
+        PIONEER_LAST_COMMAND=now
+        reply=pioneer_exchange(PIONEER_COMMANDS[action])
+        return {"ok":True,"command":action,"reply":reply[:80],"host":PIONEER_HOST}
+    except (OSError, ValueError) as exc:
+        return {"ok":False,"error":"Receiver connection failed: "+type(exc).__name__}
+    finally:
+        PIONEER_LOCK.release()
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -4235,6 +4298,9 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+        if path == "/api/pioneer/status":
+            if _remote_request(self): self.send_error(403); return
+            self.send_bytes(json.dumps(pioneer_status()).encode()); return
         if path == "/api/sky/isolation":
             with SKY_PASSIVE_LOCK: blocked=dict(SKY_PASSIVE_BLOCKED)
             self.send_bytes(json.dumps({"enabled":SKY_PASSIVE_ISOLATION,
@@ -4264,6 +4330,8 @@ class Handler(BaseHTTPRequestHandler):
             "/home-briefing.js": ("home-briefing.js", "application/javascript; charset=utf-8"),
             "/home.js": ("home.js", "application/javascript; charset=utf-8"),
             "/velux.html": ("velux.html", "text/html; charset=utf-8"),
+            "/pioneer.html": ("pioneer.html", "text/html; charset=utf-8"),
+            "/pioneer.js": ("pioneer.js", "application/javascript; charset=utf-8"),
             "/velux.js": ("velux.js", "application/javascript; charset=utf-8"),
             "/home.css": ("home.css", "text/css; charset=utf-8"),
             "/lights.html": ("lights.html", "text/html; charset=utf-8"),
@@ -4587,6 +4655,23 @@ class Handler(BaseHTTPRequestHandler):
             return
         if _remote_request(self) and not _remote_session_ok(self):
             self.send_response(401); self.end_headers(); return
+        if urllib.parse.urlparse(self.path).path == "/api/pioneer/control":
+            origin=self.headers.get("Origin","")
+            host=self.headers.get("Host","")
+            if (_remote_request(self) or not host or
+                not host.startswith(("10.0.0.34:","localhost:","127.0.0.1:")) or
+                origin!="http://"+host or
+                self.headers.get("Content-Type","").split(";")[0].strip()!="application/json" or
+                length>128):
+                self.send_error(403); return
+            try:
+                request=json.loads(raw_body)
+                if not isinstance(request,dict) or set(request)!={"action"} or not isinstance(request["action"],str):
+                    raise ValueError("Invalid control request")
+                result=pioneer_control(request["action"])
+                self.send_bytes(json.dumps(result).encode()); return
+            except (ValueError, TypeError):
+                self.send_error(400); return
         payload = json.loads(raw_body or b"{}")
         if self.path.startswith("/api/lg/room/") or self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy","/api/lg/kitchen/learn-mac","/api/lg/kitchen/wake","/api/lg/kitchen/hdmi1","/api/lg/hdmi1"):
             # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
