@@ -97,3 +97,9 @@
 - Using documented Zappi API semantics, coded `myenergi_decode_zappi()`: `sta` and `pst` determine charging/paused/complete/cable state; `zmo` gives charging mode (Fast/Eco/Eco+/Stopped); `div` is power in watts (display as kW), `che` is energy added in kWh. Missing keys deliberately remain unknown; retain raw codes for diagnosing discrepancies.
 - Updated `zappi.html` to display charging mode and cable state; no controls or schedule changes. Integration revisions: connector `91d2abab522cbdcd8368e743a41e5a01c8b5911d`; page `d3e6d744dbc0123ddb8bdb146e18a5a908f46c42`.
 - **Conversions have not yet been visually verified against the actual charger after deployment.** If live state displays unexpected information, examine raw `sta,pst,div,che,zmo` and cross-check with Zappi screen. Zappi cloud data is cached for 120 seconds. Car Ariya Nissan API still unconfigured.
+
+## 21 November 2026, 17:50 — Zappi failed-to-fetch bug identified and patched
+- User screenshot showed Car Charging `Status check failed: Failed to fetch` after Zappi decoding update, despite previous successful API authentication.
+- Confirmed `myenergi_decode_zappi()` uses `math.isfinite`, but `math` was only imported inside unrelated UniFi helper, not at module scope. This leads to an unhandled `NameError` when real numeric `div` or `che` fields are processed, causing HTTP connection to terminate without a JSON response.
+- Fixed by adding global `import math` to `connector.py`; committed `9f4bb2c8917bb2a7afac24241c19e2f616d4b072`. Credentials, cache, read-only mode and Sky isolation unchanged.
+- Not yet verified on live Bulldog after its auto-update: user should reload Car Charging and press Refresh both statuses. If error persists, check `/api/zappi/status` locally before troubleshooting credentials.
