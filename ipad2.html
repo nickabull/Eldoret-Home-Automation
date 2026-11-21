@@ -187,12 +187,66 @@ h1{letter-spacing:.20em;font-size:23px}h1 small{color:#f3c597;letter-spacing:.25
 .directory-panel{background:#1e1724f7;border-color:#c7927c77}.directory-grid a{background:#322733;border-color:#946f78}.directory-grid a:hover{background:#574050}
 @media(max-width:850px){#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}#telemetry .tile{min-height:119px}.family-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){#telemetry .tile{min-height:108px;padding:11px}#telemetry .tile .hint{display:none}#telemetry .tile .primary{font-size:17px}.family-card{min-height:123px;padding:13px}.family-card .family-icon{font-size:28px}.family-card strong{font-size:16px}.family-heading h2{font-size:23px}.mode-btn{font-size:10px}.drawer-action{min-height:84px}}
+
+/* Eldoret 2.1 — high-art family actions, compact real telemetry underneath */
+.hero-home{margin-top:10px}
+.hero-home[hidden],.telemetry-heading[hidden]{display:none!important}
+.hero-topline{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 1px 10px}
+.hero-topline .micro{font-size:9px;letter-spacing:.22em;color:#f4b88d;font-weight:750}
+.hero-topline h2{font-size:clamp(21px,2.6vw,36px);margin:4px 0 0;font-weight:700;letter-spacing:-.045em;color:#fff2e4}
+.hero-topline-right{font-size:10px;font-weight:750;letter-spacing:.1em;color:#ebccb4;white-space:nowrap}
+.hero-topline-right span{color:#f8ba87;margin-left:5px}
+.hero-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.hero-action{appearance:none;position:relative;isolation:isolate;overflow:hidden;text-align:left;min-height:141px;padding:13px 16px;display:flex;flex-direction:column;align-items:flex-start;border:1px solid #ffffff5a;border-radius:18px;background:#14121b;color:#fff6e9;cursor:pointer;box-shadow:0 13px 27px #0008;transition:transform .15s,border-color .15s}
+.hero-action::before{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(92deg,#0a0b13db 0%,#14101cc7 42%,#2513274a 100%),var(--hero-bg,linear-gradient(110deg,#37263a,#121826));background-position:center;background-size:cover;transform:scale(1.01);transition:transform .22s}
+.hero-action::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 87% 18%,var(--hero-glow,#f4b27b88),transparent 50%),linear-gradient(0deg,#101019cf 0%,transparent 75%)}
+.hero-action:hover,.hero-action:focus-visible{border-color:#ffe3ba;transform:translateY(-1px);outline:none}
+.hero-action:hover::before{transform:scale(1.065)}
+.hero-action .hero-meta{font-size:9px;font-weight:830;letter-spacing:.16em;color:#f7c49c;z-index:1}
+.hero-action strong{font-size:clamp(21px,2.15vw,28px);font-weight:760;letter-spacing:-.035em;margin-top:16px;line-height:1.06;z-index:1;text-shadow:0 3px 10px #000b}
+.hero-action .hero-sub{font-size:11px;color:#f4dbd1;margin-top:7px;z-index:1}
+.hero-action .hero-reading{font-size:10px;color:#efceac;margin-top:auto;padding-top:6px;z-index:1;max-width:90%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero-action .hero-arrow{position:absolute;bottom:13px;right:14px;color:#ffe7b7;font-size:17px}
+.hero-illustration{position:absolute;right:19px;top:23px;font-size:67px;line-height:1;opacity:.70;filter:drop-shadow(0 13px 11px #000b);transform:rotate(-9deg);pointer-events:none}
+.hero-warmcar{--hero-glow:#ffba589c;--hero-bg:linear-gradient(110deg,#5f332b,#8f5632 62%,#211525)}
+.hero-watch{--hero-glow:#905ce6b6;--hero-bg:linear-gradient(110deg,#252047,#38318a 68%,#1a1531)}
+.hero-lighting{--hero-glow:#ffc64eb1;--hero-bg:linear-gradient(110deg,#5b371f,#936a21 70%,#251625)}
+.hero-windows{--hero-glow:#79e0cf99;--hero-bg:linear-gradient(110deg,#174549,#225c6c 70%,#102a3d)}
+.hero-music{--hero-glow:#ee62aeb3;--hero-bg:linear-gradient(110deg,#582843,#8d2f67 70%,#20182f)}
+.hero-status{--hero-glow:#91b0ffc1;--hero-bg:linear-gradient(110deg,#2e395c,#536485 65%,#1b243a)}
+.telemetry-heading{display:flex;align-items:center;gap:10px;margin:13px 1px 7px}
+.telemetry-heading strong{font-size:11px;letter-spacing:.16em;color:#f4cba6}
+.telemetry-heading span{font-size:9px;color:#cfb7ad;letter-spacing:.06em}
+.telemetry-heading button{margin-left:auto;border:1px solid #ba937258;color:#f7d1af;background:#2b2029a3;border-radius:8px;font-size:9px;letter-spacing:.06em;padding:6px 9px;cursor:pointer}
+#telemetry{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+#telemetry .tile{min-height:78px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;border-radius:12px;padding:9px;background:#16141bdc}
+#telemetry .tile::after{font-size:39px;right:4px;top:10px;opacity:.54}
+#telemetry .tile-ident{gap:6px;align-items:center}
+#telemetry .tile .symbol{font-size:14px}
+#telemetry .tile .name{font-size:11px}
+#telemetry .tile .hint,#telemetry .tile .chevron{display:none}
+#telemetry .tile-data{margin-top:2px;align-items:flex-start}
+#telemetry .tile .primary{font-size:14px}
+#telemetry .tile .secondary{font-size:9px;-webkit-line-clamp:1}
+#telemetry .tile .state{font-size:8px}
+@media(min-width:900px) and (max-height:830px){
+ .hero-action{min-height:126px;padding:10px 13px}.hero-action strong{margin-top:11px;font-size:22px}.hero-illustration{font-size:55px}
+ .hero-grid{gap:8px}.hero-topline{margin-bottom:7px}
+ #telemetry .tile{min-height:70px;padding:7px}.telemetry-heading{margin-top:9px}
+}
+@media(max-width:900px){#telemetry{grid-template-columns:repeat(5,minmax(0,1fr))}.hero-illustration{font-size:56px;right:11px}.hero-action strong{font-size:22px}}
+@media(max-width:700px){.hero-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#telemetry{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-action{min-height:126px}.hero-topline-right{display:none}}
+@media(max-width:420px){.hero-action{min-height:124px;padding:10px}.hero-action strong{font-size:19px}.hero-action .hero-meta{font-size:8px}.hero-action .hero-sub{font-size:10px}.hero-illustration{font-size:47px;top:17px;right:8px}#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}.telemetry-heading span{display:none}.hero-topline h2{font-size:23px}}
 </style></head>
 <body><main class="shell">
 <header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>HOME 2.0</small></h1></a><div class="top-right"><button class="mode-btn" id="modeBtn" type="button" aria-label="Open family controls">CONTROLS</button><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="directory-trigger" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open Eldoret directory" title="All Eldoret pages">H</button><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
-<nav class="directory-panel" id="directoryPanel" aria-label="All Eldoret controls" hidden><div class="directory-head"><strong>ELDORET DIRECTORY</strong><button type="button" id="directoryClose" aria-label="Close directory">×</button></div><div class="directory-grid"><a href="ipad2.html">Home 2.0</a><a href="zappi.html">Nissan + Zappi</a><a href="av.html#ps5Panel">PlayStation</a><a href="pioneer.html">Kitchen Audio</a><a href="lights.html">Lights</a><a href="house.html">House Hue</a><a href="utility.html">Utility Hue</a><a href="sky.html">Sky Q</a><a href="tvs.html">Televisions</a><a href="appliances.html">Appliances</a><a href="velux.html">VELUX</a><a href="network.html">Network</a><a href="office.html">Printer / Office</a><a href="bulldog.html">Bulldog</a><a href="radio.html">Radio</a><a href="engineering.html">Diagnostics</a><a href="index.html">Desktop View</a></div></nav><div class="section" id="holdingTitle"><strong>LIVE HOME · ALL SYSTEMS</strong><span id="health">Checking devices…</span></div>
+<nav class="directory-panel" id="directoryPanel" aria-label="All Eldoret controls" hidden><div class="directory-head"><strong>ELDORET DIRECTORY</strong><button type="button" id="directoryClose" aria-label="Close directory">×</button></div><div class="directory-grid"><a href="ipad2.html">Home 2.0</a><a href="zappi.html">Nissan + Zappi</a><a href="av.html#ps5Panel">PlayStation</a><a href="pioneer.html">Kitchen Audio</a><a href="lights.html">Lights</a><a href="house.html">House Hue</a><a href="utility.html">Utility Hue</a><a href="sky.html">Sky Q</a><a href="tvs.html">Televisions</a><a href="appliances.html">Appliances</a><a href="velux.html">VELUX</a><a href="network.html">Network</a><a href="office.html">Printer / Office</a><a href="bulldog.html">Bulldog</a><a href="radio.html">Radio</a><a href="engineering.html">Diagnostics</a><a href="index.html">Desktop View</a></div></nav><div class="section" id="holdingTitle"><strong>HOME IS LIVE</strong><span id="health">Checking devices…</span></div>
 <aside class="alert-dock" id="alertsDock" aria-labelledby="alertsTitle"><div class="alert-head"><strong id="alertsTitle">⚠ HOME ALERTS</strong><span id="alertCount" aria-live="polite">Checking…</span></div><div class="alert-list" id="alertsList"><span class="alert-empty">Scanning…</span></div></aside>
-<section class="tiles" id="telemetry" aria-label="Live home systems">
+<section id="heroHome" class="hero-home" aria-label="Everyday home controls">
+<div class="hero-topline"><div><span class="micro">ELDORET · THE HOUSE</span><h2>Everything at home.</h2></div><span class="hero-topline-right">ONE TAP TO CONTROL <span aria-hidden="true">↗</span></span></div>
+<div class="hero-grid"><button type="button" class="hero-action hero-warmcar" data-hero="warmcar" aria-label="Warm the car"><span class="hero-illustration" aria-hidden="true">🚗</span><span class="hero-meta">CAR</span><strong>Warm the car</strong><span class="hero-sub">Climate · charging</span><span class="hero-reading" id="heroReading-warmcar">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-watch" data-hero="watch" aria-label="Watch TV"><span class="hero-illustration" aria-hidden="true">📺</span><span class="hero-meta">TELEVISION</span><strong>Watch TV</strong><span class="hero-sub">Sky · rooms · volume</span><span class="hero-reading" id="heroReading-watch">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-lighting" data-hero="lighting" aria-label="Lights"><span class="hero-illustration" aria-hidden="true">💡</span><span class="hero-meta">LIGHTING</span><strong>Lights</strong><span class="hero-sub">Rooms · scenes</span><span class="hero-reading" id="heroReading-lighting">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-windows" data-hero="windows" aria-label="Windows"><span class="hero-illustration" aria-hidden="true">🪟</span><span class="hero-meta">WINDOWS</span><strong>Windows</strong><span class="hero-sub">VELUX · ventilation</span><span class="hero-reading" id="heroReading-windows">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-music" data-hero="music" aria-label="Play music"><span class="hero-illustration" aria-hidden="true">♫</span><span class="hero-meta">AUDIO</span><strong>Play music</strong><span class="hero-sub">Pioneer · radio</span><span class="hero-reading" id="heroReading-music">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-status" data-hero="status" aria-label="House status"><span class="hero-illustration" aria-hidden="true">⌂</span><span class="hero-meta">HOUSE</span><strong>House status</strong><span class="hero-sub">Appliances · alerts</span><span class="hero-reading" id="heroReading-status">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button></div>
+</section>
+<div class="telemetry-heading"><strong>THE LIVE PICTURE</strong><span>BATTERY · ENERGY · NETWORK · HOME</span><button type="button" id="showAllSystems" aria-label="View all systems">ALL SYSTEMS ↗</button></div><section class="tiles" id="telemetry" aria-label="Live home systems">
 <a class="tile highlight" href="zappi.html" id="energy"><div class="tile-ident"><span class="symbol" aria-hidden="true">🚗</span><div class="tile-namegroup"><span class="name">Nissan + Zappi</span><span class="hint">BATTERY · kW · RANGE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
 <a class="tile" href="av.html#ps5Panel" id="ps5"><div class="tile-ident"><span class="symbol" aria-hidden="true">🎮</span><div class="tile-namegroup"><span class="name">Jesse's PS5</span><span class="hint">GAME · PRESENCE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
 <a class="tile" href="pioneer.html" id="pioneer"><div class="tile-ident"><span class="symbol" aria-hidden="true">♫</span><div class="tile-namegroup"><span class="name">Pioneer Audio</span><span class="hint">PWR · VOL · INPUT</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
@@ -281,7 +335,7 @@ function energyPaint(){
  const power=num(z.charge_power_kw)?z.charge_power_kw.toFixed(2)+' kW':'Power —';
  const range=num(a.range_miles)?Math.round(a.range_miles)+' mi':'Range —';
  const mode=z.charge_mode||'Mode —';
- paint('energy',connected?'ok':'unknown',battery+' · '+power,range+' · '+mode,a.last_vehicle_update||z.checked_at);
+ paint('energy',connected?'ok':'unknown',battery+' · '+power,range+' · '+mode,a.last_vehicle_update||z.checked_at);heroReading('warmcar',battery+' · '+range+' · '+power);
 }
 setAlerts('initial',[]);
 
@@ -304,8 +358,8 @@ function familyCatalogue(){
  $('clearSearch').hidden=!term;
 }
 function switchPage(to){
- if(to==='family'){pageMode='family';$('telemetry').hidden=true;$('holdingTitle').hidden=true;$('familyScreen').hidden=false;$('modeBtn').textContent='LIVE';$('modeBtn').setAttribute('aria-label','Return to live wall');}
- else{pageMode='live';closeDrawer();$('telemetry').hidden=false;$('holdingTitle').hidden=false;$('familyScreen').hidden=true;$('modeBtn').textContent='CONTROLS';$('modeBtn').setAttribute('aria-label','Open family controls');}
+ if(to==='family'){pageMode='family';$('telemetry').hidden=true;$('heroHome').hidden=true;document.querySelector('.telemetry-heading').hidden=true;$('holdingTitle').hidden=true;$('familyScreen').hidden=false;$('modeBtn').textContent='LIVE';$('modeBtn').setAttribute('aria-label','Return to live wall');}
+ else{pageMode='live';closeDrawer();$('telemetry').hidden=false;$('heroHome').hidden=false;document.querySelector('.telemetry-heading').hidden=false;$('holdingTitle').hidden=false;$('familyScreen').hidden=true;$('modeBtn').textContent='CONTROLS';$('modeBtn').setAttribute('aria-label','Open family controls');}
 }
 function detailLinks(container,links,technical){
  container.replaceChildren();
@@ -357,6 +411,9 @@ $('drawerClose').addEventListener('click',closeDrawer);$('drawerBack').addEventL
 scrim.addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!drawer.hidden){closeDrawer();e.stopPropagation()}});
 familyCatalogue();
+document.querySelectorAll('[data-hero]').forEach(b=>b.addEventListener('click',()=>{switchPage('family');const item=catalogue.find(x=>x.id===b.dataset.hero);if(item)openDrawer(item)}));
+$('showAllSystems').addEventListener('click',()=>{switchPage('family');document.querySelector('[data-family-tab="systems"]').click()});
+function heroReading(id,value){const el=$('heroReading-'+id);if(el)el.textContent=value||'—';}
 
 const jobs=[
 {id:'energy',url:'/api/ariya/status',fn:p=>{energy.car=p;energyPaint()}},
