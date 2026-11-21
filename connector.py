@@ -4285,43 +4285,61 @@ def pioneer_exchange(command, timeout=1.5):
             return ""
 
 def pioneer_status():
-    # Read-only manual check. One query per connection, no automatic retries.
+    # One manual TCP session for all queries. The XC-HM82 may temporarily refuse
+    # a second connection opened immediately after the first has closed.
+    # No device writes or background status polling; never retry automatically.
     result={"host":PIONEER_HOST,"connected":False,"power":None,
             "volume":None,"mute":None,"input":None,
             "checked_at":datetime.now(timezone.utc).isoformat(),
-            "query_results":[]}
+            "query_results":[],"connection_mode":"single_socket"}
     if not PIONEER_LOCK.acquire(blocking=False):
         result["error"]="Another Pioneer request is in progress"
         return result
     try:
-        for command,key,prefix in (("?P","power","PWR"),("?V","volume","VOL"),
-                                   ("?M","mute","MUT"),("?F","input","FN")):
-            started=time.monotonic()
-            try:
-                reply=pioneer_exchange(command)
-            except (OSError, ValueError) as exc:
-                result["query_results"].append({"field":key,"status":"connection_failed",
-                    "error":type(exc).__name__,"elapsed_ms":round((time.monotonic()-started)*1000)})
-                result["error"]="Pioneer "+key+" check failed: "+type(exc).__name__
-                break
-            item={"field":key,"status":"no_reply" if not reply else "unexpected_reply",
-                  "elapsed_ms":round((time.monotonic()-started)*1000)}
-            if key=="power" and reply.startswith("PWR"):
-                result["connected"]=True
-                result[key]="On" if reply=="PWR0" else ("Standby" if reply=="PWR2" else reply)
-                item["status"]="ok"
-            elif reply.startswith(prefix):
-                result["connected"]=True
-                code=reply[len(prefix):]
-                result[key]=("Muted" if code=="0" else "Not muted") if key=="mute" and code in ("0","1") else code
-                item["status"]="ok"
-            result["query_results"].append(item)
-            if item["status"]!="ok":
-                result["error"]="Pioneer "+key+" query returned "+item["status"]
-                break
+        try:
+            sock=socket.create_connection((PIONEER_HOST,PIONEER_PORT),timeout=1.5)
+        except (OSError,ValueError) as exc:
+            result["error"]="Pioneer connection failed: "+type(exc).__name__
+            result["query_results"].append({"field":"connection","status":"connection_failed",
+                                             "error":type(exc).__name__})
+            return result
+        with sock:
+            sock.settimeout(1.5)
+            # Makefile preserves framing even if TCP returns partial lines.
+            with sock.makefile("rb") as stream:
+                for command,key,prefix in (("?P","power","PWR"),("?V","volume","VOL"),
+                                           ("?M","mute","MUT"),("?F","input","FN")):
+                    started=time.monotonic()
+                    try:
+                        sock.sendall((command+"\r").encode("ascii"))
+                        raw=stream.readline(256)
+                        reply=raw.decode("ascii",errors="replace").strip() if raw else ""
+                    except (OSError,ValueError) as exc:
+                        result["query_results"].append({
+                            "field":key,"status":"socket_failed",
+                            "error":type(exc).__name__,
+                            "elapsed_ms":round((time.monotonic()-started)*1000)})
+                        result["error"]="Pioneer "+key+" check failed: "+type(exc).__name__
+                        break
+                    item={"field":key,"status":"no_reply" if not reply else "unexpected_reply",
+                          "elapsed_ms":round((time.monotonic()-started)*1000)}
+                    if key=="power" and reply.startswith("PWR"):
+                        result["connected"]=True
+                        result[key]="On" if reply=="PWR0" else ("Standby" if reply=="PWR2" else reply)
+                        item["status"]="ok"
+                    elif reply.startswith(prefix):
+                        result["connected"]=True
+                        code=reply[len(prefix):]
+                        result[key]=("Muted" if code=="0" else "Not muted") if key=="mute" and code in ("0","1") else code
+                        item["status"]="ok"
+                    result["query_results"].append(item)
+                    if item["status"]!="ok":
+                        result["error"]="Pioneer "+key+" query returned "+item["status"]
+                        break
         return result
     finally:
         PIONEER_LOCK.release()
+
 
 def pioneer_connection_diagnostics():
     """User-triggered bounded checks. Do not send Pioneer control commands."""
