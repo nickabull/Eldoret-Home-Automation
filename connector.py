@@ -43,7 +43,7 @@ SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
 SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
 # Temporary diagnostic: prevent ALL passive Sky Q GET requests from reaching the box.
 # Manual Sky Q POST remote/channel commands remain enabled.
-SKY_PASSIVE_ISOLATION = False
+SKY_PASSIVE_ISOLATION = True
 SKY_PASSIVE_BLOCKED = {}
 SKY_PASSIVE_LOCK = threading.Lock()
 NETWORK_PROBES = [
