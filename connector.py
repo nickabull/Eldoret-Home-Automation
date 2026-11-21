@@ -4483,7 +4483,20 @@ def myenergi_status():
                 def redirect_request(self,*args,**kwargs):
                     return None
             # Stable documented community telemetry endpoint. Redirects blocked.
+            import re
+            # myenergi director advertises the account's current server shard.
+            # Never follow redirects and never accept arbitrary hosts.
             server="https://s18.myenergi.net"
+            try:
+                director_req=urllib.request.Request("https://director.myenergi.net/",method="HEAD",
+                    headers={"User-Agent":"Eldoret-Bulldog/1.0"})
+                with urllib.request.build_opener(NoRedirect()).open(director_req,timeout=4) as d:
+                    advertised=d.headers.get("x_myenergi-asn","")
+                m=re.fullmatch(r"s?([0-9]{1,3})",advertised.strip().lower())
+                if m:
+                    server="https://s"+m.group(1)+".myenergi.net"
+            except (OSError,urllib.error.URLError,ValueError):
+                pass
             manager=urllib.request.HTTPPasswordMgrWithDefaultRealm()
             manager.add_password(None,server+"/",serial,key)
             auth=urllib.request.HTTPDigestAuthHandler(manager)
