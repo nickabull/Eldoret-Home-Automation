@@ -237,6 +237,22 @@ h1{letter-spacing:.20em;font-size:23px}h1 small{color:#f3c597;letter-spacing:.25
 @media(max-width:900px){#telemetry{grid-template-columns:repeat(5,minmax(0,1fr))}.hero-illustration{font-size:56px;right:11px}.hero-action strong{font-size:22px}}
 @media(max-width:700px){.hero-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#telemetry{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-action{min-height:126px}.hero-topline-right{display:none}}
 @media(max-width:420px){.hero-action{min-height:124px;padding:10px}.hero-action strong{font-size:19px}.hero-action .hero-meta{font-size:8px}.hero-action .hero-sub{font-size:10px}.hero-illustration{font-size:47px;top:17px;right:8px}#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}.telemetry-heading span{display:none}.hero-topline h2{font-size:23px}}
+
+/* Category-personalised second-level remote surfaces */
+.device-drawer{--drawer-glow:#ebaa7265;--drawer-tone:#3f2d37}
+.device-drawer::before{content:"";position:sticky;display:block;z-index:-1;top:-20px;height:0;pointer-events:none;box-shadow:0 0 175px 85px var(--drawer-glow);opacity:.42}
+.device-drawer[data-category="warmcar"],.device-drawer[data-category="car"],.device-drawer[data-category="outside"]{--drawer-glow:#ffa45c8a;--drawer-tone:#503125}
+.device-drawer[data-category="watch"],.device-drawer[data-category="television"],.device-drawer[data-category="lounge"]{--drawer-glow:#9364e58a;--drawer-tone:#3e2d62}
+.device-drawer[data-category="lighting"],.device-drawer[data-category="hue"]{--drawer-glow:#ffcb7b91;--drawer-tone:#594126}
+.device-drawer[data-category="music"],.device-drawer[data-category="av"]{--drawer-glow:#ed75c38a;--drawer-tone:#5b2a52}
+.device-drawer[data-category="windows"],.device-drawer[data-category="velux"]{--drawer-glow:#78ddc38c;--drawer-tone:#244c4c}
+.device-drawer[data-category="network"]{--drawer-glow:#af95f093;--drawer-tone:#353152}
+.device-drawer .drawer-main{background:linear-gradient(110deg,var(--drawer-tone),#17172370);border:1px solid #ffffff27;border-radius:20px;padding:13px;margin:18px 0 18px;min-height:104px}
+.device-drawer .drawer-action{position:relative;overflow:hidden;border-radius:16px;min-height:94px;background:linear-gradient(145deg,var(--drawer-tone),#221b2ee0);box-shadow:0 8px 18px #0006}
+.device-drawer .drawer-action::after{content:"↗";position:absolute;right:12px;top:11px;color:#f6d8bbad;font-size:14px}
+.device-drawer .drawer-action span{font-size:27px}
+.device-drawer .drawer-action:hover{transform:translateY(-1px)}
+@media(max-width:600px){.device-drawer .drawer-main{min-height:88px}.device-drawer .drawer-action{min-height:83px}}
 </style></head>
 <body><main class="shell">
 <header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>HOME 2.0</small></h1></a><div class="top-right"><button class="mode-btn" id="modeBtn" type="button" aria-label="Open family controls">CONTROLS</button><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="directory-trigger" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open Eldoret directory" title="All Eldoret pages">H</button><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
@@ -370,7 +386,7 @@ function detailLinks(container,links,technical){
  }
 }
 function openDrawer(item){
- chosen=item;drawerExpanded=familyNerd;
+ chosen=item;drawerExpanded=familyNerd;drawer.dataset.category=item.id;
  $('drawerIcon').textContent=item.icon;$('drawerTitle').textContent=item.title;$('drawerSubtitle').textContent=item.sub;
  $('drawerMeta').textContent='';
  detailLinks($('drawerActions'),item.actions,false);
@@ -411,6 +427,7 @@ $('drawerClose').addEventListener('click',closeDrawer);$('drawerBack').addEventL
 scrim.addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!drawer.hidden){closeDrawer();e.stopPropagation()}});
 familyCatalogue();
+heroReading('watch','Sky Q · TV rooms · volume');heroReading('music','Pioneer · radio');
 document.querySelectorAll('[data-hero]').forEach(b=>b.addEventListener('click',()=>{switchPage('family');const item=catalogue.find(x=>x.id===b.dataset.hero);if(item)openDrawer(item)}));
 $('showAllSystems').addEventListener('click',()=>{switchPage('family');document.querySelector('[data-family-tab="systems"]').click()});
 function heroReading(id,value){const el=$('heroReading-'+id);if(el)el.textContent=value||'—';}
@@ -419,12 +436,12 @@ const jobs=[
 {id:'energy',url:'/api/ariya/status',fn:p=>{energy.car=p;energyPaint()}},
 {id:'energy',url:'/api/zappi/status',fn:p=>{energy.zappi=p;energyPaint()}},
 {id:'ps5',url:'/api/playstation/activity',fn:p=>{const n=p.psn||{},c=p.live||{};paint('ps5',c.online?'ok':'unknown',n.game||c.running_app_name||(c.online?'PS5 online':'OFFLINE'),n.game?'Now playing · PSN':n.connected?'PSN: '+label(n.online_status):'GAME —',n.checked_at||p.observed_at)}},
-{id:'appliances',url:'/api/home-connect/status',fn:p=>{const a=Array.isArray(p.devices)?p.devices:[];const connected=a.filter(x=>x.connected).length;paint('appliances',connected?'ok':'unknown',connected+' / '+a.length+' linked',a.filter(x=>x.connected).slice(0,2).map(x=>x.name||'Connected appliance').join(' · ')||'Home Connect',p.checked_at);const found=[];for(const d of a){if(!d.connected)continue;for(const [k,v] of Object.entries(d.status||{})){if(/salt|rinseaid/i.test(k)&&(/empty|low|refill|replace|true/i.test(String(v))||v===1)){found.push({key:(d.name||'appliance')+k,text:(/salt/i.test(k)?'Low salt: ':'Rinse aid: ')+(d.name||'dishwasher'),href:'appliances.html'})}}}setAlerts('appliances',found)}},
-{id:'velux',url:'/api/velux/status',fn:p=>{const temp=p.climate?.temperature;const ws=Array.isArray(p.windows)?p.windows:[];paint('velux',p.connected?'ok':'unknown',num(temp)?temp.toFixed(1)+'°C':'Temp —',ws.length?ws.length+' windows · '+ws.filter(w=>num(w.current_position)&&w.current_position>0).length+' open':'WINDOWS —',p.checked_at)}},
+{id:'appliances',url:'/api/home-connect/status',fn:p=>{const a=Array.isArray(p.devices)?p.devices:[];const connected=a.filter(x=>x.connected).length;paint('appliances',connected?'ok':'unknown',connected+' / '+a.length+' linked',a.filter(x=>x.connected).slice(0,2).map(x=>x.name||'Connected appliance').join(' · ')||'Home Connect',p.checked_at);const found=[];for(const d of a){if(!d.connected)continue;for(const [k,v] of Object.entries(d.status||{})){if(/salt|rinseaid/i.test(k)&&(/empty|low|refill|replace|true/i.test(String(v))||v===1)){found.push({key:(d.name||'appliance')+k,text:(/salt/i.test(k)?'Low salt: ':'Rinse aid: ')+(d.name||'dishwasher'),href:'appliances.html'})}}}setAlerts('appliances',found);heroReading('status',connected+' appliance'+(connected===1?'':'s')+' online'+(found.length?' · '+found.length+' alert'+(found.length===1?'':'s'):''))}},
+{id:'velux',url:'/api/velux/status',fn:p=>{const temp=p.climate?.temperature;const ws=Array.isArray(p.windows)?p.windows:[];paint('velux',p.connected?'ok':'unknown',num(temp)?temp.toFixed(1)+'°C':'Temp —',ws.length?ws.length+' windows · '+ws.filter(w=>num(w.current_position)&&w.current_position>0).length+' open':'WINDOWS —',p.checked_at);heroReading('windows',(num(temp)?temp.toFixed(1)+'°C':'Temp —')+(ws.length?' · '+ws.length+' windows':''))}},
 {id:'network',url:'/api/unifi/status',fn:p=>{network.wifi=p;networkPaint()}},
 {id:'network',url:'/api/router/status',fn:p=>{network.router=p;networkPaint()}},
 {id:'printer',url:'/api/printer/status',fn:p=>{const ink=(p.ink||[]).filter(x=>num(x.percent));const low=ink.filter(x=>x.percent<=15);paint('printer',p.online?(low.length?'warning':'ok'):'unknown',p.online?'Printer online':'OFFLINE',ink.length?ink.map(x=>x.colour[0]+': '+x.percent+'%').join('  '):'INK —',p.checked_at);setAlerts('printer',[...low.map(x=>({key:'ink-'+x.colour,text:'Low '+x.colour.toLowerCase()+' ink ('+x.percent+'%)',href:'office.html#epson'})),...(Array.isArray(p.alerts)?p.alerts.filter(x=>typeof x==='string'&&x.length<120).slice(0,3).map((x,i)=>({key:'printer-'+i,text:x,href:'office.html#epson'})):[])])}},
-{id:'hue',url:'/api/hue/group?bridge=house&group=0',fn:p=>{const lights=Array.isArray(p.lights)?p.lights:[];paint('hue','ok',lights.length+' house lights','UTILITY · ROOMS · SCENES',new Date().toISOString())}}
+{id:'hue',url:'/api/hue/group?bridge=house&group=0',fn:p=>{const lights=Array.isArray(p.lights)?p.lights:[];paint('hue','ok',lights.length+' house lights','UTILITY · ROOMS · SCENES',new Date().toISOString());heroReading('lighting',lights.length+' house lights · scenes')}}
 ];
 let busy=false;
 async function refresh(){if(busy||document.hidden)return;busy=true;$('refresh').disabled=true;let ok=0;await Promise.all(jobs.map(async j=>{const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(j.url,{cache:'no-store',signal:controller.signal});if(!r.ok)throw Error('HTTP status');const data=await r.json();j.fn(data);ok++;}catch(_){if(j.id==='energy'){if(j.url.includes('ariya'))energy.car=null;else energy.zappi=null;energyPaint();}else if(j.id==='network'){if(j.url.includes('router'))network.router=null;else network.wifi=null;networkPaint()}else paint(j.id,'unknown','—','NO DATA',null)}finally{clearTimeout(timer)}}));$('health').textContent=ok+' / '+jobs.length+' data sources responded';$('checked').textContent='Last dashboard check '+time(new Date().toISOString())+' · values may be cached';busy=false;$('refresh').disabled=false;}
