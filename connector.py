@@ -4650,6 +4650,50 @@ def design_centre_save(name,preset,design):
         os.replace(tmp,path)
     return {"ok":True,"saved_at":datetime.now(timezone.utc).isoformat()}
 
+# Nissan Ariya helper stays in a restricted local virtual environment.
+# Cloud credentials live only in ~/.config/eldoret/nissan.json (0600).
+NISSAN_BRIDGE=os.path.expanduser("~/eldoret-connector/nissan-bridge.py")
+NISSAN_PYTHON=os.path.expanduser("~/nissan-test/venv/bin/python")
+NISSAN_CACHE={"updated":0.0,"value":None}
+NISSAN_LOCK=threading.Lock()
+
+def _ariya_invoke(mode,payload=None):
+    args=[NISSAN_PYTHON,NISSAN_BRIDGE,mode]
+    run=subprocess.run(args,input=json.dumps(payload) if payload is not None else None,
+                       text=True,capture_output=True,timeout=45,check=False,
+                       env={**os.environ,"PYTHONUNBUFFERED":"1"})
+    if run.returncode!=0:
+        raise RuntimeError("Nissan helper failed")
+    return json.loads(run.stdout)
+
+def ariya_status():
+    with NISSAN_LOCK:
+        now=time.monotonic()
+        if NISSAN_CACHE["value"] is not None and now-NISSAN_CACHE["updated"]<120:
+            return dict(NISSAN_CACHE["value"])
+        if not os.path.isfile(NISSAN_BRIDGE):
+            return {"configured":False,"connected":False,
+                    "detail":"Nissan helper not yet installed on Bulldog."}
+        try:
+            result=_ariya_invoke("status")
+            if isinstance(result,dict) and result.get("connected"):
+                NISSAN_CACHE.update(updated=now,value=result)
+            return result
+        except (OSError,ValueError,RuntimeError,subprocess.TimeoutExpired):
+            return {"configured":True,"connected":False,
+                    "detail":"Nissan service unavailable. Please retry later; no commands sent."}
+
+def ariya_control(action,temperature_c):
+    if action not in ("start","stop") or type(temperature_c)!=int or not 16<=temperature_c<=26:
+        return {"ok":False,"detail":"Invalid climate request"}
+    with NISSAN_LOCK:
+        try:
+            result=_ariya_invoke("control",{"action":action,"temperature_c":temperature_c})
+            NISSAN_CACHE.update(updated=0.0,value=None)
+            return result
+        except (OSError,ValueError,RuntimeError,subprocess.TimeoutExpired):
+            return {"ok":False,"detail":"Nissan climate command failed. Verify the car's actual state."}
+
 class Handler(BaseHTTPRequestHandler):
     def send_bytes(self, data, content_type="application/json"):
         self.send_response(200)
@@ -4679,13 +4723,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_error(400); return
         if path == "/api/ariya/status":
             if _remote_request(self): self.send_error(403); return
-            self.send_bytes(json.dumps({
-                "model":"Nissan Ariya","provider":"NissanConnect Services EU",
-                "configured":False,"battery_percent":None,"range_miles":None,
-                "plugged_in":None,"climate_active":None,"climate_command_enabled":False,
-                "last_vehicle_update":None,
-                "detail":"Nissan account authentication has not been configured on Bulldog. No vehicle polling or climate commands enabled."
-            }).encode()); return
+            self.send_bytes(json.dumps(ariya_status()).encode()); return
         if path == "/api/zappi/status":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps(myenergi_status()).encode()); return
@@ -5073,6 +5111,23 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Invalid save request")
                 self.send_bytes(json.dumps(design_centre_save(name,preset,payload["design"])).encode()); return
             except (ValueError, TypeError, json.JSONDecodeError):
+                self.send_error(400); return
+        if urllib.parse.urlparse(self.path).path == "/api/ariya/climate":
+            origin=self.headers.get("Origin","")
+            host=self.headers.get("Host","")
+            if (_remote_request(self) or
+                host not in ("10.0.0.34:8765","localhost:8765","127.0.0.1:8765") or
+                origin!="http://"+host or
+                self.headers.get("Content-Type","").split(";")[0].strip()!="application/json" or
+                length>128):
+                self.send_error(403); return
+            try:
+                req=json.loads(raw_body)
+                if not isinstance(req,dict) or set(req)!={"action","temperature_c"}:
+                    raise ValueError("Invalid climate payload")
+                result=ariya_control(req["action"],req["temperature_c"])
+                self.send_bytes(json.dumps(result).encode()); return
+            except (ValueError,TypeError,json.JSONDecodeError):
                 self.send_error(400); return
         if urllib.parse.urlparse(self.path).path == "/api/pioneer/control":
             origin=self.headers.get("Origin","")
