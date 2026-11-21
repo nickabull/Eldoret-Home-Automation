@@ -4459,6 +4459,37 @@ def _myenergi_config():
     except FileNotFoundError:
         return None
 
+def myenergi_decode_zappi(z):
+    """Translate documented Zappi status fields; preserve absent fields as unknown."""
+    states={1:"Paused",3:"Charging",5:"Complete"}
+    plugs={"A":"Vehicle unplugged","B1":"Vehicle connected",
+           "B2":"Waiting for vehicle","C1":"Vehicle ready",
+           "C2":"Charging","F":"Fault"}
+    modes={1:"Fast",2:"Eco",3:"Eco+",4:"Stopped"}
+    sta=z.get("sta")
+    pst=z.get("pst")
+    mode=z.get("zmo")
+    charging_state=("Charging" if pst=="C2" else
+                    "Vehicle unplugged" if pst=="A" else
+                    "Fault" if pst=="F" else
+                    states.get(sta) if sta in (1,5) else
+                    plugs.get(pst) or states.get(sta))
+    def numeric(k):
+        val=z.get(k)
+        if isinstance(val,bool) or not isinstance(val,(int,float)) or not math.isfinite(val):
+            return None
+        return float(val)
+    diversion=numeric("div")
+    energy=numeric("che")
+    return {"charging_state":charging_state,
+            "charge_power_kw":round(diversion/1000,3) if diversion is not None else None,
+            "session_energy_kwh":round(energy,3) if energy is not None else None,
+            "charge_mode":modes.get(mode),
+            "plug_status":plugs.get(pst),
+            "raw_plug_code":pst,
+            "power_source":"div (W)",
+            "energy_source":"che (kWh)"}
+
 def myenergi_status():
     conf=None
     try:
@@ -4509,16 +4540,16 @@ def myenergi_status():
             if not isinstance(items,list) or not items or not isinstance(items[0],dict):
                 raise ValueError("Unexpected Zappi status response; no zappi entries")
             z=items[0]
-            # Raw fields are deliberately retained with clear naming until
-            # unit semantics are verified against the actual charger.
+            # Documented API units: 'div' is diverted/charging power in W;
+            # 'che' is charge energy in kWh. Absent values remain unknown.
+            decoded=myenergi_decode_zappi(z)
             result={"configured":True,"connected":True,"mode":"read-only",
-                    "charging_state":None,"charge_power_kw":None,
-                    "session_energy_kwh":None,
+                    **decoded,
                     "raw_status_code":z.get("sta"),"raw_mode_code":z.get("zmo"),
                     "raw_diversion":z.get("div"),"raw_charge_energy":z.get("che"),
                     "checked_at":datetime.now(timezone.utc).isoformat(),
                     "device_time":str(z.get("dat",""))+" "+str(z.get("tim","")),
-                    "detail":"Live myenergi status received. Raw energy/power codes shown until units are calibrated."}
+                    "detail":"Live myenergi status received. Decoded charging fields use documented API units; power is not necessarily the car battery's net power."}
             MYENERGI_CACHE.update(updated=now,value=result)
             return dict(result)
         except (OSError,ValueError,TypeError,urllib.error.URLError) as exc:
