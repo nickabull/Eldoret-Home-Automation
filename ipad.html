@@ -33,25 +33,34 @@
 .alert-empty{font-size:11px;color:#a7c7b7}
 .alert-dock[data-clear="true"]{border-color:#31584d;background:#122b2bf2}.alert-dock[data-clear="true"] .alert-head{color:#a4edcf}
 @media(max-width:620px){.alert-dock{top:0;padding:9px 10px}.alert-list{max-height:76px}.alert-item{font-size:11px;min-height:34px}}
+/* High-density readout: minimal labels, maximum operational telemetry. */
+.section{margin:3px 1px 7px}.section strong{font-size:11px}
+.tile{min-height:88px;padding:9px 12px}
+.tile .hint{font-size:9px;letter-spacing:.03em}.tile .secondary{font-size:11px}
+.tile .primary{font-size:20px}.tile .name{font-size:15px}
+.tile .state{font-size:9px}
+.alert-dock{margin-bottom:8px;padding:8px 12px}
+.footer{padding-top:7px}
+@media(max-width:620px){.tile{min-height:80px;padding:10px 11px}.tile .primary{font-size:18px}.alert-dock{padding:9px}}
 </style></head>
 <body><main class="shell">
-<header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>HOME COMMAND CENTRE</small></h1></a><div class="top-right"><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="refresh" id="refresh" type="button">↻ Refresh</button></div></header>
-<div class="section"><strong>LIVE HOME INTELLIGENCE</strong><span id="health">Checking devices…</span></div>
-<aside class="alert-dock" id="alertsDock" aria-labelledby="alertsTitle"><div class="alert-head"><strong id="alertsTitle">⚠ HOME ALERTS</strong><span id="alertCount" aria-live="polite">Checking…</span></div><div class="alert-list" id="alertsList"><span class="alert-empty">Checking live warnings from connected devices…</span></div></aside>
+<header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>LIVE CONTROL</small></h1></a><div class="top-right"><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="refresh" id="refresh" type="button">↻</button></div></header>
+<div class="section"><strong>SYSTEMS</strong><span id="health">Checking devices…</span></div>
+<aside class="alert-dock" id="alertsDock" aria-labelledby="alertsTitle"><div class="alert-head"><strong id="alertsTitle">⚠ HOME ALERTS</strong><span id="alertCount" aria-live="polite">Checking…</span></div><div class="alert-list" id="alertsList"><span class="alert-empty">Scanning…</span></div></aside>
 <section class="tiles" aria-label="Devices and home systems">
-<a class="tile highlight" href="zappi.html" id="energy"><div class="tile-ident"><span class="symbol" aria-hidden="true">🚗</span><div class="tile-namegroup"><span class="name">Nissan + Zappi</span><span class="hint">Battery · charging · climate</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
-<a class="tile" href="av.html#ps5Panel" id="ps5"><div class="tile-ident"><span class="symbol" aria-hidden="true">🎮</span><div class="tile-namegroup"><span class="name">Jesse's PS5</span><span class="hint">Game · PSN presence</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
-<a class="tile" href="pioneer.html" id="pioneer"><div class="tile-ident"><span class="symbol" aria-hidden="true">♫</span><div class="tile-namegroup"><span class="name">Pioneer Audio</span><span class="hint">Power · volume · mute</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
-<a class="tile" href="lights.html" id="hue"><div class="tile-ident"><span class="symbol" aria-hidden="true">💡</span><div class="tile-namegroup"><span class="name">Philips Hue</span><span class="hint">House · utility lights</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
-<a class="tile" href="sky.html" id="sky"><div class="tile-ident"><span class="symbol" aria-hidden="true">📺</span><div class="tile-namegroup"><span class="name">Sky Q</span><span class="hint">Remote · guide</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
-<a class="tile" href="tvs.html" id="tvs"><div class="tile-ident"><span class="symbol" aria-hidden="true">🖥️</span><div class="tile-namegroup"><span class="name">LG Televisions</span><span class="hint">All rooms · inputs</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
-<a class="tile" href="appliances.html" id="appliances"><div class="tile-ident"><span class="symbol" aria-hidden="true">🍽️</span><div class="tile-namegroup"><span class="name">Appliances</span><span class="hint">Dishwashers · ovens</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
-<a class="tile" href="velux.html" id="velux"><div class="tile-ident"><span class="symbol" aria-hidden="true">🪟</span><div class="tile-namegroup"><span class="name">VELUX</span><span class="hint">Windows · sensors</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
-<a class="tile" href="network.html" id="network"><div class="tile-ident"><span class="symbol" aria-hidden="true">📶</span><div class="tile-namegroup"><span class="name">Internet + Wi-Fi</span><span class="hint">DrayTek · UniFi</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile highlight" href="zappi.html" id="energy"><div class="tile-ident"><span class="symbol" aria-hidden="true">🚗</span><div class="tile-namegroup"><span class="name">Nissan + Zappi</span><span class="hint">BATTERY · kW · RANGE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="av.html#ps5Panel" id="ps5"><div class="tile-ident"><span class="symbol" aria-hidden="true">🎮</span><div class="tile-namegroup"><span class="name">Jesse's PS5</span><span class="hint">GAME · PRESENCE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="pioneer.html" id="pioneer"><div class="tile-ident"><span class="symbol" aria-hidden="true">♫</span><div class="tile-namegroup"><span class="name">Pioneer Audio</span><span class="hint">PWR · VOL · INPUT</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="lights.html" id="hue"><div class="tile-ident"><span class="symbol" aria-hidden="true">💡</span><div class="tile-namegroup"><span class="name">Philips Hue</span><span class="hint">HOUSE · UTILITY</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="sky.html" id="sky"><div class="tile-ident"><span class="symbol" aria-hidden="true">📺</span><div class="tile-namegroup"><span class="name">Sky Q</span><span class="hint">PROGRAMME · SOURCE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="tvs.html" id="tvs"><div class="tile-ident"><span class="symbol" aria-hidden="true">🖥️</span><div class="tile-namegroup"><span class="name">LG Televisions</span><span class="hint">ROOMS · INPUTS</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="appliances.html" id="appliances"><div class="tile-ident"><span class="symbol" aria-hidden="true">🍽️</span><div class="tile-namegroup"><span class="name">Appliances</span><span class="hint">CYCLES · STATUS</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="velux.html" id="velux"><div class="tile-ident"><span class="symbol" aria-hidden="true">🪟</span><div class="tile-namegroup"><span class="name">VELUX</span><span class="hint">TEMP · WINDOWS</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="network.html" id="network"><div class="tile-ident"><span class="symbol" aria-hidden="true">📶</span><div class="tile-namegroup"><span class="name">Internet + Wi-Fi</span><span class="hint">WAN · APs · CLIENTS</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
 
-<a class="tile" href="office.html#epson" id="printer"><div class="tile-ident"><span class="symbol" aria-hidden="true">🖨️</span><div class="tile-namegroup"><span class="name">Epson Printer</span><span class="hint">Ink · availability</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">Checking data…</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="office.html#epson" id="printer"><div class="tile-ident"><span class="symbol" aria-hidden="true">🖨️</span><div class="tile-namegroup"><span class="name">Epson Printer</span><span class="hint">K · C · M · Y</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
 </section>
-<footer class="footer"><span id="checked">Readings show their source and may be cached</span><span><a href="index.html">Desktop</a> · <a href="bulldog.html">Bulldog</a> · <a href="engineering.html">Diagnostics</a></span></footer>
+<footer class="footer"><span id="checked">STATUS</span><span><a href="index.html">Desktop</a> · <a href="bulldog.html">Bulldog</a> · <a href="engineering.html">Diagnostics</a></span></footer>
 </main>
 <script>
 (()=>{
@@ -64,10 +73,10 @@ clock();setInterval(clock,30000);
 function paint(id,state,primary,secondary,stamp){
  const e=$(id);if(!e)return;
  e.dataset.status=state;
- e.querySelector('.state').textContent=state==='ok'?'CONNECTED':state==='warning'?'ATTENTION':'STATUS UNAVAILABLE';
+ e.querySelector('.state').textContent=state==='ok'?'CONNECTED':state==='warning'?'ATTENTION':'NO DATA';
  e.querySelector('.primary').textContent=label(primary);
  e.querySelector('.secondary').textContent=label(secondary);
- if(stamp&&e.title!=='manual')e.title='Last source update '+new Date(stamp).toLocaleString('en-GB')+' · tap for full controls';
+ if(stamp&&e.title!=='manual')e.title='Updated '+new Date(stamp).toLocaleString('en-GB');
 }
 let alerts=new Map(),alertSources=new Map();
 function setAlerts(source,items){
@@ -76,8 +85,8 @@ function setAlerts(source,items){
  const dock=$('alertsDock'),list=$('alertsList');list.replaceChildren();
  const entries=[...alerts.values()];
  dock.dataset.clear=entries.length===0?'true':'false';
- $('alertCount').textContent=entries.length?entries.length+' active':'No confirmed alerts';
- if(!entries.length){const el=document.createElement('span');el.className='alert-empty';el.textContent='No confirmed alerts from connected systems';list.append(el);return}
+ $('alertCount').textContent=entries.length?entries.length+' active':'ALL CLEAR';
+ if(!entries.length){const el=document.createElement('span');el.className='alert-empty';el.textContent='ALL CLEAR';list.append(el);return}
  for(const a of entries.slice(0,8)){const el=document.createElement('a');el.href=a.href;el.className='alert-item';el.textContent='● '+a.text;list.append(el)}
 }
 let energy={car:null,zappi:null};
@@ -88,7 +97,7 @@ function networkPaint(){
  const dl=num(r.download_mbps)?r.download_mbps.toFixed(1)+' Mb/s':'WAN —';
  const clients=a.filter(x=>num(x.clients)).reduce((n,x)=>n+x.clients,0);
  const known=a.some(x=>num(x.clients));
- paint('network',r.online&&up===4?'ok':r.online||up?'warning':'unknown',dl+' · '+up+'/4 APs',known?clients+' Wi-Fi clients · DrayTek + UniFi':'DrayTek + UniFi · client counts unavailable',r.checked_at||w.checked_at);
+ paint('network',r.online&&up===4?'ok':r.online||up?'warning':'unknown',dl+' · '+up+'/4 APs',known?clients+' Wi-Fi clients · DrayTek + UniFi':'WAN · UNIFI · CLIENTS —',r.checked_at||w.checked_at);
  const issues=[];
  if(r.online===true&&r.link_up===false)issues.push({key:'wan',text:'DrayTek WAN link down',href:'network.html'});
  if(a.length===4&&up<4)issues.push({key:'aps',text:(4-up)+' UniFi access point(s) not responding',href:'network.html'});
@@ -106,16 +115,16 @@ setAlerts('initial',[]);
 const jobs=[
 {id:'energy',url:'/api/ariya/status',fn:p=>{energy.car=p;energyPaint()}},
 {id:'energy',url:'/api/zappi/status',fn:p=>{energy.zappi=p;energyPaint()}},
-{id:'ps5',url:'/api/playstation/activity',fn:p=>{const n=p.psn||{},c=p.live||{};paint('ps5',c.online?'ok':'unknown',n.game||c.running_app_name||(c.online?'PS5 online':'No console reply'),n.game?'Now playing · PSN':n.connected?'PSN: '+label(n.online_status):'Local: game not supplied',n.checked_at||p.observed_at)}},
+{id:'ps5',url:'/api/playstation/activity',fn:p=>{const n=p.psn||{},c=p.live||{};paint('ps5',c.online?'ok':'unknown',n.game||c.running_app_name||(c.online?'PS5 online':'OFFLINE'),n.game?'Now playing · PSN':n.connected?'PSN: '+label(n.online_status):'GAME —',n.checked_at||p.observed_at)}},
 {id:'appliances',url:'/api/home-connect/status',fn:p=>{const a=Array.isArray(p.devices)?p.devices:[];const connected=a.filter(x=>x.connected).length;paint('appliances',connected?'ok':'unknown',connected+' / '+a.length+' linked',a.filter(x=>x.connected).slice(0,2).map(x=>x.name||'Connected appliance').join(' · ')||'Home Connect',p.checked_at);const found=[];for(const d of a){if(!d.connected)continue;for(const [k,v] of Object.entries(d.status||{})){if(/salt|rinseaid/i.test(k)&&(/empty|low|refill|replace|true/i.test(String(v))||v===1)){found.push({key:(d.name||'appliance')+k,text:(/salt/i.test(k)?'Low salt: ':'Rinse aid: ')+(d.name||'dishwasher'),href:'appliances.html'})}}}setAlerts('appliances',found)}},
-{id:'velux',url:'/api/velux/status',fn:p=>{const temp=p.climate?.temperature;const ws=Array.isArray(p.windows)?p.windows:[];paint('velux',p.connected?'ok':'unknown',num(temp)?temp.toFixed(1)+'°C':'Temp —',ws.length?ws.length+' windows · '+ws.filter(w=>num(w.current_position)&&w.current_position>0).length+' open':'Window status unknown',p.checked_at)}},
+{id:'velux',url:'/api/velux/status',fn:p=>{const temp=p.climate?.temperature;const ws=Array.isArray(p.windows)?p.windows:[];paint('velux',p.connected?'ok':'unknown',num(temp)?temp.toFixed(1)+'°C':'Temp —',ws.length?ws.length+' windows · '+ws.filter(w=>num(w.current_position)&&w.current_position>0).length+' open':'WINDOWS —',p.checked_at)}},
 {id:'network',url:'/api/unifi/status',fn:p=>{network.wifi=p;networkPaint()}},
 {id:'network',url:'/api/router/status',fn:p=>{network.router=p;networkPaint()}},
-{id:'printer',url:'/api/printer/status',fn:p=>{const ink=(p.ink||[]).filter(x=>num(x.percent));const low=ink.filter(x=>x.percent<=15);paint('printer',p.online?(low.length?'warning':'ok'):'unknown',p.online?'Printer online':'No reply',ink.length?ink.map(x=>x.colour[0]+': '+x.percent+'%').join('  '):'Ink levels unavailable',p.checked_at);setAlerts('printer',[...low.map(x=>({key:'ink-'+x.colour,text:'Low '+x.colour.toLowerCase()+' ink ('+x.percent+'%)',href:'office.html#epson'})),...(Array.isArray(p.alerts)?p.alerts.filter(x=>typeof x==='string'&&x.length<120).slice(0,3).map((x,i)=>({key:'printer-'+i,text:x,href:'office.html#epson'})):[])])}},
-{id:'hue',url:'/api/hue/group?bridge=house&group=0',fn:p=>{const lights=Array.isArray(p.lights)?p.lights:[];paint('hue','ok',lights.length+' house lights','Utility bridge · tap for controls',new Date().toISOString())}}
+{id:'printer',url:'/api/printer/status',fn:p=>{const ink=(p.ink||[]).filter(x=>num(x.percent));const low=ink.filter(x=>x.percent<=15);paint('printer',p.online?(low.length?'warning':'ok'):'unknown',p.online?'Printer online':'OFFLINE',ink.length?ink.map(x=>x.colour[0]+': '+x.percent+'%').join('  '):'INK —',p.checked_at);setAlerts('printer',[...low.map(x=>({key:'ink-'+x.colour,text:'Low '+x.colour.toLowerCase()+' ink ('+x.percent+'%)',href:'office.html#epson'})),...(Array.isArray(p.alerts)?p.alerts.filter(x=>typeof x==='string'&&x.length<120).slice(0,3).map((x,i)=>({key:'printer-'+i,text:x,href:'office.html#epson'})):[])])}},
+{id:'hue',url:'/api/hue/group?bridge=house&group=0',fn:p=>{const lights=Array.isArray(p.lights)?p.lights:[];paint('hue','ok',lights.length+' house lights','UTILITY · ROOMS · SCENES',new Date().toISOString())}}
 ];
 let busy=false;
-async function refresh(){if(busy||document.hidden)return;busy=true;$('refresh').disabled=true;let ok=0;await Promise.all(jobs.map(async j=>{const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(j.url,{cache:'no-store',signal:controller.signal});if(!r.ok)throw Error('HTTP status');const data=await r.json();j.fn(data);ok++;}catch(_){if(j.id==='energy'){if(j.url.includes('ariya'))energy.car=null;else energy.zappi=null;energyPaint();}else if(j.id==='network'){if(j.url.includes('router'))network.router=null;else network.wifi=null;networkPaint()}else paint(j.id,'unknown','—','No current reading · tap for details',null)}finally{clearTimeout(timer)}}));$('health').textContent=ok+' / '+jobs.length+' data sources responded';$('checked').textContent='Last dashboard check '+time(new Date().toISOString())+' · values may be cached';busy=false;$('refresh').disabled=false;}
+async function refresh(){if(busy||document.hidden)return;busy=true;$('refresh').disabled=true;let ok=0;await Promise.all(jobs.map(async j=>{const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(j.url,{cache:'no-store',signal:controller.signal});if(!r.ok)throw Error('HTTP status');const data=await r.json();j.fn(data);ok++;}catch(_){if(j.id==='energy'){if(j.url.includes('ariya'))energy.car=null;else energy.zappi=null;energyPaint();}else if(j.id==='network'){if(j.url.includes('router'))network.router=null;else network.wifi=null;networkPaint()}else paint(j.id,'unknown','—','NO DATA',null)}finally{clearTimeout(timer)}}));$('health').textContent=ok+' / '+jobs.length+' data sources responded';$('checked').textContent='Last dashboard check '+time(new Date().toISOString())+' · values may be cached';busy=false;$('refresh').disabled=false;}
 $('refresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});refresh();setInterval(refresh,120000);
 })();
 </script>
