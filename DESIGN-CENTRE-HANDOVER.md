@@ -44,3 +44,13 @@ Open `http://10.0.0.34:8765/design-centre.html`, select `pioneer` and `wide`, ad
 - Existing draft JSON remains backwards-compatible; optional formatting fields validated server-side. Source JSON cannot run JavaScript.
 - Not yet ported: rich text formatting of *individual words within one box*, multi-selection, snapping guides, native tables, stroke/outline, crop and protected artwork replacement, keyboard shortcuts for copy/paste, asset library, one-click publish. These require further work and separate tests.
 - JS syntax compilation checked. Full browser/runtime verification remains pending.
+
+## V1.2 — Tivvy visual workspace parity (21 November 2026, ~11:48)
+- User supplied side-by-side screenshots showing Bulldog's poor canvas fit and Tivvy's preferred high-density editor. The required target is the actual Tivvy style: compact top toolbar, full central artwork preview, layers at left, precise inspector at right.
+- Rebuilt editor into fixed-height three-column workspace, dark charcoal/yellow accent, with compact top text toolbar and layers before the add controls.
+- Fixed **critical Fit zoom bug**: formerly 1920px-wide stage was CSS transformed but continued occupying 1920px layout width, so only the left side appeared with horizontal scroll. Now a stageholder is sized to the scaled dimensions so 16:9 fits within the viewport. Absolute layer coordinates remain full-resolution.
+- Added sliders and +/- with matching number fields for X, Y, width, height, scale %, and rotation degrees; toggle layer visibility (including layer list), lock/unlock, snap-to-10px toggle, and gold/dashed selected layer outline. Snapping can be disabled for 1px precision.
+- Duplicated bold/underline/strikethrough/text-alignment actions on top toolbar like Tivvy. Inspector still supports italic and font family.
+- Backend `design_centre_validate` now accepts and bounds optional `hidden: bool`, `scale: 20..300`, and `rotation: -180..180`, preserving compatibility with old JSON.
+- JS syntax and required element IDs verified through the connected repository tool. **Not yet verified in an actual live browser after Pi pulls these commits.** No existing saved drafts or live page publishing altered.
+- Remaining gaps from Tivvy: word-level rich text spans, multi-selection, crop, fully searchable artwork library, asset upload, history/version restore, guided snap lines and preview/publish. Avoid claiming full parity yet.
