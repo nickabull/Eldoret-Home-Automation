@@ -69,3 +69,9 @@
 - User reported: **"it has just rebooted"** at approximately **12:08 GMT**. This was an observed physical Pioneer reboot, not merely a ping failure. Network route at this point was previously stated to be via the PoE switch; no confirmation whether topology changed since.
 - This event occurred close to the update of the one-socket readback implementation, but **no evidence that the new connector version was loaded or that a query was in progress at the instant of reboot**. Do not ascribe causation. Correlate with ping monitor records if available.
 - Known user-observed reboot timestamps today: approximately **11:07 GMT** and **12:08 GMT**, ~61 minutes between reports (not a proven interval or comprehensive count). Preserve all reported events, even if IP remains reachable in passive log.
+
+## 21 November 2026, 12:11 — SINGLE-SOCKET READBACK CONFIRMED WORKING
+- User screenshot captured full success at 12:11:00 (21 Nov): **Power On, volume raw code 089, input raw code 59, Not muted**. Each of four reads succeeded: power 8ms; volume 5ms; mute 4ms; input 13ms.
+- This validates the manual one-TCP-session strategy for all four queries. Previous immediate per-command reconnect was refused at second (volume) query. Reboot fault is separate and remains unresolved.
+- **Do not convert raw volume 089 to a physical displayed number or percentage until verified.** **Do not assign meaning to source 59 without verification.**
+- User-confirmed working status data can now underpin Eldoret Design Centre component bindings; no increase in background control polling.
