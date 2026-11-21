@@ -40,3 +40,13 @@
 - **ICMP reachability loss is not proof of a reboot**. If user removes Ethernet intentionally, resulting loss should not be counted as device fault; correlate with reported front-panel shutdowns and equipment power.
 - Log starts only when updated connector restarts and user confirms the host matches wired Pioneer IP. If ping is blocked, this monitor is not reliable. No historical 11:07 ping event is retroactively recorded.
 - Suggested later: compare router/switch port link flap and Pioneer power behavior, inspect thermal/ventilation and hardware fault.
+
+## 21 November 2026 ~11:14: reduced terminal dependency
+- User requested that ChatGPT do more troubleshooting instead of requiring SSH commands and copy/paste.
+- Existing allowlisted GitHub-polled agent now supports read-only tasks: `engineering_runtime`, `engineering_pioneer`, `engineering_snapshot`.
+- Engineer snapshot includes connector uptime/health and Pioneer status and ping-based connection history; result at `/api/agent/results`.
+- `engineering.html` provides local status inspection, last task output, and links from Bulldog and Pioneer pages. No continuous device-control polling.
+- `agent-task.json` submitted one user-approved `engineering_snapshot` request, ID `engineering-snapshot-20261121-1114`. This task may fail if it is fetched before Bulldog's updated connector deploys; if so submit a new ID once deployed.
+- No SSH, sudo, arbitrary command execution, secret access, restart or repair actions have been granted. Disruptive actions require a separate design with explicit user approvals.
+- Sensitive results are never included in the one-way agent relay; a sanitised summary is sent for supported engineering tasks.
+- Live operation pending verification via `http://10.0.0.34:8765/engineering.html`.
