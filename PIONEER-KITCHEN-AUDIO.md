@@ -79,3 +79,7 @@
 ## Volume calibration — 21 November 2026, 12:12 GMT
 - At approximately 12:11 the API reported `VOL089` (displayed by Eldoret as raw code `089`). At 12:12 the user confirmed the physical amplifier volume display was **16**.
 - First observed calibration point: **raw `089` ↔ physical display `16`**. Do not infer a conversion formula from one sample, and do not assume the value was unchanged if the user adjusted it in the intervening minute. Ask for one adjacent point after a single volume step to establish direction/step size.
+
+## Control verification — 21 November 2026, 12:12–12:13 GMT
+- User explicitly confirmed **Mute is working** after restoring the single-TCP-session status readback. This is a verified live control test, independent of the earlier known mute success.
+- Physical volume shown as 16 while recent status read returned raw code 089. First provisional calibration only; no conversion coded.
