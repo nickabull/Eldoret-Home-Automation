@@ -4801,6 +4801,7 @@ class Handler(BaseHTTPRequestHandler):
             "/design-centre.html": ("design-centre.html", "text/html; charset=utf-8"),
             "/design-centre.js": ("design-centre.js", "application/javascript; charset=utf-8"),
             "/zappi.html": ("zappi.html", "text/html; charset=utf-8"),
+            "/ipad2.html": ("ipad2.html", "text/html; charset=utf-8"),
             "/pioneer.js": ("pioneer.js", "application/javascript; charset=utf-8"),
             "/velux.js": ("velux.js", "application/javascript; charset=utf-8"),
             "/home.css": ("home.css", "text/css; charset=utf-8"),
