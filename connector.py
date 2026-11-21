@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import socket
 import ssl
@@ -4552,7 +4553,7 @@ def myenergi_status():
                     "detail":"Live myenergi status received. Decoded charging fields use documented API units; power is not necessarily the car battery's net power."}
             MYENERGI_CACHE.update(updated=now,value=result)
             return dict(result)
-        except (OSError,ValueError,TypeError,urllib.error.URLError) as exc:
+        except (OSError,ValueError,TypeError,urllib.error.URLError,KeyError,AttributeError) as exc:
             return {"configured":True,"connected":False,"mode":"read-only",
                     "charging_state":None,"charge_power_kw":None,
                     "session_energy_kwh":None,"error":type(exc).__name__,
