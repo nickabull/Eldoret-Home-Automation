@@ -4441,8 +4441,15 @@ def design_centre_validate(value,name,preset):
         raise ValueError("Too many layers")
     names=set()
     for e in elems:
-        if not isinstance(e,dict) or set(e)!={"id","type","name","label","src","x","y","w","h","size","radius","color","bg","opacity","locked","behaviour"}:
+        if not isinstance(e,dict) or not {"id","type","name","label","src","x","y","w","h","size","radius","color","bg","opacity","locked","behaviour"}.issubset(set(e)) or not set(e).issubset({"id","type","name","label","src","x","y","w","h","size","radius","color","bg","opacity","locked","behaviour","font","bold","italic","underline","strike","align"}):
             raise ValueError("Invalid layer structure")
+        if "font" in e and e["font"] not in ("Arial","Georgia","Verdana","Tahoma","Impact","Trebuchet MS","Courier New"):
+            raise ValueError("Unsupported font")
+        if "align" in e and e["align"] not in ("left","center","right"):
+            raise ValueError("Invalid text alignment")
+        for key in ("bold","italic","underline","strike"):
+            if key in e and not isinstance(e[key],bool):
+                raise ValueError("Invalid formatting flag")
         if not isinstance(e["id"],str) or not 1<=len(e["id"])<=100 or e["id"] in names:
             raise ValueError("Invalid or duplicate layer ID")
         names.add(e["id"])
