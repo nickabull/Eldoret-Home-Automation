@@ -1445,16 +1445,47 @@ def _ps5_collector_loop():
             pass
         time.sleep(60)
 
+# PSN profile presence complements local PS5 discovery. Read-only, bounded and cached.
+# Never put the NPSSO token into HTML, GitHub, event logs or remote-state relay.
+PSN_BRIDGE=os.path.expanduser("~/eldoret-connector/psn-bridge.py")
+PSN_PYTHON=os.path.expanduser("~/psn-test/venv/bin/python")
+PSN_CACHE={"at":0.0,"value":None}
+PSN_STATUS_LOCK=threading.Lock()
+
+def playstation_network_status():
+    with PSN_STATUS_LOCK:
+        now=time.monotonic()
+        if PSN_CACHE["value"] is not None and now-PSN_CACHE["at"]<120:
+            return dict(PSN_CACHE["value"])
+        if not os.path.isfile(PSN_BRIDGE) or not os.path.isfile(PSN_PYTHON):
+            return {"configured":False,"connected":False,
+                    "detail":"Private PSN bridge or virtual environment not installed."}
+        try:
+            proc=subprocess.run([PSN_PYTHON,PSN_BRIDGE,"status"],text=True,
+                                capture_output=True,timeout=35,check=False)
+            if proc.returncode!=0:
+                raise RuntimeError("PSN helper unavailable")
+            result=json.loads(proc.stdout)
+            if not isinstance(result,dict): raise ValueError("Invalid PSN status")
+            PSN_CACHE.update(at=now,value=result)
+            return dict(result)
+        except (OSError,RuntimeError,ValueError,subprocess.TimeoutExpired):
+            failure={"configured":True,"connected":False,
+                     "detail":"PSN status unavailable; check token, privacy and internet."}
+            PSN_CACHE.update(at=now,value=failure)
+            return failure
+
 def playstation_activity_status():
     live=playstation_status()
     with PS5_ACTIVITY_LOCK:
         events=list(PS5_ACTIVITY.get("events",[])[-60:])
         sessions=list(PS5_ACTIVITY.get("sessions",[])[-30:])
         last=PS5_ACTIVITY.get("last_checked")
-    return {"live":live,"observed_at":datetime.now(timezone.utc).isoformat(),
+    psn=playstation_network_status()
+    return {"live":live,"psn":psn,"observed_at":datetime.now(timezone.utc).isoformat(),
             "history_started":last,"events":events,"sessions":sessions,
-            "game_source":"PS5 local discovery only; PSN account not connected",
-            "game_available":bool(live.get("running_app_name") or live.get("running_app_titleid"))}
+            "game_source":"PSN presence" if psn.get("connected") else "PS5 local discovery",
+            "game_available":bool(psn.get("game") or live.get("running_app_name") or live.get("running_app_titleid"))}
 
 def _ipp_attributes(raw):
     """Decode IPP scalar attributes, including repeated values (RFC 8010)."""
@@ -4938,8 +4969,13 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps({"targets": [], "error": str(e)}).encode())
             return
         if path == "/api/playstation/activity":
+            if _remote_request(self): self.send_error(403); return
+
             self.send_bytes(json.dumps(playstation_activity_status()).encode())
             return
+        if path == "/api/playstation/psn":
+            if _remote_request(self): self.send_error(403); return
+            self.send_bytes(json.dumps(playstation_network_status()).encode()); return
         if path == "/api/playstation/status":
             try:
                 self.send_bytes(json.dumps(playstation_status()).encode())
