@@ -253,16 +253,30 @@ h1{letter-spacing:.20em;font-size:23px}h1 small{color:#f3c597;letter-spacing:.25
 .device-drawer .drawer-action span{font-size:27px}
 .device-drawer .drawer-action:hover{transform:translateY(-1px)}
 @media(max-width:600px){.device-drawer .drawer-main{min-height:88px}.device-drawer .drawer-action{min-height:83px}}
+
+/* Eldoret 2.2 — live data is the default home; family hero actions appear on entry */
+.hero-home[hidden],.family-cards[hidden],.family-heading[hidden]{display:none!important}
+#telemetry{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#telemetry .tile{min-height:118px;padding:12px;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+#telemetry .tile .symbol{font-size:22px}
+#telemetry .tile .name{font-size:15px}
+#telemetry .tile .hint{display:block;font-size:9px}
+#telemetry .tile .primary{font-size:clamp(18px,2vw,27px)}
+#telemetry .tile .secondary{font-size:11px;-webkit-line-clamp:2}
+#telemetry .tile .state{font-size:9px}
+#telemetry .tile::after{font-size:66px}
+#telemetry .tile .chevron{display:block}
+.hero-home{margin:9px 0}.hero-action{min-height:145px}
+@media(min-width:900px) and (max-height:820px){#telemetry .tile{min-height:111px;padding:10px}.hero-action{min-height:127px}}
+@media(max-width:850px){#telemetry{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}#telemetry .tile{min-height:103px}#telemetry .tile .name{font-size:12px}#telemetry .tile .hint{display:none}#telemetry .tile .primary{font-size:17px}}
 </style></head>
 <body><main class="shell">
 <header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>HOME 2.0</small></h1></a><div class="top-right"><button class="mode-btn" id="modeBtn" type="button" aria-label="Open family controls">CONTROLS</button><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="directory-trigger" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open Eldoret directory" title="All Eldoret pages">H</button><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
-<nav class="directory-panel" id="directoryPanel" aria-label="All Eldoret controls" hidden><div class="directory-head"><strong>ELDORET DIRECTORY</strong><button type="button" id="directoryClose" aria-label="Close directory">×</button></div><div class="directory-grid"><a href="ipad2.html">Home 2.0</a><a href="zappi.html">Nissan + Zappi</a><a href="av.html#ps5Panel">PlayStation</a><a href="pioneer.html">Kitchen Audio</a><a href="lights.html">Lights</a><a href="house.html">House Hue</a><a href="utility.html">Utility Hue</a><a href="sky.html">Sky Q</a><a href="tvs.html">Televisions</a><a href="appliances.html">Appliances</a><a href="velux.html">VELUX</a><a href="network.html">Network</a><a href="office.html">Printer / Office</a><a href="bulldog.html">Bulldog</a><a href="radio.html">Radio</a><a href="engineering.html">Diagnostics</a><a href="index.html">Desktop View</a></div></nav><div class="section" id="holdingTitle"><strong>HOME IS LIVE</strong><span id="health">Checking devices…</span></div>
+<nav class="directory-panel" id="directoryPanel" aria-label="All Eldoret controls" hidden><div class="directory-head"><strong>ELDORET DIRECTORY</strong><button type="button" id="directoryClose" aria-label="Close directory">×</button></div><div class="directory-grid"><a href="ipad2.html">Home 2.0</a><a href="zappi.html">Nissan + Zappi</a><a href="av.html#ps5Panel">PlayStation</a><a href="pioneer.html">Kitchen Audio</a><a href="lights.html">Lights</a><a href="house.html">House Hue</a><a href="utility.html">Utility Hue</a><a href="sky.html">Sky Q</a><a href="tvs.html">Televisions</a><a href="appliances.html">Appliances</a><a href="velux.html">VELUX</a><a href="network.html">Network</a><a href="office.html">Printer / Office</a><a href="bulldog.html">Bulldog</a><a href="radio.html">Radio</a><a href="engineering.html">Diagnostics</a><a href="index.html">Desktop View</a></div></nav><div class="section" id="holdingTitle"><strong>NERD CENTRAL</strong><span id="health">Checking devices…</span></div>
 <aside class="alert-dock" id="alertsDock" aria-labelledby="alertsTitle"><div class="alert-head"><strong id="alertsTitle">⚠ HOME ALERTS</strong><span id="alertCount" aria-live="polite">Checking…</span></div><div class="alert-list" id="alertsList"><span class="alert-empty">Scanning…</span></div></aside>
-<section id="heroHome" class="hero-home" aria-label="Everyday home controls">
-<div class="hero-topline"><div><span class="micro">ELDORET · THE HOUSE</span><h2>Everything at home.</h2></div><span class="hero-topline-right">ONE TAP TO CONTROL <span aria-hidden="true">↗</span></span></div>
-<div class="hero-grid"><button type="button" class="hero-action hero-warmcar" data-hero="warmcar" aria-label="Warm the car"><span class="hero-illustration" aria-hidden="true">🚗</span><span class="hero-meta">CAR</span><strong>Warm the car</strong><span class="hero-sub">Climate · charging</span><span class="hero-reading" id="heroReading-warmcar">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-watch" data-hero="watch" aria-label="Watch TV"><span class="hero-illustration" aria-hidden="true">📺</span><span class="hero-meta">TELEVISION</span><strong>Watch TV</strong><span class="hero-sub">Sky · rooms · volume</span><span class="hero-reading" id="heroReading-watch">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-lighting" data-hero="lighting" aria-label="Lights"><span class="hero-illustration" aria-hidden="true">💡</span><span class="hero-meta">LIGHTING</span><strong>Lights</strong><span class="hero-sub">Rooms · scenes</span><span class="hero-reading" id="heroReading-lighting">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-windows" data-hero="windows" aria-label="Windows"><span class="hero-illustration" aria-hidden="true">🪟</span><span class="hero-meta">WINDOWS</span><strong>Windows</strong><span class="hero-sub">VELUX · ventilation</span><span class="hero-reading" id="heroReading-windows">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-music" data-hero="music" aria-label="Play music"><span class="hero-illustration" aria-hidden="true">♫</span><span class="hero-meta">AUDIO</span><strong>Play music</strong><span class="hero-sub">Pioneer · radio</span><span class="hero-reading" id="heroReading-music">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-status" data-hero="status" aria-label="House status"><span class="hero-illustration" aria-hidden="true">⌂</span><span class="hero-meta">HOUSE</span><strong>House status</strong><span class="hero-sub">Appliances · alerts</span><span class="hero-reading" id="heroReading-status">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button></div>
-</section>
-<div class="telemetry-heading"><strong>THE LIVE PICTURE</strong><span>BATTERY · ENERGY · NETWORK · HOME</span><button type="button" id="showAllSystems" aria-label="View all systems">ALL SYSTEMS ↗</button></div><section class="tiles" id="telemetry" aria-label="Live home systems">
+
+<div class="telemetry-heading"><strong>LIVE SYSTEMS</strong><span>BATTERY · ENERGY · NETWORK · HOME</span><button type="button" id="showAllSystems" aria-label="View all systems">CONTROLS ↗</button></div><section class="tiles" id="telemetry" aria-label="Live home systems">
 <a class="tile highlight" href="zappi.html" id="energy"><div class="tile-ident"><span class="symbol" aria-hidden="true">🚗</span><div class="tile-namegroup"><span class="name">Nissan + Zappi</span><span class="hint">BATTERY · kW · RANGE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
 <a class="tile" href="av.html#ps5Panel" id="ps5"><div class="tile-ident"><span class="symbol" aria-hidden="true">🎮</span><div class="tile-namegroup"><span class="name">Jesse's PS5</span><span class="hint">GAME · PRESENCE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
 <a class="tile" href="pioneer.html" id="pioneer"><div class="tile-ident"><span class="symbol" aria-hidden="true">♫</span><div class="tile-namegroup"><span class="name">Pioneer Audio</span><span class="hint">PWR · VOL · INPUT</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
@@ -277,7 +291,11 @@ h1{letter-spacing:.20em;font-size:23px}h1 small{color:#f3c597;letter-spacing:.25
 </section>
 <section class="family-screen" id="familyScreen" hidden>
   <div class="family-heading"><div><small>ELDORET · FAMILY</small><h2 id="familyTitle">What shall we do?</h2></div><button type="button" class="small-btn" id="backToLive">◫ LIVE DATA</button></div>
-  <nav class="family-nav" aria-label="Home controls">
+  <section id="heroHome" class="hero-home" aria-label="Everyday home controls">
+<div class="hero-topline"><div><span class="micro">ELDORET · THE HOUSE</span><h2>Everything at home.</h2></div><span class="hero-topline-right">ONE TAP TO CONTROL <span aria-hidden="true">↗</span></span></div>
+<div class="hero-grid"><button type="button" class="hero-action hero-warmcar" data-hero="warmcar" aria-label="Warm the car"><span class="hero-illustration" aria-hidden="true">🚗</span><span class="hero-meta">CAR</span><strong>Warm the car</strong><span class="hero-sub">Climate · charging</span><span class="hero-reading" id="heroReading-warmcar">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-watch" data-hero="watch" aria-label="Watch TV"><span class="hero-illustration" aria-hidden="true">📺</span><span class="hero-meta">TELEVISION</span><strong>Watch TV</strong><span class="hero-sub">Sky · rooms · volume</span><span class="hero-reading" id="heroReading-watch">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-lighting" data-hero="lighting" aria-label="Lights"><span class="hero-illustration" aria-hidden="true">💡</span><span class="hero-meta">LIGHTING</span><strong>Lights</strong><span class="hero-sub">Rooms · scenes</span><span class="hero-reading" id="heroReading-lighting">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-windows" data-hero="windows" aria-label="Windows"><span class="hero-illustration" aria-hidden="true">🪟</span><span class="hero-meta">WINDOWS</span><strong>Windows</strong><span class="hero-sub">VELUX · ventilation</span><span class="hero-reading" id="heroReading-windows">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-music" data-hero="music" aria-label="Play music"><span class="hero-illustration" aria-hidden="true">♫</span><span class="hero-meta">AUDIO</span><strong>Play music</strong><span class="hero-sub">Pioneer · radio</span><span class="hero-reading" id="heroReading-music">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-status" data-hero="status" aria-label="House status"><span class="hero-illustration" aria-hidden="true">⌂</span><span class="hero-meta">HOUSE</span><strong>House status</strong><span class="hero-sub">Appliances · alerts</span><span class="hero-reading" id="heroReading-status">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button></div>
+</section>
+<nav class="family-nav" aria-label="Home controls">
     <button type="button" class="family-tab active" data-family-tab="do" aria-selected="true">⚡ DO</button>
     <button type="button" class="family-tab" data-family-tab="rooms" aria-selected="false">⌂ ROOMS</button>
     <button type="button" class="family-tab" data-family-tab="systems" aria-selected="false">▦ SYSTEMS</button>
@@ -372,10 +390,22 @@ function familyCatalogue(){
   b.append(icon,title,sub);b.addEventListener('click',()=>openDrawer(item));cards.append(b);
  }
  $('clearSearch').hidden=!term;
+ if(pageMode==='family')showFamilyContent();
 }
 function switchPage(to){
- if(to==='family'){pageMode='family';$('telemetry').hidden=true;$('heroHome').hidden=true;document.querySelector('.telemetry-heading').hidden=true;$('holdingTitle').hidden=true;$('familyScreen').hidden=false;$('modeBtn').textContent='LIVE';$('modeBtn').setAttribute('aria-label','Return to live wall');}
- else{pageMode='live';closeDrawer();$('telemetry').hidden=false;$('heroHome').hidden=false;document.querySelector('.telemetry-heading').hidden=false;$('holdingTitle').hidden=false;$('familyScreen').hidden=true;$('modeBtn').textContent='CONTROLS';$('modeBtn').setAttribute('aria-label','Open family controls');}
+ if(to==='family'){
+  pageMode='family';$('telemetry').hidden=true;document.querySelector('.telemetry-heading').hidden=true;$('holdingTitle').hidden=true;$('familyScreen').hidden=false;
+  $('modeBtn').textContent='LIVE';$('modeBtn').setAttribute('aria-label','Return to telemetry');
+  showFamilyContent();
+ }else{
+  pageMode='live';closeDrawer();$('telemetry').hidden=false;document.querySelector('.telemetry-heading').hidden=false;$('holdingTitle').hidden=false;$('familyScreen').hidden=true;
+  $('modeBtn').textContent='CONTROLS';$('modeBtn').setAttribute('aria-label','Open family controls');
+ }
+}
+function showFamilyContent(){
+ const heroVisible=familyTab==='do'&&!search.value.trim();
+ $('heroHome').hidden=!heroVisible;$('familyCards').hidden=heroVisible;
+ document.querySelector('.family-heading').hidden=heroVisible;
 }
 function detailLinks(container,links,technical){
  container.replaceChildren();
@@ -404,18 +434,14 @@ $('telemetry').addEventListener('pointerup',e=>{if(!e.target.closest('a,button')
 // Touching the telemetry wall itself switches to family controls; tapping its tiles remains useful
 // and takes the visitor directly into the relevant household task instead of navigating away.
 const homeToFamily={energy:'warmcar',ps5:'playstation',pioneer:'music',hue:'lighting',sky:'watch',tvs:'television',appliances:'status',velux:'windows',network:'network',printer:'printer'};
-$('telemetry').addEventListener('click',e=>{
- const a=e.target.closest('a.tile');if(!a)return;
- e.preventDefault();switchPage('family');
- const id=homeToFamily[a.id];const item=catalogue.find(x=>x.id===id);if(item)openDrawer(item);
-});
+$('telemetry').addEventListener('click',e=>{if(e.target.closest('a.tile')){e.preventDefault();switchPage('family');}});
 document.querySelectorAll('[data-family-tab]').forEach(btn=>btn.addEventListener('click',()=>{
  familyTab=btn.dataset.familyTab;search.value='';
  document.querySelectorAll('[data-family-tab]').forEach(b=>{const active=b===btn;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});
  $('familyTitle').textContent=familyTab==='do'?'What would you like to do?':familyTab==='rooms'?'Choose a room':'Choose a system';
  familyCatalogue();
 }));
-search.addEventListener('input',familyCatalogue);
+search.addEventListener('input',()=>{familyCatalogue();showFamilyContent()});
 $('clearSearch').addEventListener('click',()=>{search.value='';familyCatalogue();search.focus()});
 $('familyNerd').addEventListener('click',()=>{
  familyNerd=!familyNerd;$('familyNerd').setAttribute('aria-pressed',String(familyNerd));
@@ -429,7 +455,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!drawer.hidden){clo
 familyCatalogue();
 heroReading('watch','Sky Q · TV rooms · volume');heroReading('music','Pioneer · radio');
 document.querySelectorAll('[data-hero]').forEach(b=>b.addEventListener('click',()=>{switchPage('family');const item=catalogue.find(x=>x.id===b.dataset.hero);if(item)openDrawer(item)}));
-$('showAllSystems').addEventListener('click',()=>{switchPage('family');document.querySelector('[data-family-tab="systems"]').click()});
+$('showAllSystems').addEventListener('click',()=>{switchPage('family');document.querySelector('[data-family-tab="do"]').click()});
 function heroReading(id,value){const el=$('heroReading-'+id);if(el)el.textContent=value||'—';}
 
 const jobs=[
