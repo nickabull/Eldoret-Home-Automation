@@ -1,5 +1,5 @@
 {
-  "id": "velux-readonly-1792796224835",
-  "task": "velux_discovery",
-  "note": "User requested a read-only VELUX hub probe for the upstairs/downstairs Eldoret dashboards; no pairing or device movement."
+  "id": "engineering-snapshot-20261121-1114",
+  "task": "engineering_snapshot",
+  "note": "User-authorised read-only Bulldog and Pioneer diagnostics; no restarts, shell, credentials or device state changes."
 }
