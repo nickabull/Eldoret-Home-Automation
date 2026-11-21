@@ -101,6 +101,39 @@ el('refresh').addEventListener('click',()=>refresh());
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>action(b.dataset.action)));
 el('host').textContent='Configured in Bulldog (check receiver to confirm)';
 
+async function diagnoseConnection(){
+ const b=el('connectionRefresh'),root=el('connectionResult');
+ b.disabled=true;root.replaceChildren();
+ try{
+  const response=await fetch('/api/pioneer/connection',{cache:'no-store'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const result=await response.json();
+  const rows=[
+    ['Network ping',result.ping?.last_probe_reachable===true?'Responding':result.ping?.last_probe_reachable===false?'Not responding':'Unknown'],
+    ['Pioneer control (TCP 8102)',result.control_port_open?'Accepting connections':'Unavailable'+(result.control_port_open_error?' · '+result.control_port_open_error:'')],
+    ['Web interface (TCP 80)',result.web_port_open?'Port open':'Port closed'],
+    ['IP address',result.host||'—'],
+    ['Checked',result.checked_at?new Date(result.checked_at).toLocaleString('en-GB'):'—']
+  ];
+  for(const [label,value] of rows){
+   const item=document.createElement('div');item.className='stability-event'+(value==='Accepting connections'?' up':'');
+   const n=document.createElement('span');n.textContent=label;const v=document.createElement('b');v.textContent=value;
+   item.append(n,v);root.append(item);
+  }
+  const note=document.createElement('p');note.className='mini';note.textContent=result.diagnosis||'';
+  root.append(note);el('host').textContent=result.host||'Unknown';
+  if(result.control_port_open){
+   notice('Pioneer control port is responding. Press Retry receiver status to read power, volume and mute.');
+  }else{
+   notice('Control port is not responding. Network ping alone cannot confirm the amplifier is ready.');
+  }
+ }catch(e){const p=document.createElement('p');p.className='mini';p.textContent='Connection test failed: '+e.message;root.append(p)}
+ finally{b.disabled=false}
+}
+el('connectionRefresh').addEventListener('click',diagnoseConnection);
+el('receiverRetry').addEventListener('click',()=>refresh());
+
+
 async function showMonitor(){
  const button=el('monitorRefresh');
  button.disabled=true;
