@@ -4285,27 +4285,40 @@ def pioneer_exchange(command, timeout=1.5):
             return ""
 
 def pioneer_status():
+    # Read-only manual check. One query per connection, no automatic retries.
     result={"host":PIONEER_HOST,"connected":False,"power":None,
-            "volume":None,"mute":None,"input":None}
+            "volume":None,"mute":None,"input":None,
+            "checked_at":datetime.now(timezone.utc).isoformat(),
+            "query_results":[]}
     if not PIONEER_LOCK.acquire(blocking=False):
         result["error"]="Another Pioneer request is in progress"
         return result
     try:
         for command,key,prefix in (("?P","power","PWR"),("?V","volume","VOL"),
                                    ("?M","mute","MUT"),("?F","input","FN")):
-            reply=pioneer_exchange(command)
+            started=time.monotonic()
+            try:
+                reply=pioneer_exchange(command)
+            except (OSError, ValueError) as exc:
+                result["query_results"].append({"field":key,"status":"connection_failed",
+                    "error":type(exc).__name__,"elapsed_ms":round((time.monotonic()-started)*1000)})
+                result["error"]="Pioneer "+key+" check failed: "+type(exc).__name__
+                break
+            item={"field":key,"status":"no_reply" if not reply else "unexpected_reply",
+                  "elapsed_ms":round((time.monotonic()-started)*1000)}
             if key=="power" and reply.startswith("PWR"):
                 result["connected"]=True
                 result[key]="On" if reply=="PWR0" else ("Standby" if reply=="PWR2" else reply)
+                item["status"]="ok"
             elif reply.startswith(prefix):
+                result["connected"]=True
                 code=reply[len(prefix):]
                 result[key]=("Muted" if code=="0" else "Not muted") if key=="mute" and code in ("0","1") else code
-            elif not result["connected"]:
-                result["error"]="No recognised response from Pioneer"
+                item["status"]="ok"
+            result["query_results"].append(item)
+            if item["status"]!="ok":
+                result["error"]="Pioneer "+key+" query returned "+item["status"]
                 break
-        return result
-    except (OSError, ValueError) as exc:
-        result["error"]="Pioneer unavailable: "+type(exc).__name__
         return result
     finally:
         PIONEER_LOCK.release()
