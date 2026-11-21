@@ -83,3 +83,11 @@
 ## Control verification — 21 November 2026, 12:12–12:13 GMT
 - User explicitly confirmed **Mute is working** after restoring the single-TCP-session status readback. This is a verified live control test, independent of the earlier known mute success.
 - Physical volume shown as 16 while recent status read returned raw code 089. First provisional calibration only; no conversion coded.
+
+## 21 November 2026, ~12:16 onward — car integrations before further design work
+- User agreed to freeze physical Pioneer page design until the Design Centre is completed, and prioritised **car integration first, Design Centre second**. Preserve current functioning Pioneer status and mute controls.
+- Implemented read-only myenergi Zappi client in `connector.py` behind `GET /api/zappi/status`. Uses HTTP Digest authentication over HTTPS, bounded requests, a 120-second cache, and only `/cgi-jstatus-Z` telemetry. Uses `director.myenergi.net` for a validated server shard when available, with `s18.myenergi.net` fallback. **No charger commands or schedules**.
+- New private key file: `~/.config/eldoret/myenergi.json`, required to be owned by Bulldog user and mode 0600. Created using interactive `setup-myenergi.py` script with masked API key, atomic write and no credential echo; never commit or paste secrets to chat. Setup requires myenergi gateway/hub serial number, *not* Zappi serial if distinct, and myenergi API key. Existing key is not automatically rotated.
+- Zappi values on `zappi.html` remain blank unless the API confirms them. Raw `sta,zmo,div,che` are surfaced for calibration if a real response is received; no speculative conversion of power/energy units yet.
+- Nissan Ariya: `/api/ariya/status` still returns an explicit unconfigured placeholder, no fake battery values and no climate commands. Auth integration requires separate work; public Home Assistant EU community integration `dan-r/HomeAssistant-NissanConnect` v0.8.2 (stable Sept 2026) updated OneID login after Nissan broke earlier flows in Aug 2026. v0.9.0-beta.1 (28 Oct 2026) exists and adds diagnostics. Investigate compatible integration carefully and use secure local auth; do not copy customer credentials to chat/GitHub.
+- No live API authentication has been validated yet; user action to configure gateway serial/key remains. Existing deployed connector must reload latest GitHub changes.
