@@ -1,5 +1,5 @@
 {
-  "id": "engineering-snapshot-20261121-1114",
+  "id": "engineering-snapshot-20261121-1115-retry",
   "task": "engineering_snapshot",
-  "note": "User-authorised read-only Bulldog and Pioneer diagnostics; no restarts, shell, credentials or device state changes."
+  "note": "User-approved read-only engineering snapshot after connector update. Never run shell or disruptive actions."
 }
