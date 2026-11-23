@@ -1,0 +1,89 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071520"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="/eldoret.webmanifest"><title>Eldoret · PlayStation 1.3</title><style>
+:root{color-scheme:dark;--line:#afc4d342;--teal:#1c4a54;--border:#5a8991;--gold:#f3d09c}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06121e;color:#eff9ff;font:14px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,a{font:inherit}
+.stage{position:relative;isolation:isolate;width:100vw;height:100dvh;display:grid;grid-template-rows:54px minmax(0,1fr)}
+.stage:before{content:"";z-index:-2;position:absolute;inset:0;background:url('/eldoret-playstation.jpg') center/cover no-repeat;opacity:.88}
+.stage:after{content:"";z-index:-1;position:absolute;inset:0;background:linear-gradient(90deg,#03131fdc,#071522ae 75%,#03111bd3),linear-gradient(0deg,#03111bc4,transparent 80%)}
+header{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:5px 14px;background:#041725e3;border-bottom:1px solid var(--line);min-width:0}
+.brand strong{font-size:19px;letter-spacing:.1em}.brand small{display:block;color:var(--gold);font-size:9px;letter-spacing:.13em}
+.tools{display:flex;gap:8px;align-items:center}.tools button,.tools a,.tabs button{display:inline-flex;align-items:center;justify-content:center;min-height:41px;padding:8px 13px;border:1px solid var(--border);border-radius:10px;background:var(--teal);color:#fff;text-decoration:none;font-weight:800;white-space:nowrap;cursor:pointer}.tools button:disabled{opacity:.5}.stamp{color:#c4d9df;font-size:11px;white-space:nowrap}
+main{min-height:0;display:grid;grid-template-rows:minmax(0,20fr) minmax(0,63fr) minmax(0,17fr);gap:9px;padding:9px 12px 11px}
+.panel{border:1px solid var(--line);background:linear-gradient(130deg,#051522db,#071c2acf);border-radius:13px;backdrop-filter:blur(2px);min-height:0;min-width:0;overflow:hidden}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;width:60%}
+.ey{font-size:9px;font-weight:800;letter-spacing:.15em;color:var(--gold)}.hero h1{font-size:clamp(22px,2.7vw,33px);margin:5px 0 2px}.small{font-size:11px;color:#b4cbd5}
+.pill{font-size:10px;font-weight:800;padding:6px 10px;border-radius:20px;border:1px solid #75bfa78a;background:#135042b5;color:#b8f7d9;white-space:nowrap}.pill.warn{background:#654524aa;border-color:#cfa36b;color:#ffe2aa}.pill.bad{background:#602534b3;border-color:#d36a76;color:#ffced2}
+.bodyGrid{display:grid;grid-template-columns:minmax(0,60fr) minmax(0,40fr);gap:9px;min-height:0}
+.now{display:grid;grid-template-columns:minmax(0,47fr) minmax(0,53fr);gap:12px;padding:12px}
+.cover{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;border:1px solid #7ba0b255;border-radius:11px;background:#071827c9;overflow:hidden}
+.cover img{width:100%;height:100%;object-fit:cover;display:none}
+.cover.hasArt{background:#020814e0}.cover.hasArt img{display:block}.placeholder{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:11px;text-align:center;padding:18px;color:#c1d4df}.placeholder .psSymbol{font-size:55px;line-height:1;color:#b9cee4}.placeholder strong{font-size:15px}
+.cover.hasArt .placeholder{display:none}
+.nowInfo{min-width:0;min-height:0;display:flex;flex-direction:column;gap:9px;padding:6px 2px}
+.nowInfo h2{font-size:clamp(19px,2.8vw,34px);line-height:1.12;margin:0;overflow-wrap:anywhere}
+.nowInfo .headline{font-size:10px;color:#f0d39f;font-weight:800;letter-spacing:.1em}.source{font-size:10px;color:#a3c2d2}
+.nowInfo .info{padding:8px 0;border-top:1px solid #9db7c433;display:flex;justify-content:space-between;gap:9px;font-size:11px}.info strong{font-size:12px;text-align:right;overflow-wrap:anywhere}
+.aside{display:grid;grid-template-rows:minmax(0,50fr) minmax(0,50fr);gap:9px;min-height:0}
+.statusPanel,.activity{padding:12px 15px;display:flex;flex-direction:column;gap:7px}.aside h2{font-size:18px;margin:2px 0 4px}
+.statRow{display:grid;grid-template-columns:minmax(0,45fr) minmax(0,55fr);gap:5px;font-size:11px;border-bottom:1px solid #adc4d120;padding:3px 0}.statRow span{color:#b1cad6}.statRow strong{text-align:right;overflow-wrap:anywhere}
+.activityList{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden}.activityItem{display:flex;gap:8px;align-items:baseline;justify-content:space-between;font-size:11px;border-bottom:1px solid #adc4d120;padding-bottom:5px}.activityItem span{overflow-wrap:anywhere}.activityItem time{font-size:9px;color:#a3c2d2;white-space:nowrap}
+.footer{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:10px 13px;align-items:center}.footer strong{display:block;font-size:12px;margin-top:5px;overflow-wrap:anywhere}.footer .ey{color:#a8d8c7}
+@media(max-width:900px){.hero{width:66%}.now{grid-template-columns:45fr 55fr}.statusPanel,.activity{padding:8px}.aside h2{font-size:15px}.statRow,.activityItem{font-size:9px}.nowInfo{gap:5px}.nowInfo .info{padding:4px 0}.footer{padding:7px}.footer strong{font-size:10px}}
+@media(max-width:700px){header{padding:4px 7px}.brand strong{font-size:14px}.brand small{font-size:8px}.tools{gap:4px}.tools button,.tools a{padding:5px 7px;min-height:34px;font-size:10px}.stamp{display:none}main{gap:5px;padding:5px}.hero{padding:7px;width:68%}.hero h1{font-size:19px}.bodyGrid{gap:5px}.now{padding:6px;gap:6px}.nowInfo h2{font-size:18px}.placeholder .psSymbol{font-size:32px}.footer{gap:5px}}
+
+
+/* 1.4: reclaim photographic negative space, preserve every readout and game art. */
+main{grid-template-rows:minmax(0,15fr) minmax(0,73fr) minmax(0,12fr);gap:8px}
+.hero{width:47%;padding:9px 14px;gap:8px}.hero h1{font-size:clamp(22px,2.4vw,29px)}
+.footer{width:76%;background:linear-gradient(115deg,#061723d0,#081e2db0);padding:7px 12px}
+.bodyGrid{grid-template-columns:minmax(0,63fr) minmax(0,37fr);gap:8px}
+.now{padding:9px;gap:10px}.aside{gap:8px}
+.statusPanel,.activity{padding:9px 12px;gap:5px}
+.panel{background:linear-gradient(130deg,#051522c4,#071c2aa9)}
+.stage:before{opacity:1;background-position:62% center}
+.stage:after{background:linear-gradient(90deg,#03131fd7 0%,#0715227a 68%,#03111b32)}
+@media(max-width:850px){.hero{width:58%}.footer{width:88%}.statusPanel,.activity{padding:7px 8px}.now{padding:7px}}
+
+</style></head><body><div class="stage"><header><div class="brand"><strong>ELDORET · PLAYSTATION 1.4</strong><small>JESSE'S PS5 · PLAYING NOW</small></div><div class="tools"><span class="stamp" id="checked">Checking…</span><button type="button" id="refresh">↻ REFRESH</button><a href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<main><section class="panel hero"><div><div class="ey">PLAYSTATION 5 · LIVE PRESENCE</div><h1>Jesse's PlayStation</h1><div class="small" id="statusText">Connecting to console and PlayStation Network…</div></div><span class="pill warn" id="badge">CHECKING</span></section>
+<div class="bodyGrid"><section class="panel now"><div class="cover" id="cover"><img alt="Artwork for currently reported PlayStation game" id="gameArtwork" referrerpolicy="no-referrer"><div class="placeholder" id="placeholder"><span class="psSymbol">◈</span><strong>GAME ARTWORK</strong><span>Appears here when PlayStation reports a game and cover image</span></div></div>
+<div class="nowInfo"><div class="headline">PLAYING NOW · PLAYSTATION NETWORK</div><h2 id="gameTitle">Waiting for a game…</h2><p class="small" id="gameStatus">A game title appears when shared by local PS5 discovery or PSN presence.</p><div class="info"><span>PSN presence</span><strong id="psn">—</strong></div><div class="info"><span>Platform</span><strong id="platform">—</strong></div><div class="info"><span>Game source</span><strong id="source">—</strong></div><div class="source" id="gameNote">Availability depends on PlayStation account privacy settings.</div></div></section>
+<aside class="aside"><section class="panel statusPanel"><div class="ey">CONSOLE · STATUS</div><h2>PS5 information</h2><div class="statRow"><span>Console</span><strong id="console">—</strong></div><div class="statRow"><span>Console name</span><strong id="consoleName">—</strong></div><div class="statRow"><span>Firmware</span><strong id="version">—</strong></div><div class="statRow"><span>Local address</span><strong id="ip">—</strong></div><div class="statRow"><span>Discovery</span><strong id="discovery">—</strong></div></section>
+<section class="panel activity"><div class="ey">BULLDOG · OBSERVED</div><h2>Recent activity</h2><div class="activityList" id="activity"><div class="activityItem"><span>No observed game changes yet</span></div></div></section></aside></div>
+<section class="panel footer"><div><div class="ey">GAME SESSIONS OBSERVED</div><strong id="sessions">—</strong></div><div><div class="ey">PSN CONNECTION</div><strong id="psnConnection">—</strong></div><div><div class="ey">PSN DATA CHECKED</div><strong id="psnChecked">—</strong></div><div><div class="ey">LOCAL OBSERVATION</div><strong id="localChecked">—</strong></div></section></main></div>
+<script>
+(()=>{'use strict';const $=id=>document.getElementById(id),text=(id,value)=>{$(id).textContent=value==null||value===''?'—':String(value)},clock=s=>{const d=new Date(s||'');return Number.isFinite(d.getTime())?d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'};let busy=false;
+function render(p){const local=p.live||{},psn=p.psn||{},connected=local.online===true,psnOk=psn.connected===true;
+$('badge').textContent=connected?'CONSOLE ONLINE':psnOk?'PSN CONNECTED':'NOT RESPONDING';
+$('badge').className='pill'+(connected?'':psnOk?' warn':' bad');
+text('statusText',connected?'Console responding to local discovery':psnOk?'PSN responding · console may be sleeping':'No local console response · may be in rest mode');
+const game=psn.game||local.running_app_name||'No game currently reported';
+text('gameTitle',game);text('gameStatus',psn.game_status||(psn.game?'Live game reported by PSN':local.running_app_name?'Game reported by console':'No game reported — this does not establish that no game is being played.'));
+text('psn',psn.connected?psn.online_status||'Connected':psn.detail||'Not available');text('platform',psn.platform||local.host_type||'—');
+text('source',psn.game?'PlayStation Network':local.running_app_name?'Local PS5 discovery':'Not reported');
+// Prefer Sony-supplied live artwork. For the game confirmed tonight, use a separately
+// licensed game-cover fallback while PSN withholds its artwork URL. Never guess a game.
+const title=String(game).trim();
+const rocketLeague=/^rocket league(?:®|\u00ae)?(?:\s|$)/i.test(title);
+const fc27=/^EA SPORTS(?:™|\u2122)?\s*FC(?:™|\u2122)?\s*27(?:\s|$)/i.test(title);
+const fallback=rocketLeague?'https://commons.wikimedia.org/wiki/Special:FilePath/Rocket_League_coverart.jpg':
+ fc27?'https://store-images.s-microsoft.com/image/apps.47660.13743839398469485.db2131e0-e679-48e9-9a6a-8a24fa7716b1.c794348b-7cd8-4ff5-8d65-f3d37c533731':null;
+const sonyArt=typeof psn.game_artwork==='string'&&/^https:\/\//i.test(psn.game_artwork)&&psn.game_artwork.length<2000?psn.game_artwork:null;
+text('gameNote',sonyArt?'Artwork supplied by PSN · updates may be cached up to 2 minutes':
+ fallback?(fc27?'EA SPORTS FC 27 cover artwork · publisher artwork via Microsoft Store CDN':'Rocket League cover art · licensed fallback while PSN does not supply artwork'):
+ 'Artwork appears when PSN provides a cover image for the reported game.');
+const art=$('gameArtwork'),cover=$('cover');cover.classList.remove('hasArt');art.removeAttribute('src');
+const sequence=[sonyArt,fallback].filter(Boolean);let next=0;
+art.onload=()=>cover.classList.add('hasArt');
+art.onerror=()=>{if(next<sequence.length){art.src=sequence[next++];}else{cover.classList.remove('hasArt');art.removeAttribute('src');}};
+if(sequence.length)art.src=sequence[next++];
+text('console',connected?'Online':'No response');text('consoleName',local.host_name||'—');text('version',local.system_version||'—');text('ip',local.ip||'—');
+text('discovery',connected?'UDP response':'Not available');
+const activity=$('activity');activity.replaceChildren();const events=Array.isArray(p.events)?p.events.slice(-3).reverse():[];
+if(events.length){for(const e of events){const line=document.createElement('div');line.className='activityItem';const name=document.createElement('span'),date=document.createElement('time');name.textContent=e.detail||e.kind||'Event';date.textContent=clock(e.at);line.append(name,date);activity.append(line);}}
+else{const line=document.createElement('div');line.className='activityItem';line.textContent='No changes recorded yet';activity.append(line);}
+const sessions=Array.isArray(p.sessions)?p.sessions:[];text('sessions',sessions.length+(sessions.length>=30?'+':'')+' stored');text('psnConnection',psn.connected?'CONNECTED':psn.configured?'NOT REACHABLE':'NOT CONFIGURED');
+text('psnChecked',psn.checked_at?clock(psn.checked_at):'Not supplied by PSN');text('localChecked',clock(p.observed_at));text('checked','Checked '+clock(p.observed_at));
+}
+async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),45000);try{const r=await fetch('/api/playstation/activity',{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);render(await r.json());}catch(e){$('badge').className='pill bad';$('badge').textContent='READING UNAVAILABLE';text('statusText','PlayStation status is temporarily unavailable: '+e.message);}finally{clearTimeout(timer);busy=false;$('refresh').disabled=false;}}
+$('refresh').addEventListener('click',refresh);refresh();setInterval(()=>{if(!document.hidden)refresh();},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+})();
+</script></body></html>
