@@ -662,8 +662,7 @@ function wallRender(){
   wallRow('Samsung fridge',fridge.connected?'CONNECTED · '+(fridge.fridge_c==null?'—':fridge.fridge_c+'°C')+' / '+(fridge.freezer_c==null?'—':fridge.freezer_c+'°C'):'SMARTTHINGS NOT READY',fridge.connected?'ok':'unknown'),
   ...(fridge.connected?[
    wallRow('Fridge doors',Object.entries(fridge.doors||{}).map(([k,v])=>k+': '+v).join(' · ')||'—',Object.values(fridge.doors||{}).some(v=>v==='open')?'active':'ok'),
-   wallRow('FlexZone',wallEnum(fridge.flexzone_mode),'ok'),
-   wallRow('Ice maker',wallText(fridge.ice_maker)+' · '+wallText(fridge.ice_maker_state),fridge.ice_maker_state==='running'?'active':'off'),
+   wallRow('FlexZone / Ice',wallEnum(fridge.flexzone_mode)+' · ice '+wallText(fridge.ice_maker),fridge.ice_maker_state==='running'?'active':'ok'),
    wallRow('Water filter',fridge.water_filter_status==='replace'?'REPLACE NOW':wallText(fridge.water_filter_status),fridge.water_filter_status==='replace'?'active':'ok')
   ]:[])
  ]);
