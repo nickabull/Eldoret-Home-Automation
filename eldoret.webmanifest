@@ -1,0 +1,11 @@
+{
+  "name": "Eldoret Home Control",
+  "short_name": "Eldoret",
+  "id": "/nerd-control.html",
+  "start_url": "/nerd-control.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#06121c",
+  "theme_color": "#071520",
+  "description": "Local household controls for Eldoret"
+}
