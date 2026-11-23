@@ -30,8 +30,9 @@ async def run(aid, target):
         char = next((ch for service in entry.get("services", [])
                      for ch in service.get("characteristics", [])
                      if ch.get("iid") == 11), None)
-        if not char or "pw" not in (char.get("perms") or []):
-            return {"ok": False, "detail": "Window target is not writable"}
+        target_type = str(char.get("type", "")).upper() if char else ""
+        if not char or "pw" not in (char.get("perms") or []) or not (target_type.startswith("0000007C") or target_type == "7C"):
+            return {"ok": False, "detail": "Window target position is not verified writable"}
         if char.get("format") not in ("uint8", "int", "uint16", "uint32"):
             return {"ok": False, "detail": "Unexpected target characteristic type"}
         try:
