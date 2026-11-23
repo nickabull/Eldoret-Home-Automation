@@ -399,11 +399,11 @@ body:before{content:"";position:fixed;inset:0;background:linear-gradient(#06111c
 .printer-link-tile{cursor:pointer!important;outline-offset:-4px}.printer-link-tile:hover{border-color:#8df1ce!important}.printer-link-tile:focus-visible{outline:3px solid #8df1ce!important}
 .pioneer-link-tile{cursor:pointer!important;outline-offset:-4px}.pioneer-link-tile:hover{border-color:#ffd858!important}.pioneer-link-tile:focus-visible{outline:3px solid #ffd858!important}</style><link rel="stylesheet" href="eldoret-artwork-v1.css?v=1"></head>
 <body><main class="shell">
-<header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>NERD CENTRAL 2.16</small></h1></a><div class="top-right"><button class="mode-btn" id="modeBtn" type="button" aria-label="Open family controls">CONTROLS</button><button class="directory-trigger mode-btn directory-labelled" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open all Eldoret systems" title="All Eldoret systems">ALL SYSTEMS</button><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
+<header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>NERD CENTRAL 2.16</small></h1></a><div class="top-right"><button class="directory-trigger mode-btn directory-labelled" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open all Eldoret systems" title="All Eldoret systems">ALL SYSTEMS</button><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
 <nav class="directory-panel" id="directoryPanel" aria-label="All Eldoret controls" hidden><div class="directory-head"><strong>ELDORET DIRECTORY</strong><button type="button" id="directoryClose" aria-label="Close directory">×</button></div><div class="directory-grid"><a href="ipad2.html">Home 2.0</a><a href="zappi.html">Nissan + Zappi</a><a href="av.html#ps5Panel">PlayStation</a><a href="pioneer-control.html">Kitchen Audio</a><a href="lights.html">Lights</a><a href="house.html">House Hue</a><a href="utility.html">Utility Hue</a><a href="sky.html">Sky Q</a><a href="tvs.html">Televisions</a><a href="appliances.html">Appliances</a><a href="fridge.html">Fridge</a><a href="velux.html">VELUX</a><a href="network-control.html">Network</a><a href="printer-control.html">Epson Printer</a><a href="bulldog.html">Bulldog</a><a href="radio.html">Radio</a><a href="engineering.html">Diagnostics</a><a href="index.html">Desktop View</a></div></nav><div class="section" id="holdingTitle"><strong>NERD CENTRAL 2.16 · WHOLE HOUSE</strong><span id="health">Checking devices…</span></div>
 <aside class="alert-dock" id="alertsDock" aria-labelledby="alertsTitle"><div class="alert-head"><strong id="alertsTitle">⚠ HOME ALERTS</strong><span id="alertCount" aria-live="polite">Checking…</span></div><div class="alert-list" id="alertsList"><span class="alert-empty">Scanning…</span></div></aside>
 
-<div class="telemetry-heading"><strong>LIVE SYSTEMS</strong><span>BATTERY · ENERGY · NETWORK · HOME</span><button type="button" id="showAllSystems" aria-label="View all systems">CONTROLS ↗</button></div><section class="tiles" id="telemetry" hidden aria-label="Live home systems">
+<div class="telemetry-heading"><strong>LIVE SYSTEMS</strong><span>BATTERY · ENERGY · NETWORK · HOME</span></div><section class="tiles" id="telemetry" hidden aria-label="Live home systems">
 <a class="tile highlight" href="zappi.html" id="energy"><div class="tile-ident"><span class="symbol" aria-hidden="true">🚗</span><div class="tile-namegroup"><span class="name">Nissan + Zappi</span><span class="hint">BATTERY · kW · RANGE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
 <a class="tile" href="av.html#ps5Panel" id="ps5"><div class="tile-ident"><span class="symbol" aria-hidden="true">🎮</span><div class="tile-namegroup"><span class="name">Jesse's PS5</span><span class="hint">GAME · PRESENCE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
 <a class="tile" href="pioneer.html" id="pioneer"><div class="tile-ident"><span class="symbol" aria-hidden="true">♫</span><div class="tile-namegroup"><span class="name">Pioneer Audio</span><span class="hint">PWR · VOL · INPUT</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
@@ -549,14 +549,14 @@ function switchPage(to){
   $('nerdWall').hidden=true;
   $('engineeringPanels').hidden=true;
   pageMode='family';$('telemetry').hidden=true;document.querySelector('.telemetry-heading').hidden=true;$('holdingTitle').hidden=true;$('familyScreen').hidden=false;
-  $('modeBtn').textContent='LIVE';$('modeBtn').setAttribute('aria-label','Return to telemetry');
+  
   showFamilyContent();
  }else{
   $('statusLegend').hidden=false;
   $('nerdWall').hidden=false;
   $('engineeringPanels').hidden=true;
   pageMode='live';closeDrawer();$('telemetry').hidden=false;document.querySelector('.telemetry-heading').hidden=false;$('holdingTitle').hidden=false;$('familyScreen').hidden=true;
-  $('modeBtn').textContent='CONTROLS';$('modeBtn').setAttribute('aria-label','Open family controls');
+  
  }
 }
 function showFamilyContent(){
@@ -584,14 +584,14 @@ function openDrawer(item){
  $('drawerClose').focus({preventScroll:true});
 }
 function closeDrawer(){scrim.hidden=true;drawer.hidden=true;document.body.style.overflow='';chosen=null}
-$('modeBtn').addEventListener('click',()=>switchPage(pageMode==='live'?'family':'live'));
+
 $('backToLive').addEventListener('click',()=>switchPage('live'));
-$('holdingTitle').addEventListener('click',()=>switchPage('family'));
-$('telemetry').addEventListener('pointerup',e=>{if(!e.target.closest('a,button'))switchPage('family')});
+
+
 // Touching the telemetry wall itself switches to family controls; tapping its tiles remains useful
 // and takes the visitor directly into the relevant household task instead of navigating away.
 const homeToFamily={energy:'warmcar',ps5:'playstation',pioneer:'music',hue:'lighting',sky:'watch',tvs:'television',appliances:'status',velux:'windows',network:'network',printer:'printer'};
-$('telemetry').addEventListener('click',e=>{if(e.target.closest('a.tile')){e.preventDefault();switchPage('family');}});
+
 document.querySelectorAll('[data-family-tab]').forEach(btn=>btn.addEventListener('click',()=>{
  familyTab=btn.dataset.familyTab;search.value='';
  document.querySelectorAll('[data-family-tab]').forEach(b=>{const active=b===btn;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});
@@ -612,7 +612,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!drawer.hidden){clo
 familyCatalogue();
 heroReading('watch','Sky Q · TV rooms · volume');heroReading('music','Pioneer · radio');
 document.querySelectorAll('[data-hero]').forEach(b=>b.addEventListener('click',()=>{switchPage('family');const item=catalogue.find(x=>x.id===b.dataset.hero);if(item)openDrawer(item)}));
-$('showAllSystems').addEventListener('click',()=>{switchPage('family');document.querySelector('[data-family-tab="do"]').click()});
+
 function heroReading(id,value){const el=$('heroReading-'+id);if(el)el.textContent=value||'—';}
 
 
