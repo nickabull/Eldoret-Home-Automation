@@ -4697,6 +4697,90 @@ def _ariya_invoke(mode,payload=None):
         raise RuntimeError("Nissan helper failed")
     return json.loads(run.stdout)
 
+# SmartThings refrigerator: private read-only API. Never proxy raw device status.
+SMARTTHINGS_PRIVATE_FILE=os.path.expanduser("~/.config/eldoret/smartthings.json")
+SMARTTHINGS_LOCK=threading.Lock()
+SMARTTHINGS_CACHE={"expires":0.0,"value":None}
+
+def smartthings_fridge_status():
+    import stat
+    import urllib.error
+    from urllib.parse import quote
+    checked=datetime.now(timezone.utc).isoformat()
+    empty={"configured":False,"connected":False,"source":"SmartThings cloud",
+           "mode":"read-only","checked_at":checked}
+    with SMARTTHINGS_LOCK:
+        now=time.monotonic()
+        if SMARTTHINGS_CACHE["value"] is not None and now<SMARTTHINGS_CACHE["expires"]:
+            return dict(SMARTTHINGS_CACHE["value"])
+        try:
+            st=os.stat(SMARTTHINGS_PRIVATE_FILE)
+            if st.st_uid!=os.getuid() or stat.S_IMODE(st.st_mode)&0o077:
+                raise ValueError("Private token permissions invalid")
+            with open(SMARTTHINGS_PRIVATE_FILE,encoding="utf-8") as file:
+                token=json.load(file).get("token")
+            if not isinstance(token,str) or len(token)<16:
+                raise ValueError("Token missing")
+        except FileNotFoundError:
+            return dict(empty,detail="SmartThings read-only token not installed on Bulldog.")
+        except (OSError,ValueError,TypeError):
+            return dict(empty,detail="SmartThings token file needs local attention.")
+        try:
+            base="https://api.smartthings.com/v1"
+            headers={"Authorization":"Bearer "+token,"Accept":"application/json",
+                     "User-Agent":"Eldoret-Bulldog/1.0"}
+            def get(path):
+                req=urllib.request.Request(base+path,headers=headers)
+                with urllib.request.urlopen(req,timeout=12) as response:
+                    raw=response.read(1024*1024+1)
+                if len(raw)>1024*1024: raise ValueError("Unexpected large response")
+                data=json.loads(raw)
+                if not isinstance(data,dict): raise ValueError("Invalid response")
+                return data
+            devices=get("/devices").get("items",[])
+            if not isinstance(devices,list): raise ValueError("Invalid list")
+            found=next((d for d in devices if isinstance(d,dict)
+                and "refrigerator" in (str(d.get("label") or "")+" "+str(d.get("name") or "")).lower()
+                and isinstance(d.get("deviceId"),str)),None)
+            if not found:
+                result=dict(empty,configured=True,detail="No refrigerator in authorized device list.")
+            else:
+                raw=get("/devices/"+quote(found["deviceId"],safe="")+"/status")
+                parts=raw.get("components") or {}
+                def val(component,capability,attribute):
+                    obj=parts.get(component,{}).get(capability,{}).get(attribute,{})
+                    return obj.get("value") if isinstance(obj,dict) else None
+                def numeric(v):
+                    if type(v) in (int,float) and abs(v)<10000: return round(float(v),1)
+                    return None
+                fridge=numeric(val("cooler","temperatureMeasurement","temperature"))
+                freezer=numeric(val("freezer","temperatureMeasurement","temperature"))
+                doors={name:val(name,"contactSensor","contact") for name in ("cooler","freezer","cvroom")}
+                doors={k:v for k,v in doors.items() if v in ("open","closed")}
+                filter_state=val("main","custom.waterFilter","waterFilterStatus")
+                filter_usage=numeric(val("main","custom.waterFilter","waterFilterUsage"))
+                result={"configured":True,"connected":True,"source":"SmartThings cloud",
+                    "mode":"read-only","checked_at":checked,"name":"Samsung Refrigerator",
+                    "fridge_c":fridge,"freezer_c":freezer,
+                    "flexzone_mode":val("cvroom","custom.fridgeMode","fridgeMode"),
+                    "doors":doors,
+                    "ice_maker":val("icemaker","switch","switch"),
+                    "ice_maker_state":val("icemaker","samsungce.fridgeIcemakerOperatingState","operatingState"),
+                    "power_cool":val("main","samsungce.powerCool","activated"),
+                    "power_freeze":val("main","samsungce.powerFreeze","activated"),
+                    "auto_fill":val("main","samsungce.autoFillPitcher","autoFillPitcher"),
+                    "water_filter_status":filter_state if filter_state in ("replace","normal","good","ok") else None,
+                    "water_filter_usage_percent":filter_usage}
+            SMARTTHINGS_CACHE.update(value=result,expires=now+(120 if result.get("connected") else 30))
+            return result
+        except urllib.error.HTTPError as e:
+            result=dict(empty,configured=True,detail=("SmartThings token rejected or expired" if e.code in (401,403)
+                else "SmartThings status request failed"),http_status=e.code)
+        except (OSError,ValueError,TypeError,KeyError):
+            result=dict(empty,configured=True,detail="SmartThings temporarily unavailable.")
+        SMARTTHINGS_CACHE.update(value=result,expires=now+30)
+        return result
+
 def ariya_status():
     with NISSAN_LOCK:
         now=time.monotonic()
@@ -4752,6 +4836,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes(json.dumps({"design":design_centre_read(name,preset)}).encode()); return
             except ValueError:
                 self.send_error(400); return
+        if path == "/api/smartthings/fridge/status":
+            if _remote_request(self): self.send_error(403); return
+            self.send_bytes(json.dumps(smartthings_fridge_status()).encode()); return
         if path == "/api/ariya/status":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps(ariya_status()).encode()); return
