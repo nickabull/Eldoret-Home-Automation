@@ -1,0 +1,118 @@
+{
+  "version": "1.0",
+  "created": "2026-11-23",
+  "visual_preview": "ipad12.html",
+  "legacy_fallback": "ipad11.html",
+  "asset_package": "Eldoret-Artwork-v1.zip (download from chat and upload JPGs to repository root)",
+  "instructions": "Upload only the twelve individual JPG files from the package to the repository root, keeping exact names. Static routes and CSS are already registered. Do not upload the ZIP as an asset. Check iPad 16:9 2.12 before promoting; use same assets for 4:3 detail pages.",
+  "images": [
+    {
+      "module": "network",
+      "path": "/eldoret-network.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "televisions",
+      "path": "/eldoret-televisions.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "lighting",
+      "path": "/eldoret-lighting.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "appliances",
+      "path": "/eldoret-appliances.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "ariya",
+      "path": "/eldoret-ariya.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "printer",
+      "path": "/eldoret-printer.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "playstation",
+      "path": "/eldoret-playstation.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "velux",
+      "path": "/eldoret-velux.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "audio",
+      "path": "/eldoret-audio.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "bulldog",
+      "path": "/eldoret-bulldog.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "home",
+      "path": "/eldoret-home.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    },
+    {
+      "module": "sources",
+      "path": "/eldoret-sources.jpg",
+      "usage": [
+        "16:9 Nerd Central tile",
+        "4:3 iPad detail hero"
+      ],
+      "status": "asset awaiting upload"
+    }
+  ]
+}
