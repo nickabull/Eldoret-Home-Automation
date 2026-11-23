@@ -736,8 +736,8 @@ function wallRender(){
  wallRow('Input / volume','NOT MONITORED','unknown'),
  wallRow('Mac playout','INDEPENDENCE UNTESTED','unknown'),
  wallRow('Airlite fader-start','UNTESTED','unknown'),
- wallRow('Behringer X32','NOT ONBOARDED','unknown'),
- wallRow('X-Touch','NOT ONBOARDED','unknown')
+ wallRow('Behringer X32','10.0.0.42 · NOT ONBOARDED','unknown'),
+ wallRow('X-Touch','10.0.0.26 · NOT ONBOARDED','unknown')
 ]);
  const ink=Array.isArray(printer.ink)?printer.ink:[];wallDraw('devices',[wallRow('Epson',printer.online?'CONNECTED':'UNAVAILABLE',wallState(printer.online)),...ink.map(x=>wallRow('Ink '+x.colour,x.percent==null?'—':x.percent+'%',x.percent<=15?'off':'ok'))]);
  wallDraw('charging',[
