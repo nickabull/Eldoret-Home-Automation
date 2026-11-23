@@ -4980,6 +4980,7 @@ class Handler(BaseHTTPRequestHandler):
             "/design-centre.html": ("design-centre.html", "text/html; charset=utf-8"),
             "/design-centre.js": ("design-centre.js", "application/javascript; charset=utf-8"),
             "/zappi.html": ("zappi.html", "text/html; charset=utf-8"),
+            "/ariya-ipad.html": ("ariya-ipad.html", "text/html; charset=utf-8"),
             "/ipad2.html": ("ipad2.html", "text/html; charset=utf-8"),
             "/ipad3.html": ("ipad3.html", "text/html; charset=utf-8"),
             "/ipad4.html": ("ipad4.html", "text/html; charset=utf-8"),
