@@ -74,7 +74,7 @@ main{min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:minm
   <div class="commandDeck">
     <section class="panel volumePanel" aria-label="Pioneer listening controls">
       <div class="panelHead"><div><div class="ey">AMPLIFIER · DIRECT CONTROLS</div><h2>Listening level</h2></div><span id="powerBadge" class="pill warn">POWER UNKNOWN</span></div>
-      <div class="knobArea"><button id="knob" class="knob" aria-label="Volume: drag one step at a time" disabled><span class="knobFace"><span>PIONEER VOLUME</span><b id="volume">—</b><small>RECEIVER CODE</small></span></button></div>
+      <div class="knobArea"><button id="knob" class="knob" aria-label="Volume: drag one step at a time" disabled><span class="knobFace"><span>PIONEER VOLUME</span><b id="volume">—</b><small>RAW RECEIVER CODE</small></span></button></div>
       <div class="knobGuide">Turn for one step · actual level is checked after each command</div>
       <div class="controls"><button id="down" disabled>− VOLUME</button><button id="mute" disabled>MUTE</button><button id="up" disabled>+ VOLUME</button></div>
     </section>
@@ -96,8 +96,8 @@ main{min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:minm
     <section class="panel statusPanel" aria-label="Pioneer information and receiver readback">
       <div class="panelHead"><div><div class="ey">PIONEER · LAST REPORTED</div><h2>Receiver information</h2></div><span class="pill warn" id="checked">MANUAL ONLY</span></div>
       <div class="grid">
-        <div class="fact"><span>POWER</span><strong id="power">—</strong><small>Last verified state</small></div>
-        <div class="fact"><span>INPUT SOURCE</span><strong id="input">—</strong><small>Actual input code</small></div>
+        <div class="fact"><span>POWER</span><strong id="power">—</strong><small>Last receiver check</small></div>
+        <div class="fact"><span>INPUT SOURCE</span><strong id="input">—</strong><small>Raw code · *user-reported source</small></div>
         <div class="fact"><span>MUTE</span><strong id="muted">—</strong><small>Yellow = engaged</small></div>
         <div class="fact"><span>NETWORK</span><strong id="network">—</strong><small id="host">No receiver query yet</small></div>
       </div>
@@ -128,7 +128,7 @@ async function check(silent=false){
    const j=await r.json();online=!!j.connected;
    volume=j.volume!=null&&/^\d+$/.test(String(j.volume))?String(j.volume):null;
    muted=j.mute==='Muted'?true:j.mute==='Not muted'?false:null;
-   $('volume').textContent=volume??'—';$('power').textContent=j.power??'—';$('input').textContent=j.input??'—';
+   $('volume').textContent=volume??'—';$('power').textContent=j.power??'—';$('input').textContent=j.input==='59'?'59 · DIGITAL IN*':(j.input??'—');
    $('muted').textContent=muted===null?'Unknown':muted?'MUTED':'NOT MUTED';$('muted').classList.toggle('active',muted===true);
    $('network').textContent=online?'Connected':'Unavailable';$('host').textContent=j.host||'—';
    setPill('connBadge',online?'CONNECTED':'UNAVAILABLE',online?'good':'bad');
