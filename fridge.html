@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08141e"><title>Samsung Fridge · Eldoret</title>
+<link rel="stylesheet" href="styles.css?v=56">
+<style>
+*{box-sizing:border-box}
+body{background:#07131e;color:#eff9fb;font-family:Arial,Helvetica,sans-serif;min-height:100vh;margin:0}
+.backdrop{position:fixed;inset:0;z-index:-1;background:linear-gradient(110deg,#051321ee,#081826ed 53%,#0b2034df),url('/eldoret-house-night.webp') center/cover no-repeat}
+header,nav,main{max-width:1390px;margin:auto;padding-left:28px;padding-right:28px}
+header{padding-top:23px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.brand{font-size:23px;font-weight:800;color:#edf8f5;letter-spacing:.14em;text-decoration:none}.brand small{display:block;color:#98c9c5;font-size:10px;letter-spacing:.16em;margin-top:5px;font-weight:500}
+small,.muted{color:#a9bec9}.right{display:flex;align-items:center;gap:12px}
+button{cursor:pointer;border:1px solid #5a8792;background:#123748;color:#edfbfd;border-radius:10px;padding:10px 16px;font-weight:700}
+nav{display:flex;flex-wrap:wrap;gap:8px;padding-top:22px;padding-bottom:18px}
+nav a{color:#afc5d1;text-decoration:none;border:1px solid #2b4859;padding:9px 12px;border-radius:8px;font-size:13px}
+nav a[aria-current="page"]{color:#b6f5e2;border-color:#91d6c4;background:#1d443f}
+main{padding-top:12px;padding-bottom:30px}
+.hero{padding:26px 28px;border:1px solid #6c9f9f66;border-radius:22px;background:linear-gradient(125deg,#0d2537f2,#0b1b2ae0 70%,#214458a8);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.eyebrow{font-size:11px;letter-spacing:.17em;color:#a8e4d6;font-weight:800}
+h1{margin:7px 0;font-size:clamp(28px,3.8vw,44px);letter-spacing:.03em}
+.status{display:inline-flex;align-items:center;gap:8px;color:#b5f1d6;font-weight:700;font-size:13px}
+.dot{height:9px;width:9px;border-radius:50%;background:#718796}.dot.good{background:#67e2af;box-shadow:0 0 7px #58d6a867}.dot.bad{background:#ee8883}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.panel{background:#10283adf;border:1px solid #406274;border-radius:16px;padding:19px;min-width:0}
+.panel h2{font-size:12px;letter-spacing:.12em;color:#9bd8ce;margin:0 0 13px}
+.big{font-size:clamp(30px,3.3vw,46px);font-weight:800;font-variant-numeric:tabular-nums}
+.value{font-size:16px;font-weight:700;margin-top:8px}
+.pill{border:1px solid #5c9a86;border-radius:100px;padding:5px 9px;color:#a9e8d1;font-size:12px}
+.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #ffffff15;padding:9px 0;font-size:13px}
+.row span:last-child{font-weight:700;text-align:right}
+.warning{background:#4e321b7d;border:1px solid #ca934b;border-radius:16px;padding:15px 19px;margin:0 0 16px;color:#ffe5a8}
+.warning[hidden]{display:none}
+.six{grid-column:span 2}.foot{margin-top:16px;font-size:12px;color:#afc3cb}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.six{grid-column:span 2}}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.six{grid-column:span 1}header,nav,main{padding-left:14px;padding-right:14px}}
+</style></head><body><div class="backdrop" aria-hidden="true"></div>
+<header><a class="brand" href="index.html">ELDORET<small>HOME AUTOMATION</small></a><div class="right"><span class="muted" id="checked">Not yet checked</span><button type="button" id="refresh">↻ Refresh</button></div></header>
+<nav aria-label="Eldoret navigation"><a href="index.html">Home</a><a href="lights.html">Lights</a><a href="sky.html">Sky Q</a><a href="tvs.html">TVs</a><a href="zappi.html">Car</a><a href="appliances.html">Appliances</a><a href="fridge.html" aria-current="page">Fridge</a><a href="network.html">Network</a><a href="bulldog.html">Bulldog</a></nav>
+<main>
+<section class="hero"><div><div class="eyebrow">SMARTTHINGS · READ ONLY</div><h1>Samsung Refrigerator</h1><div class="status"><i id="dot" class="dot"></i><span id="state">Checking connection…</span></div></div><div style="font-size:70px" aria-hidden="true">❄️</div></section>
+<div id="filterWarning" class="warning" hidden>⚠️ <strong>Water filter replacement needed.</strong> <span id="filterDetails"></span></div>
+<section class="grid" aria-label="Live refrigerator information">
+<div class="panel"><h2>FRIDGE TEMPERATURE</h2><div class="big" id="fridge">—</div><div class="muted">Samsung-reported temperature</div></div>
+<div class="panel"><h2>FREEZER TEMPERATURE</h2><div class="big" id="freezer">—</div><div class="muted">Samsung-reported temperature</div></div>
+<div class="panel"><h2>FLEXZONE</h2><div class="big" style="font-size:30px" id="flex">—</div><div class="muted">Current mode</div></div>
+<div class="panel"><h2>ICE MAKER</h2><div class="big" style="font-size:30px" id="ice">—</div><div class="muted" id="iceDetail">Operating state</div></div>
+<div class="panel six"><h2>DOORS</h2><div class="row"><span>Fridge</span><span id="doorCooler">—</span></div><div class="row"><span>Freezer</span><span id="doorFreezer">—</span></div><div class="row"><span>FlexZone</span><span id="doorFlex">—</span></div></div>
+<div class="panel six"><h2>COOLING & WATER</h2><div class="row"><span>Power Cool</span><span id="powerCool">—</span></div><div class="row"><span>Power Freeze</span><span id="powerFreeze">—</span></div><div class="row"><span>AutoFill pitcher</span><span id="autoFill">—</span></div><div class="row"><span>Water filter</span><span id="filter">—</span></div></div>
+</section><p class="foot" id="note">Read-only monitoring. No refrigerator commands are available from this page. Values are refreshed periodically and may be cached.</p>
+</main>
+<script>
+(()=>{'use strict';
+const el=id=>document.getElementById(id);
+let busy=false;
+const text=(id,v)=>el(id).textContent=v===null||v===undefined||v===''?'—':String(v);
+const state=v=>v===true?'On':v===false?'Off':v===null||v===undefined?'—':String(v);
+async function refresh(){
+ if(busy||document.hidden)return;
+ busy=true;el('refresh').disabled=true;
+ const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),15000);
+ try{
+  const response=await fetch('/api/smartthings/fridge/status',{cache:'no-store',signal:abort.signal});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const d=await response.json();
+  el('dot').className='dot '+(d.connected?'good':'bad');
+  text('state',d.connected?'Connected to SmartThings':d.detail||'Unavailable');
+  text('fridge',typeof d.fridge_c==='number'?d.fridge_c.toFixed(1).replace(/\.0$/,'')+'°C':null);
+  text('freezer',typeof d.freezer_c==='number'?d.freezer_c.toFixed(1).replace(/\.0$/,'')+'°C':null);
+  text('flex',typeof d.flexzone_mode==='string'?d.flexzone_mode.replace(/^CV_FDR_/,'').replace(/_/g,' '):null);
+  text('ice',d.ice_maker);
+  text('iceDetail',state(d.ice_maker_state));
+  const doors=d.doors||{};
+  text('doorCooler',doors.cooler);text('doorFreezer',doors.freezer);text('doorFlex',doors.cvroom);
+  text('powerCool',state(d.power_cool));text('powerFreeze',state(d.power_freeze));text('autoFill',state(d.auto_fill));
+  text('filter',d.water_filter_status==='replace'?'Replace filter':d.water_filter_status);
+  const warning=d.connected&&d.water_filter_status==='replace';
+  el('filterWarning').hidden=!warning;
+  text('filterDetails',warning&&typeof d.water_filter_usage_percent==='number'?'Usage: '+d.water_filter_usage_percent.toFixed(0)+'%':'');
+  text('checked',d.checked_at?new Date(d.checked_at).toLocaleTimeString('en-GB'):'No recent reading');
+ }catch(_){el('dot').className='dot bad';text('state','SmartThings data unavailable');}
+ finally{clearTimeout(timeout);busy=false;el('refresh').disabled=false}
+}
+el('refresh').addEventListener('click',refresh);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+refresh();setInterval(refresh,120000);
+})();
+</script></body></html>
