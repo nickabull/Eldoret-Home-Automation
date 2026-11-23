@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Pioneer Audio 1.2 · Eldoret</title><style>
+:root{color-scheme:dark;--yellow:#ffd858;--mint:#8df1ce;--line:#c5e5f13a;--p:#071926e3}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#03101b;color:#f2f9fb;font:14px/1.28 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,a{font:inherit}button{cursor:pointer;border:1px solid #9dc6c26b;border-radius:10px;color:#f7fcfc;background:#1a4651}button:disabled{opacity:.38;cursor:not-allowed}button:focus-visible,a:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.stage{position:relative;isolation:isolate;height:100dvh;width:100vw;display:grid;grid-template-rows:58px minmax(0,1fr)}
+.stage:before{content:"";position:absolute;inset:0;z-index:-2;background:url('/eldoret-audio.jpg') center/cover no-repeat;opacity:.82}
+.stage:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(95deg,#021423ed 0%,#0819238a 55%,#041622bd),linear-gradient(0deg,#000b17b8,transparent 72%)}
+header{background:#041725e0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 14px;min-width:0}
+.brand strong{font-size:21px;letter-spacing:.1em}.brand small{display:block;color:#f0d5ac;letter-spacing:.14em;font-size:10px}.headerTools{display:flex;align-items:center;gap:8px}
+.pill{font-size:10px;font-weight:800;border-radius:20px;padding:6px 9px;border:1px solid #72bead99;color:#bbf9da;background:#135042b5;white-space:nowrap}.pill.warn{color:#ffdfa9;border-color:#d3a66b8a;background:#6b4b24b3}.pill.bad{color:#ffbcbc;border-color:#dc656c9c;background:#6b252fb3}
+.headbutton,.home{padding:9px 13px;text-decoration:none;font-weight:800;white-space:nowrap}
+main{min-height:0;display:grid;grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr);gap:12px;padding:12px}
+.col{min-height:0;display:grid;grid-template-rows:minmax(0,1fr) minmax(0,.40fr);gap:12px}
+.panel{background:linear-gradient(130deg,#071827ee,#0a2231d9);border:1px solid var(--line);border-radius:13px;min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.panelHead{padding:9px 13px 8px;border-bottom:1px solid #a1c2cf2e;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ey{font-size:10px;letter-spacing:.17em;font-weight:800;color:#f1d1a5}.panel h2{font-size:20px;letter-spacing:.02em;margin:1px 0 0}
+.knobArea{flex:1;min-height:0;display:grid;place-items:center;position:relative;padding:5px}
+.knob{border:0;touch-action:none;width:min(35vh,65%,280px);aspect-ratio:1;border-radius:50%;position:relative;background:conic-gradient(from 215deg,#39dfc1 0deg,#ffd858 240deg,#304653 242deg 280deg,transparent 281deg);padding:14px;box-shadow:0 0 31px #00d5cd22,0 15px 35px #0008;transform:rotate(var(--turn,0deg));transition:transform .08s}
+.knob:before{content:"";position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#2e5a65,#071622 68%);box-shadow:inset 0 0 0 2px #bddde851}
+.knobFace{position:absolute;inset:20%;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(calc(-1 * var(--turn,0deg)))}
+.knobFace span{font-size:10px;color:#bad1d8;letter-spacing:.1em}.knobFace b{font-size:clamp(32px,6vw,70px);font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.knobFace small{font-size:10px;color:#ddc6a2}.knobGuide{text-align:center;font-size:10px;color:#abc6d0;padding:2px 6px}
+.controls{padding:7px 12px 11px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.controls button{min-height:47px;font-size:17px;font-weight:800}.controls .muteActive{color:#ffe6e9;background:#8d2739;border-color:#fa7d8b}
+.grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;padding:10px}
+.fact{min-width:0;padding:9px 11px;background:#0a2b3bc2;border:1px solid #a6c9d038;border-radius:10px;display:flex;flex-direction:column;justify-content:space-between;gap:3px}
+.fact span{font-size:11px;color:#bcd0da}.fact strong{font-size:clamp(16px,2.5vw,27px);overflow-wrap:anywhere;line-height:1.14}.fact strong.active{color:var(--yellow)}.fact small{font-size:9px;color:#b5c6ca}
+.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px}.actions button{min-height:53px;font-size:13px;font-weight:800}.actions button.power{background:#1c594e}.actions button.standby{background:#583644}
+.status{font-size:11px;color:#c3d5df;min-height:25px;padding:3px 13px 7px;overflow-wrap:anywhere}
+.hint{padding:7px 13px 9px;font-size:10px;color:#c1d0d3}
+.diag{padding:11px 13px;display:grid;gap:8px;align-content:start;font-size:12px}
+.diag strong{color:#f2d09b}.diag small{font-size:10px;color:#a5b9c2}
+.modal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;width:min(480px,92vw);background:#071725f8;border:2px solid var(--yellow);border-radius:15px;padding:20px;box-shadow:0 0 0 100vmax #02060cc9}.modal[hidden]{display:none}.modal h2{margin:5px 0 8px}.modal p{line-height:1.5}.modal .buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modal button{padding:15px}
+@media(max-width:850px){.stage{grid-template-rows:52px minmax(0,1fr)}.brand strong{font-size:15px}.panel h2{font-size:16px}.panelHead{padding:6px 8px}.controls button{font-size:12px;min-height:40px}.actions button{font-size:11px;min-height:43px}.grid{gap:5px;padding:6px}.fact{padding:6px}.fact strong{font-size:15px}.knob{width:min(30vh,65%,210px)}}
+@media(orientation:portrait){main{grid-template-columns:1fr 1fr;gap:6px;padding:6px}.col{gap:6px}.knob{width:min(27vh,90%,230px)}.headerTools .headbutton{font-size:11px}}
+
+/* v1.1: approved Eldoret pattern, controls above / readback below. 4:3 fixed viewport. */
+main{min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,61fr) minmax(0,39fr);gap:9px;padding:9px 12px 12px}
+.commandDeck{min-height:0;display:grid;grid-template-columns:minmax(0,49fr) minmax(0,51fr);gap:9px}
+.intelligence{min-height:0;display:grid;grid-template-columns:minmax(0,58fr) minmax(0,42fr);gap:9px}
+.knob{width:min(29vh,57%,225px)}
+.knobArea{padding:3px;min-height:0}
+.knobGuide{font-size:10px;line-height:1.2;padding:0 6px 4px}
+.controls{padding:4px 10px 10px;gap:8px}
+.controls button{font-size:14px;min-height:45px}
+.commandMain{flex:1;min-height:0;display:flex;flex-direction:column;gap:11px;padding:11px}
+.actions{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:9px;padding:0;flex:0 0 122px}
+.actions button{font-size:15px;min-height:0}
+.actions .source{grid-column:1/-1;background:#31536a}
+.pathRow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pathRow>div{background:#102b39c7;border:1px solid #719da23d;border-radius:9px;padding:11px;min-width:0}
+.pathRow .ey{display:block;letter-spacing:.11em;font-size:9px}
+.pathRow strong{display:block;font-size:14px;margin-top:5px}
+.safety{display:grid;gap:3px;background:#182e3c9c;border-left:3px solid #ffd858;padding:9px 11px;font-size:11px;line-height:1.3}
+.safety strong{color:#ffdb81}
+.status{margin-top:auto;padding:5px 2px;min-height:32px;font-size:11px}
+.intelligence .panelHead{padding:7px 10px}
+.intelligence h2{font-size:16px}
+.grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:minmax(0,1fr);padding:8px;gap:7px}
+.fact{padding:8px;gap:3px}.fact span{font-size:10px}.fact strong{font-size:clamp(14px,1.7vw,19px)}.fact small{font-size:9px;overflow-wrap:anywhere}
+.healthInner{display:flex;flex-direction:column;gap:8px;min-height:0;flex:1;padding:9px}
+.healthButton{display:flex;align-items:center;gap:7px}
+.healthButton button{font-size:11px;font-weight:800;padding:11px 9px;min-width:0}
+.healthButton span{font-size:9px;color:#bacbd4}
+.diagnostic{font-size:11px;color:#d9e3e8;line-height:1.4;overflow-wrap:anywhere;flex:1;min-height:0}
+.healthPath{display:flex;gap:5px;flex-wrap:wrap;font-size:9px;color:#e5cb9f}
+.healthPath span{background:#1d3a48a6;padding:5px 7px;border-radius:6px}
+@media(max-width:850px){main{gap:6px;padding:6px}.commandDeck,.intelligence{gap:6px}.commandMain{padding:6px;gap:6px}.actions{flex-basis:94px;gap:5px}.actions button{font-size:11px}.pathRow>div{padding:6px}.pathRow strong{font-size:11px}.safety{padding:6px;font-size:9px}.status{font-size:9px}.knob{width:min(26vh,70%,190px)}.controls button{min-height:36px;font-size:11px}.fact strong{font-size:12px}.healthButton button{padding:7px;font-size:9px}}
+@media(orientation:portrait){main{grid-template-rows:minmax(0,60fr) minmax(0,40fr)}.commandDeck,.intelligence{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="stage">
+<header><div class="brand"><strong>ELDORET · PIONEER 1.2</strong><small>KITCHEN AUDIO · XC-HM82D-K</small></div><div class="headerTools"><span id="connBadge" class="pill warn">CHECKING…</span><button id="check" class="headbutton">↻ CHECK RECEIVER</button><a class="home headbutton" href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<main>
+  <div class="commandDeck">
+    <section class="panel volumePanel" aria-label="Pioneer listening controls">
+      <div class="panelHead"><div><div class="ey">AMPLIFIER · DIRECT CONTROLS</div><h2>Listening level</h2></div><span id="powerBadge" class="pill warn">POWER UNKNOWN</span></div>
+      <div class="knobArea"><button id="knob" class="knob" aria-label="Volume: drag one step at a time" disabled><span class="knobFace"><span>PIONEER VOLUME</span><b id="volume">—</b><small>RECEIVER CODE</small></span></button></div>
+      <div class="knobGuide">Turn for one step · actual level is checked after each command</div>
+      <div class="controls"><button id="down" disabled>− VOLUME</button><button id="mute" disabled>MUTE</button><button id="up" disabled>+ VOLUME</button></div>
+    </section>
+    <section class="panel commandPanel" aria-label="Pioneer power and source controls">
+      <div class="panelHead"><div><div class="ey">AMPLIFIER · COMMAND DESK</div><h2>Power &amp; sources</h2></div><span class="pill warn">LIVE CONTROLS</span></div>
+      <div class="commandMain">
+        <div class="actions">
+          <button id="on" class="power" disabled>⏻ POWER ON</button>
+          <button id="off" class="standby" disabled>⏻ STANDBY</button>
+          <button id="source" class="source" disabled>⇄ NEXT SOURCE</button>
+        </div>
+        <div class="pathRow"><div><span class="ey">KITCHEN TV</span><strong>DIGITAL IN</strong></div><div><span class="ey">AIRLITE STUDIO</span><strong>FRONT AUDIO IN</strong></div></div>
+        <div class="safety"><strong>Verified command set only</strong><span>Power and source changes require confirmation. Dedicated TV / Airlite input codes are not yet verified.</span></div>
+        <div id="message" class="status" role="status">Checking receiver once on opening. No repeated background status polling.</div>
+      </div>
+    </section>
+  </div>
+  <div class="intelligence">
+    <section class="panel statusPanel" aria-label="Pioneer information and receiver readback">
+      <div class="panelHead"><div><div class="ey">PIONEER · LAST REPORTED</div><h2>Receiver information</h2></div><span class="pill warn" id="checked">MANUAL ONLY</span></div>
+      <div class="grid">
+        <div class="fact"><span>POWER</span><strong id="power">—</strong><small>Last verified state</small></div>
+        <div class="fact"><span>INPUT SOURCE</span><strong id="input">—</strong><small>Actual input code</small></div>
+        <div class="fact"><span>MUTE</span><strong id="muted">—</strong><small>Yellow = engaged</small></div>
+        <div class="fact"><span>NETWORK</span><strong id="network">—</strong><small id="host">No receiver query yet</small></div>
+      </div>
+    </section>
+    <section class="panel healthPanel" aria-label="Pioneer network and engineering diagnostics">
+      <div class="panelHead"><div><div class="ey">ENGINEERING · SAFE DIAGNOSTICS</div><h2>Connectivity &amp; signal path</h2></div></div>
+      <div class="healthInner">
+        <div class="healthButton"><button id="diagnose">CHECK PING / TCP 8102</button><span>Manual only · zero automatic power cycles</span></div>
+        <div id="diagnostic" class="diagnostic">No diagnostic check performed.</div>
+        <div class="healthPath"><span>TV audio → Digital In</span><span>Studio audio → Front Audio In</span></div>
+      </div>
+    </section>
+  </div>
+</main>
+<section id="confirm" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden><div class="ey">CONFIRM PHYSICAL COMMAND</div><h2 id="confirmTitle">Confirm</h2><p id="confirmText"></p><div class="buttons"><button id="approve">CONFIRM</button><button id="cancel">CANCEL</button></div><p><small>Expires after 10 seconds.</small></p></section></div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+let online=false,busy=false,muted=null,volume=null,pending=null,timer=null,drag=null;
+const say=s=>{$('message').textContent=s};
+const setPill=(id,text,state)=>{const x=$(id);x.textContent=text;x.className='pill'+(state==='bad'?' bad':state==='warn'?' warn':'')};
+function buttons(){for(const id of ['down','up','mute','on','off','source','knob'])$(id).disabled=busy||!online||(id==='mute'&&muted===null)||(id==='knob'&&volume===null);$('check').disabled=busy;$('mute').classList.toggle('muteActive',muted===true);$('mute').textContent=muted===true?'UNMUTE':'MUTE'}
+function cancel(){pending=null;clearTimeout(timer);$('confirm').hidden=true}
+async function check(silent=false){
+ if(busy)return;busy=true;buttons();cancel();if(!silent)say('Reading Pioneer status once…');
+ try{
+   const r=await fetch('/api/pioneer/status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
+   const j=await r.json();online=!!j.connected;
+   volume=j.volume!=null&&/^\d+$/.test(String(j.volume))?String(j.volume):null;
+   muted=j.mute==='Muted'?true:j.mute==='Not muted'?false:null;
+   $('volume').textContent=volume??'—';$('power').textContent=j.power??'—';$('input').textContent=j.input??'—';
+   $('muted').textContent=muted===null?'Unknown':muted?'MUTED':'NOT MUTED';$('muted').classList.toggle('active',muted===true);
+   $('network').textContent=online?'Connected':'Unavailable';$('host').textContent=j.host||'—';
+   setPill('connBadge',online?'CONNECTED':'UNAVAILABLE',online?'good':'bad');
+   setPill('powerBadge',j.power??'UNKNOWN',!online?'bad':/on/i.test(j.power||'')?'good':'warn');
+   $('power').classList.toggle('active',!!j.power&&/on/i.test(j.power));
+   $('input').classList.toggle('active',false);
+   $('checked').textContent='CHECKED '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+   say(j.error||'Receiver checked once. Controls ready; subsequent readings are only refreshed manually.');
+ }catch(e){online=false;muted=null;volume=null;$('volume').textContent='—';setPill('connBadge','NO RESPONSE','bad');say('Check failed: '+e.message)}
+ finally{busy=false;buttons()}
+}
+async function send(action){
+ if(busy||!online)return;
+ if(action==='mute_toggle'){if(muted===null)return;action=muted?'mute_off':'mute_on'}
+ busy=true;buttons();say('Sending ONE '+action.replace('_',' ')+' command…');
+ try{
+   const r=await fetch('/api/pioneer/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+   const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Command not accepted');
+   say('Command sent. Last reported volume/input may now be stale; press CHECK RECEIVER to refresh.');
+ }catch(e){say('Command failed: '+e.message);busy=false;buttons();return}
+ busy=false;buttons();
+}
+function propose(action,title,desc){if(!online||busy)return;cancel();pending=action;$('confirmTitle').textContent=title;$('confirmText').textContent=desc;$('confirm').hidden=false;timer=setTimeout(cancel,10000)}
+function angle(e){const r=$('knob').getBoundingClientRect();return Math.atan2(e.clientX-r.left-r.width/2,-(e.clientY-r.top-r.height/2))*180/Math.PI}
+$('knob').addEventListener('pointerdown',e=>{if(busy||!online||volume===null||e.button>0)return;drag={id:e.pointerId,last:angle(e),delta:0};$('knob').setPointerCapture(e.pointerId)});
+$('knob').addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const a=angle(e);let d=a-drag.last;if(d>180)d-=360;if(d< -180)d+=360;drag.delta+=d;drag.last=a;$('knob').style.setProperty('--turn',Math.max(-22,Math.min(22,drag.delta))+'deg')});
+$('knob').addEventListener('pointerup',e=>{if(!drag||e.pointerId!==drag.id)return;const d=drag.delta;drag=null;$('knob').style.setProperty('--turn','0deg');if(Math.abs(d)>=12)send(d>0?'volume_up':'volume_down')});
+$('knob').addEventListener('pointercancel',()=>{drag=null;$('knob').style.setProperty('--turn','0deg')});
+$('knob').addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowRight'){e.preventDefault();send('volume_up')}if(e.key==='ArrowDown'||e.key==='ArrowLeft'){e.preventDefault();send('volume_down')}});
+$('up').addEventListener('click',()=>send('volume_up'));$('down').addEventListener('click',()=>send('volume_down'));$('mute').addEventListener('click',()=>send('mute_toggle'));
+$('on').addEventListener('click',()=>propose('power_on','Power on Pioneer','Send a single POWER ON command to the kitchen receiver?'));
+$('off').addEventListener('click',()=>propose('power_off','Standby Pioneer','Place the kitchen receiver into standby?'));
+$('source').addEventListener('click',()=>propose('source_next','Change source','Cycle the Pioneer to its next input? This could interrupt the kitchen TV or Airlite audio.'));
+$('approve').addEventListener('click',()=>{if(!pending)return;const action=pending;cancel();send(action)});
+$('cancel').addEventListener('click',cancel);
+$('check').addEventListener('click',()=>check());
+$('diagnose').addEventListener('click',async()=>{
+ const btn=$('diagnose');btn.disabled=true;$('diagnostic').textContent='Checking…';
+ try{const r=await fetch('/api/pioneer/connection',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();
+ $('diagnostic').textContent='Control TCP 8102: '+(j.control_port_open?'OPEN':'CLOSED')+' · Web port: '+(j.web_port_open?'OPEN':'CLOSED')+' · '+(j.diagnosis||'');
+ }catch(e){$('diagnostic').textContent='Diagnostic error: '+e.message}
+ finally{btn.disabled=false}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cancel()});
+// User-approved one-shot receiver check at initial load; NO interval, focus/visibility read or post-command TCP query.
+// Historic receiver freezes mean this must be tested physically before promoting as stable.
+buttons();check(true);
+})();
+</script></body></html>
