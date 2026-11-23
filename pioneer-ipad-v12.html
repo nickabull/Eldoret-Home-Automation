@@ -70,12 +70,12 @@ main{min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:minm
 @media(max-width:850px){main{gap:6px;padding:6px}.commandDeck,.intelligence{gap:6px}.commandMain{padding:6px;gap:6px}.actions{flex-basis:94px;gap:5px}.actions button{font-size:11px}.pathRow>div{padding:6px}.pathRow strong{font-size:11px}.safety{padding:6px;font-size:9px}.status{font-size:9px}.knob{width:min(26vh,70%,190px)}.controls button{min-height:36px;font-size:11px}.fact strong{font-size:12px}.healthButton button{padding:7px;font-size:9px}}
 @media(orientation:portrait){main{grid-template-rows:minmax(0,60fr) minmax(0,40fr)}.commandDeck,.intelligence{grid-template-columns:1fr 1fr}}
 </style></head><body><div class="stage">
-<header><div class="brand"><strong>ELDORET · PIONEER 1.2</strong><small>KITCHEN AUDIO · XC-HM82D-K</small></div><div class="headerTools"><span id="connBadge" class="pill warn">CHECKING…</span><button id="check" class="headbutton">↻ CHECK RECEIVER</button><a class="home headbutton" href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<header><div class="brand"><strong>ELDORET · PIONEER 1.2 TEST</strong><small>KITCHEN AUDIO · XC-HM82D-K</small></div><div class="headerTools"><span id="connBadge" class="pill warn">CHECKING…</span><button id="check" class="headbutton">↻ CHECK RECEIVER</button><a class="home headbutton" href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
 <main>
   <div class="commandDeck">
     <section class="panel volumePanel" aria-label="Pioneer listening controls">
       <div class="panelHead"><div><div class="ey">AMPLIFIER · DIRECT CONTROLS</div><h2>Listening level</h2></div><span id="powerBadge" class="pill warn">POWER UNKNOWN</span></div>
-      <div class="knobArea"><button id="knob" class="knob" aria-label="Volume: drag one step at a time" disabled><span class="knobFace"><span>PIONEER VOLUME</span><b id="volume">—</b><small>RAW RECEIVER CODE</small></span></button></div>
+      <div class="knobArea"><button id="knob" class="knob" aria-label="Volume: drag one step at a time" disabled><span class="knobFace"><span>PIONEER VOLUME</span><b id="volume">—</b><small id="volumeLabel">RAW RECEIVER CODE</small></span></button></div>
       <div class="knobGuide">Turn for one step · actual level is checked after each command</div>
       <div class="controls"><button id="down" disabled>− VOLUME</button><button id="mute" disabled>MUTE</button><button id="up" disabled>+ VOLUME</button></div>
     </section>
@@ -129,7 +129,8 @@ async function check(silent=false){
    const j=await r.json();online=!!j.connected;
    volume=j.volume!=null&&/^\d+$/.test(String(j.volume))?String(j.volume):null;
    muted=j.mute==='Muted'?true:j.mute==='Not muted'?false:null;
-   $('volume').textContent=volume??'—';$('power').textContent=j.power??'—';$('input').textContent=j.input==='59'?'59 · DIGITAL IN*':(j.input??'—');
+   const calibrated=volume==='081'?'15':volume==='101'?'20':null;
+   $('volume').textContent=calibrated??volume??'—';$('volumeLabel').textContent=calibrated?'FRONT PANEL · RAW '+volume:'RAW RECEIVER CODE';$('power').textContent=j.power??'—';$('input').textContent=j.input==='59'?'59 · DIGITAL IN*':(j.input??'—');
    $('muted').textContent=muted===null?'Unknown':muted?'MUTED':'NOT MUTED';$('muted').classList.toggle('active',muted===true);
    $('network').textContent=online?'Connected':'Unavailable';$('host').textContent=j.host||'—';
    setPill('connBadge',online?'CONNECTED':'UNAVAILABLE',online?'good':'bad');
@@ -148,7 +149,7 @@ async function send(action){
  try{
    const r=await fetch('/api/pioneer/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
    const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Command not accepted');
-   say('Command sent. Last reported volume/input may now be stale; press CHECK RECEIVER to refresh.');
+   say(action==='source_next'?'Next-source request sent (FU); '+(j.reply?'reply: '+j.reply:'no receiver acknowledgement')+'. Source change NOT VERIFIED. Check physical display.': 'Command sent'+(j.reply?' · receiver reply: '+j.reply:' · no receiver reply')+'. Manual CHECK RECEIVER refreshes the last-reported state.');
  }catch(e){say('Command failed: '+e.message);busy=false;buttons();return}
  busy=false;buttons();
 }
@@ -162,7 +163,7 @@ $('knob').addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowRig
 $('up').addEventListener('click',()=>send('volume_up'));$('down').addEventListener('click',()=>send('volume_down'));$('mute').addEventListener('click',()=>send('mute_toggle'));
 $('on').addEventListener('click',()=>propose('power_on','Power on Pioneer','Send a single POWER ON command to the kitchen receiver?'));
 $('off').addEventListener('click',()=>propose('power_off','Standby Pioneer','Place the kitchen receiver into standby?'));
-$('source').addEventListener('click',()=>propose('source_next','Change source','Cycle the Pioneer to its next input? This could interrupt the kitchen TV or Airlite audio.'));
+$('source').addEventListener('click',()=>propose('source_next','Change source','Experimental FU next-input command (not confirmed on this model). This could interrupt kitchen TV or Airlite audio. Check the receiver display afterwards.'));
 $('approve').addEventListener('click',()=>{if(!pending)return;const action=pending;cancel();send(action)});
 $('cancel').addEventListener('click',cancel);
 $('check').addEventListener('click',()=>check());
