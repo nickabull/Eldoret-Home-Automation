@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071520"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="/eldoret.webmanifest"><title>Eldoret · Internet & Wi-Fi 1.3</title><style>
+:root{color-scheme:dark;--teal:#1c4a54;--border:#5a8991;--line:#afc4d342;--gold:#f3d09c}*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04131e;color:#eff9ff;font:14px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,a{font:inherit}.stage{position:relative;isolation:isolate;width:100vw;height:100dvh;display:grid;grid-template-rows:54px minmax(0,1fr)}
+.stage:before{content:"";position:absolute;z-index:-2;inset:0;background:url('/network-patchbay-background.webp') center/cover no-repeat;opacity:.85}
+.stage:after{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,#041421df,#0414218c),linear-gradient(0deg,#041421ac,transparent)}
+header{display:flex;align-items:center;justify-content:space-between;min-width:0;gap:9px;padding:5px 14px;background:#041725e3;border-bottom:1px solid var(--line)}
+.brand strong{font-size:19px;letter-spacing:.1em}.brand small{display:block;color:var(--gold);font-size:9px;letter-spacing:.13em}
+.tools{display:flex;align-items:center;gap:8px}.tools button,.tools a{min-height:42px;padding:8px 12px;border:1px solid var(--border);border-radius:11px;background:var(--teal);color:#fff;text-decoration:none;font-weight:800;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;cursor:pointer}.tools button:disabled{opacity:.45}.stamp{font-size:11px;color:#c4d9df;white-space:nowrap}
+main{min-height:0;display:grid;grid-template-rows:minmax(0,23fr) minmax(0,19fr) minmax(0,9fr) minmax(0,49fr);gap:8px;padding:8px 12px 11px}
+.panel{min-width:0;min-height:0;border:1px solid var(--line);border-radius:12px;background:linear-gradient(130deg,#051522d8,#071c2aca);backdrop-filter:blur(2px);overflow:hidden}
+.top{display:grid;grid-template-columns:minmax(0,38fr) minmax(0,62fr);gap:8px;min-height:0}
+.router{padding:12px 15px;display:flex;flex-direction:column;justify-content:space-between}.ey{font-size:9px;font-weight:800;letter-spacing:.15em;color:var(--gold)}.router h1{font-size:clamp(21px,2.5vw,30px);margin:4px 0}.meta{color:#b7d0da;font-size:10px}
+.router .ey{font-size:clamp(9px,.9vw,12px);letter-spacing:.12em;line-height:1.25}.router>div:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:11px;min-width:0}.router .pill{margin:0;max-width:100%;font-size:clamp(9px,.83vw,12px);line-height:1.25;letter-spacing:0;white-space:normal;text-align:center;overflow-wrap:anywhere}.router .meta{min-height:16px;line-height:1.3}
+.pill{display:inline-flex;align-items:center;align-self:flex-start;padding:5px 9px;border-radius:20px;color:#b8f7d9;background:#135042b5;border:1px solid #75bfa78a;font-size:10px;font-weight:800}.pill.warn{color:#ffe2aa;background:#654524aa;border-color:#cfa36b}.pill.bad{color:#ffced2;background:#602534b3;border-color:#d36a76}
+.metricGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:7px;min-height:0}
+.metric{padding:9px 12px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.metric .name{font-size:10px;color:#bdd2dc}.metric strong{font-size:clamp(16px,2.2vw,29px);font-weight:800;font-variant-numeric:tabular-nums}.metric small{font-size:9px;color:#9cb9c7}
+.traffic{padding:7px 12px;display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr);gap:7px;align-items:center}.traffic h2{font-size:14px;margin:3px 0}.traffic p{font-size:9px;color:#aac2d0;margin:0}.traffic svg{height:100%;width:100%;min-height:0;display:block}
+.strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:7px 10px;align-items:center}.strip .stat{display:flex;flex-direction:column;gap:3px;min-width:0}.strip strong{font-size:12px;white-space:normal;overflow-wrap:anywhere}
+.wifi{min-height:0;display:flex;flex-direction:column;gap:6px}.wifiHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 3px;min-height:36px}.wifiHead h2{font-size:18px;margin:2px 0}.wifiHead p{margin:0;color:#b5c9d5;font-size:10px}.wifiHead button{border:1px solid var(--border);border-radius:9px;background:var(--teal);color:#fff;font-weight:800;padding:7px 12px;min-height:33px;cursor:pointer}
+.apGrid{min-height:0;flex:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:7px}
+.ap{display:flex;flex-direction:column;gap:5px;padding:9px 12px;min-height:0}.apTitle{display:flex;justify-content:space-between;align-items:center;gap:5px}.apTitle strong{font-size:15px}.apTitle span{font-size:9px;font-weight:800;color:#bcebdc}.apTitle span.warn{color:#ffe2aa}.apInfo{font-size:10px;color:#bdd0db;overflow-wrap:anywhere}.apLine{display:grid;grid-template-columns:1fr 1fr;gap:5px}.apLine b{font-size:17px}.apLine small{font-size:9px;color:#b5cbd9}.apClients{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:#b9e4d3;font-size:10px}.apClients strong{font-size:clamp(13px,1.5vw,19px);font-variant-numeric:tabular-nums;color:#f6fff9}.apClients.stale{color:#d6c7ac}.apFoot{font-size:10px;color:#b5cbd9;margin-top:auto;overflow-wrap:anywhere}.note{font-size:9px;color:#b6c9d2;overflow-wrap:anywhere}
+@media(max-width:850px){header{padding:5px 8px}.brand strong{font-size:15px}.brand small{font-size:8px}.tools{gap:5px}.tools button,.tools a{min-height:34px;padding:5px 7px;font-size:10px}.stamp{display:none}main{gap:5px;padding:5px}.router{padding:8px}.router h1{font-size:19px}.metric{padding:6px}.metric strong{font-size:16px}.traffic{padding:5px}.wifiHead h2{font-size:14px}.ap{padding:6px;gap:2px}.apTitle strong{font-size:12px}.apLine b{font-size:13px}.apInfo,.apFoot{font-size:9px}}
+</style></head><body><div class="stage">
+<header><div class="brand"><strong>ELDORET · INTERNET & WI-FI 1.3</strong><small>DRAYTEK 2865 · UNIFI ACCESS POINTS</small></div><div class="tools"><span id="checked" class="stamp">Checking…</span><button id="refresh" type="button">↻ REFRESH</button><a href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<main>
+<div class="top"><section class="panel router"><div><div class="ey">DRAYTEK · VIGOR 2865</div><span id="routerBadge" class="pill warn">CHECKING ROUTER</span></div><div class="meta" id="routerMessage">Read-only router health and WAN2 statistics.</div></section>
+<div class="metricGrid">
+<article class="panel metric"><span class="name">INCOMING · WAN2</span><strong id="down">—</strong><small>Mbps · router interface, not speed test</small></article>
+<article class="panel metric"><span class="name">OUTGOING · WAN2</span><strong id="up">—</strong><small>Mbps · router interface, not speed test</small></article>
+<article class="panel metric"><span class="name">CPU USAGE</span><strong id="cpu">—</strong><small>Reported by DrayTek</small></article>
+<article class="panel metric"><span class="name">MEMORY USAGE</span><strong id="memory">—</strong><small>Reported by DrayTek</small></article>
+</div></div>
+<section class="panel traffic"><div><div class="ey">WAN2 TRAFFIC</div><p>Incoming: mint</p><p>Outgoing: blue</p><p id="trafficNote">Awaiting samples</p></div><svg id="plot" viewBox="0 0 600 100" role="img" aria-label="WAN traffic graph"></svg></section>
+<section class="panel strip"><div class="stat"><span class="ey">WAN2 LINK</span><strong id="link">—</strong></div><div class="stat"><span class="ey">ROUTER UPTIME</span><strong id="uptime">—</strong></div><div class="stat"><span class="ey">FIRMWARE</span><strong id="firmware">—</strong></div><div class="stat"><span class="ey">LAST ROUTER READING</span><strong id="last">—</strong></div></section>
+<section class="wifi"><div class="wifiHead"><div><span class="ey">WI-FI · UNIFI</span><h2>Access points</h2><p id="wifiStatus">Waiting for UniFi telemetry</p></div><button id="wifiRefresh" type="button">↻ REFRESH WI-FI</button></div><div class="apGrid" id="apGrid">
+<article class="panel ap" id="ap0"><div class="apTitle"><strong>Office / Kitchen</strong><span>CHECKING</span></div><div class="apInfo">10.0.0.6</div><div class="apLine"><b>—</b><b>—</b></div><div class="apFoot">Waiting for Wi-Fi data</div></article>
+<article class="panel ap" id="ap1"><div class="apTitle"><strong>Utility</strong><span>CHECKING</span></div><div class="apInfo">10.0.0.7</div><div class="apLine"><b>—</b><b>—</b></div><div class="apFoot">Waiting for Wi-Fi data</div></article>
+<article class="panel ap" id="ap2"><div class="apTitle"><strong>Garden</strong><span>CHECKING</span></div><div class="apInfo">10.0.0.8</div><div class="apLine"><b>—</b><b>—</b></div><div class="apFoot">Waiting for Wi-Fi data</div></article>
+<article class="panel ap" id="ap3"><div class="apTitle"><strong>Landing</strong><span>CHECKING</span></div><div class="apInfo">10.0.0.9</div><div class="apLine"><b>—</b><b>—</b></div><div class="apFoot">Waiting for Wi-Fi data</div></article>
+</div></section></main></div>
+<script>
+(()=>{'use strict';const $=id=>document.getElementById(id),num=v=>typeof v==='number'&&Number.isFinite(v),fixed=(v,n=1)=>num(v)?v.toFixed(n):'—',time=x=>{const d=new Date(x||'');return Number.isFinite(d.getTime())?d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'},age=x=>Date.now()-Date.parse(x||'');
+let busyRouter=false,busyWifi=false;
+function chart(history){const el=$('plot'),data=(Array.isArray(history)?history:[]).slice(-60);while(el.firstChild)el.removeChild(el.firstChild);const ns='http://www.w3.org/2000/svg',max=Math.max(1,...data.flatMap(x=>[x.download,x.upload]).filter(num))*1.12;function path(key){let s='',previous=false;data.forEach((point,i)=>{if(!num(point[key])){previous=false;return;}const x=12+i*576/59,y=86-point[key]/max*74;s+=(previous?'L':'M')+x+','+y;previous=true;});return s;}for(const [key,color] of [['download','#82e3c0'],['upload','#91b9ff']]){const pathNode=document.createElementNS(ns,'path');pathNode.setAttribute('d',path(key));pathNode.setAttribute('stroke',color);pathNode.setAttribute('fill','none');pathNode.setAttribute('stroke-width','2');el.append(pathNode);}for(const y of [15,40,65,86]){const line=document.createElementNS(ns,'line');for(const [k,v] of Object.entries({x1:0,y1:y,x2:600,y2:y,stroke:'#7fa7b144','stroke-dasharray':'3 6'}))line.setAttribute(k,String(v));el.insertBefore(line,el.firstChild);}}
+async function loadRouter(){if(busyRouter)return;busyRouter=true;$('refresh').disabled=true;
+ try{const r=await fetch('/api/router/status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const p=await r.json();
+ const elapsed=age(p.checked_at),hasReading=Number.isFinite(elapsed),fresh=hasReading&&elapsed>=-5000&&elapsed<20000;
+ const connected=p.online===true,live=connected&&fresh,lastKnown=connected&&!fresh;
+ const waiting=!connected&&!hasReading;
+ const badge=$('routerBadge');
+ badge.textContent=live?'ROUTER CONNECTED':lastKnown?'LAST KNOWN':waiting?'CONNECTING…':'READING UNAVAILABLE';
+ badge.className='pill'+(live?'':lastKnown||waiting?' warn':' bad');
+ $('routerMessage').textContent=live?(p.message||'Live read-only WAN2 data'):
+   lastKnown?'Last successful DrayTek reading: '+time(p.checked_at)+'. Waiting for a fresh sample.':
+   waiting?'Connecting to DrayTek SNMP — initial sample may take several seconds.':
+   (p.message||'Router query failed; check SNMP credentials and router connection.');
+ const show=connected;
+ $('down').textContent=show?fixed(p.download_mbps,2):'—';
+ $('up').textContent=show?fixed(p.upload_mbps,2):'—';
+ $('cpu').textContent=show&&num(p.cpu_percent)?p.cpu_percent+'%':'—';
+ $('memory').textContent=show&&num(p.memory_percent)?p.memory_percent+'%':'—';
+ $('link').textContent=show?(p.link_up?'UP':'DOWN'):'—';
+ $('uptime').textContent=show&&num(p.uptime_seconds)?Math.floor(p.uptime_seconds/86400)+'d '+Math.floor(p.uptime_seconds%86400/3600)+'h':'—';
+ $('firmware').textContent=show?(p.firmware||'—'):'—';
+ $('last').textContent=time(p.checked_at);
+ $('trafficNote').textContent=live?'Live samples':lastKnown?'Previous samples':'Awaiting fresh SNMP samples';
+ chart(p.history);
+ $('checked').textContent=hasReading?'Checked '+time(p.checked_at):'Connecting…';
+ }catch(e){$('routerBadge').className='pill bad';$('routerBadge').textContent='UNAVAILABLE';
+ $('routerMessage').textContent='Router status request failed: '+e.message;
+ for(const id of ['down','up','cpu','memory','link','uptime','firmware','last'])$(id).textContent='—';
+ $('trafficNote').textContent='No current readings';chart([]);
+ }finally{busyRouter=false;$('refresh').disabled=false;}
+}
+const expected=[['Office / Kitchen','10.0.0.6'],['Utility','10.0.0.7'],['Garden','10.0.0.8'],['Landing','10.0.0.9']];
+async function loadWifi(){if(busyWifi)return;busyWifi=true;$('wifiRefresh').disabled=true;try{const r=await fetch('/api/unifi/status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const p=await r.json();const direct=p.source==='direct_snmp',live=age(p.checked_at)>=-5000&&age(p.checked_at)<90000&&(direct||p.controller_online===true),historical=!live&&Array.isArray(p.devices)&&p.devices.length>0&&!!p.last_seen_at;
+const devices=Array.isArray(p.devices)?p.devices:[];const online=devices.filter(d=>d.online===true).length;
+const clientsFresh=d=>num(d?.clients)&&d?.online===true&&Number.isFinite(age(d.clients_checked_at))&&age(d.clients_checked_at)>=-5000&&age(d.clients_checked_at)<180000;
+const measured=devices.filter(d=>clientsFresh(d)&&live),total=measured.reduce((s,d)=>s+d.clients,0);
+$('wifiStatus').textContent=live?online+' of '+devices.length+' access points responding · '+(measured.length===4?total+' connected devices':measured.length?total+' counted on '+measured.length+'/4 APs':'client counts unavailable'):historical?'Last-known UniFi readings · not live':p.message||'Wi-Fi readings unavailable';
+expected.forEach(([name,ip],i)=>{const d=devices.find(x=>x.ip===ip),card=$('ap'+i),head=card.querySelector('.apTitle'),status=head.querySelector('span'),info=card.querySelector('.apInfo'),cells=card.querySelector('.apLine'),foot=card.querySelector('.apFoot');head.querySelector('strong').textContent=d?.name||name;status.textContent=live?(d?.online?'RESPONDING':'NO REPLY'):historical?'LAST KNOWN':'UNKNOWN';status.className=live&&!d?.online?'warn':'';info.textContent=ip+' · '+(d?.model||'UniFi AP');const row=direct?[[fixed(d?.rx_mbps,2)+' Mbps','Ethernet in'],[fixed(d?.tx_mbps,2)+' Mbps','Ethernet out']]:[[num(d?.clients)?d.clients:'—','Clients'],[num(d?.cpu_percent)?d.cpu_percent+'%':'—','CPU']];cells.replaceChildren(...row.map(([v,label])=>{const el=document.createElement('div');const b=document.createElement('b'),small=document.createElement('small');b.textContent=v;small.textContent=label;el.append(b,document.createElement('br'),small);return el;}));let clientLine=card.querySelector('.apClients');if(!clientLine){clientLine=document.createElement('div');clientLine.className='apClients';cells.after(clientLine);}
+const accurate=live&&clientsFresh(d);clientLine.classList.toggle('stale',!accurate);
+clientLine.replaceChildren();const clientLabel=document.createElement('span'),clientNum=document.createElement('strong');clientLabel.textContent='CONNECTED DEVICES';clientNum.textContent=accurate?String(d.clients):'—';clientLine.append(clientLabel,clientNum);
+foot.textContent=d?(historical?'Previous reading · ':'')+'Latency '+fixed(d.latency_ms,1)+' ms · Uptime '+(num(d.uptime_seconds)?Math.floor(d.uptime_seconds/86400)+'d':'—')+' · FW '+(d.firmware||'—'):'No AP reading';});}catch(e){$('wifiStatus').textContent='UniFi readback unavailable';expected.forEach((_,i)=>{const card=$('ap'+i);card.querySelector('.apTitle span').textContent='UNKNOWN';card.querySelector('.apInfo').textContent=expected[i][1];card.querySelector('.apLine').textContent='—';card.querySelector('.apFoot').textContent='No live reading';const clientLine=card.querySelector('.apClients');if(clientLine)clientLine.textContent='CONNECTED DEVICES  —';});}finally{busyWifi=false;$('wifiRefresh').disabled=false;}}
+$('refresh').addEventListener('click',()=>{loadRouter();loadWifi();});$('wifiRefresh').addEventListener('click',loadWifi);loadRouter();loadWifi();
+setInterval(()=>{if(!document.hidden)loadRouter()},5000);setInterval(()=>{if(!document.hidden)loadWifi()},30000);
+})();
+</script></body></html>
