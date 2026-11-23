@@ -4995,6 +4995,8 @@ class Handler(BaseHTTPRequestHandler):
             "/network-ipad-v11.html": ("network-ipad-v11.html", "text/html; charset=utf-8"),
             "/network-ipad-v12.html": ("network-ipad-v12.html", "text/html; charset=utf-8"),
             "/network-control.html": ("network-ipad-v12.html", "text/html; charset=utf-8"),
+            "/playstation-ipad-v10.html": ("playstation-ipad-v10.html", "text/html; charset=utf-8"),
+            "/playstation-control.html": ("playstation-ipad-v10.html", "text/html; charset=utf-8"),
             "/network-patchbay-background.webp": ("network-patchbay-background.webp", "image/webp"),
             "/engineering.html": ("engineering.html", "text/html; charset=utf-8"),
             "/design-centre.html": ("design-centre.html", "text/html; charset=utf-8"),
