@@ -4984,6 +4984,7 @@ class Handler(BaseHTTPRequestHandler):
             "/pioneer-ipad-v13.html": ("pioneer-ipad-v13.html", "text/html; charset=utf-8"),
             "/pioneer-ipad-v14.html": ("pioneer-ipad-v14.html", "text/html; charset=utf-8"),
             "/pioneer-ipad-v15.html": ("pioneer-ipad-v15.html", "text/html; charset=utf-8"),
+            "/pioneer-ipad-v16.html": ("pioneer-ipad-v16.html", "text/html; charset=utf-8"),
             "/eldoret.webmanifest": ("eldoret.webmanifest", "application/manifest+json; charset=utf-8"),
             # Stable action page; future approved Pioneer versions update only this mapping.
             "/pioneer-control.html": ("pioneer-ipad-v11.html", "text/html; charset=utf-8"),
