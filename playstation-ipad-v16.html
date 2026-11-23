@@ -1,0 +1,190 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071520"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="/eldoret.webmanifest"><title>Eldoret · PlayStation 1.6</title><style>
+:root{color-scheme:dark;--line:#afc4d342;--teal:#1c4a54;--border:#5a8991;--gold:#f3d09c}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06121e;color:#eff9ff;font:14px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,a{font:inherit}
+.stage{position:relative;isolation:isolate;width:100vw;height:100dvh;display:grid;grid-template-rows:54px minmax(0,1fr)}
+.stage:before{content:"";z-index:-2;position:absolute;inset:0;background:url('/eldoret-playstation.jpg') center/cover no-repeat;opacity:.88}
+.stage:after{content:"";z-index:-1;position:absolute;inset:0;background:linear-gradient(90deg,#03131fdc,#071522ae 75%,#03111bd3),linear-gradient(0deg,#03111bc4,transparent 80%)}
+header{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:5px 14px;background:#041725e3;border-bottom:1px solid var(--line);min-width:0}
+.brand strong{font-size:19px;letter-spacing:.1em}.brand small{display:block;color:var(--gold);font-size:9px;letter-spacing:.13em}
+.tools{display:flex;gap:8px;align-items:center}.tools button,.tools a,.tabs button{display:inline-flex;align-items:center;justify-content:center;min-height:41px;padding:8px 13px;border:1px solid var(--border);border-radius:10px;background:var(--teal);color:#fff;text-decoration:none;font-weight:800;white-space:nowrap;cursor:pointer}.tools button:disabled{opacity:.5}.stamp{color:#c4d9df;font-size:11px;white-space:nowrap}
+main{min-height:0;display:grid;grid-template-rows:minmax(0,20fr) minmax(0,63fr) minmax(0,17fr);gap:9px;padding:9px 12px 11px}
+.panel{border:1px solid var(--line);background:linear-gradient(130deg,#051522db,#071c2acf);border-radius:13px;backdrop-filter:blur(2px);min-height:0;min-width:0;overflow:hidden}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;width:60%}
+.ey{font-size:9px;font-weight:800;letter-spacing:.15em;color:var(--gold)}.hero h1{font-size:clamp(22px,2.7vw,33px);margin:5px 0 2px}.small{font-size:11px;color:#b4cbd5}
+.pill{font-size:10px;font-weight:800;padding:6px 10px;border-radius:20px;border:1px solid #75bfa78a;background:#135042b5;color:#b8f7d9;white-space:nowrap}.pill.warn{background:#654524aa;border-color:#cfa36b;color:#ffe2aa}.pill.bad{background:#602534b3;border-color:#d36a76;color:#ffced2}
+.bodyGrid{display:grid;grid-template-columns:minmax(0,60fr) minmax(0,40fr);gap:9px;min-height:0}
+.now{display:grid;grid-template-columns:minmax(0,47fr) minmax(0,53fr);gap:12px;padding:12px}
+.cover{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;border:1px solid #7ba0b255;border-radius:11px;background:#071827c9;overflow:hidden}
+.cover img{width:100%;height:100%;object-fit:cover;display:none}
+.cover.hasArt{background:#020814e0}.cover.hasArt img{display:block}.placeholder{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:11px;text-align:center;padding:18px;color:#c1d4df}.placeholder .psSymbol{font-size:55px;line-height:1;color:#b9cee4}.placeholder strong{font-size:15px}
+.cover.hasArt .placeholder{display:none}
+.nowInfo{min-width:0;min-height:0;display:flex;flex-direction:column;gap:9px;padding:6px 2px}
+.nowInfo h2{font-size:clamp(19px,2.8vw,34px);line-height:1.12;margin:0;overflow-wrap:anywhere}
+.nowInfo .headline{font-size:10px;color:#f0d39f;font-weight:800;letter-spacing:.1em}.source{font-size:10px;color:#a3c2d2}
+.nowInfo .info{padding:8px 0;border-top:1px solid #9db7c433;display:flex;justify-content:space-between;gap:9px;font-size:11px}.info strong{font-size:12px;text-align:right;overflow-wrap:anywhere}
+.aside{display:grid;grid-template-rows:minmax(0,50fr) minmax(0,50fr);gap:9px;min-height:0}
+.statusPanel,.activity{padding:12px 15px;display:flex;flex-direction:column;gap:7px}.aside h2{font-size:18px;margin:2px 0 4px}
+.statRow{display:grid;grid-template-columns:minmax(0,45fr) minmax(0,55fr);gap:5px;font-size:11px;border-bottom:1px solid #adc4d120;padding:3px 0}.statRow span{color:#b1cad6}.statRow strong{text-align:right;overflow-wrap:anywhere}
+.activityList{display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden}.activityItem{display:flex;gap:8px;align-items:baseline;justify-content:space-between;font-size:11px;border-bottom:1px solid #adc4d120;padding-bottom:5px}.activityItem span{overflow-wrap:anywhere}.activityItem time{font-size:9px;color:#a3c2d2;white-space:nowrap}
+.footer{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:10px 13px;align-items:center}.footer strong{display:block;font-size:12px;margin-top:5px;overflow-wrap:anywhere}.footer .ey{color:#a8d8c7}
+@media(max-width:900px){.hero{width:66%}.now{grid-template-columns:45fr 55fr}.statusPanel,.activity{padding:8px}.aside h2{font-size:15px}.statRow,.activityItem{font-size:9px}.nowInfo{gap:5px}.nowInfo .info{padding:4px 0}.footer{padding:7px}.footer strong{font-size:10px}}
+@media(max-width:700px){header{padding:4px 7px}.brand strong{font-size:14px}.brand small{font-size:8px}.tools{gap:4px}.tools button,.tools a{padding:5px 7px;min-height:34px;font-size:10px}.stamp{display:none}main{gap:5px;padding:5px}.hero{padding:7px;width:68%}.hero h1{font-size:19px}.bodyGrid{gap:5px}.now{padding:6px;gap:6px}.nowInfo h2{font-size:18px}.placeholder .psSymbol{font-size:32px}.footer{gap:5px}}
+
+
+/* 1.4: reclaim photographic negative space, preserve every readout and game art. */
+main{grid-template-rows:minmax(0,15fr) minmax(0,73fr) minmax(0,12fr);gap:8px}
+.hero{width:47%;padding:9px 14px;gap:8px}.hero h1{font-size:clamp(22px,2.4vw,29px)}
+.footer{width:76%;background:linear-gradient(115deg,#061723d0,#081e2db0);padding:7px 12px}
+.bodyGrid{grid-template-columns:minmax(0,63fr) minmax(0,37fr);gap:8px}
+.now{padding:9px;gap:10px}.aside{gap:8px}
+.statusPanel,.activity{padding:9px 12px;gap:5px}
+.panel{background:linear-gradient(130deg,#051522c4,#071c2aa9)}
+.stage:before{opacity:1;background-position:62% center}
+.stage:after{background:linear-gradient(90deg,#03131fd7 0%,#0715227a 68%,#03111b32)}
+@media(max-width:850px){.hero{width:58%}.footer{width:88%}.statusPanel,.activity{padding:7px 8px}.now{padding:7px}}
+
+\n
+/* v1.5: cinematic PS5 accents, but Eldoret functional colours remain authoritative. */
+:root{--line:#38a8c65c;--teal:#17505d;--border:#50a2ab;--gold:#ffc976;--psBlue:#237de2}
+.stage:before{background-position:85% 49%;opacity:1}
+.stage:after{background:linear-gradient(96deg,#03101de8 0%,#04172ccc 51%,#04162b95 72%,#03121f38 100%),radial-gradient(ellipse at 69% 17%,#1766dc78,transparent 51%)}
+header{background:linear-gradient(90deg,#061525fa,#09294bed 75%,#041726f0);border-bottom-color:#2677b699}
+.brand strong{font-weight:900;letter-spacing:.11em}.brand small{color:#a4defd}
+.panel{border-color:#277bb38c;background:linear-gradient(125deg,#041727e8,#061d31dc);box-shadow:inset 0 1px #87d7ff1e,0 0 20px #0869ce10}
+.hero{width:63%;border-color:#278de0bc;box-shadow:0 0 32px #0d6feb24;background:linear-gradient(90deg,#031727e8,#063069c0)}
+.hero h1{font-size:clamp(22px,3vw,39px)}.hero .ey{color:#91d9ff}
+.hero:after{content:'△  ○  ×  □';font-size:clamp(20px,3.3vw,50px);color:#7fcbff;text-shadow:0 0 16px #228cff;letter-spacing:.2em;white-space:nowrap;pointer-events:none}
+main{grid-template-rows:minmax(0,16fr) minmax(0,72fr) minmax(0,12fr)}
+.bodyGrid{grid-template-columns:minmax(0,64fr) minmax(0,36fr)}
+.now{grid-template-columns:minmax(0,33fr) minmax(0,67fr);gap:11px}
+.nowInfo{gap:6px}.nowInfo h2{font-size:clamp(19px,2.1vw,30px)}.nowInfo .info{padding:5px 0}
+.cover{border-color:#168ee9bd;box-shadow:0 0 24px #006bf330;background:radial-gradient(ellipse at center,#13365d 0%,#061827 75%)}
+.placeholder .psSymbol{color:#60b8ff;text-shadow:0 0 25px #1a8aff}
+.aside{grid-template-rows:minmax(0,51fr) minmax(0,49fr)}
+.statusPanel,.activity{background:linear-gradient(145deg,#07192ee8,#082746c9)}
+.footer{width:100%;border-color:#1584d1a0;box-shadow:0 0 18px #006dff30}
+.tools button,.tools a{background:#17505d;border-color:#50a2ab}
+.pill{background:#14523e;border-color:#49a88a;color:#b8f7d9}
+.pill.warn{background:#61451f;border-color:#d1a04e;color:#ffe0a8}
+.pill.bad{background:#622633;border-color:#d96b78;color:#ffd7dc}
+.sessionGallery{min-height:0;margin-top:auto;padding-top:5px;border-top:1px solid #5aa9db55}
+.galleryHeading{font-size:9px;color:#98d9ff;letter-spacing:.12em;font-weight:900;display:flex;justify-content:space-between;gap:6px;margin-bottom:5px}
+.galleryHeading span{color:#b5c8d7;letter-spacing:0}
+.gameGallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;min-height:0}
+.gameCard{min-width:0;height:clamp(52px,12vh,105px);display:flex;flex-direction:column;justify-content:flex-end;padding:6px;border:1px solid #218bd588;border-radius:8px;background:linear-gradient(150deg,#0a3166,#051426);overflow:hidden;position:relative}
+.gameCard.hasCover{background-size:cover;background-position:center}.gameCard.hasCover:before{content:'';position:absolute;inset:30% 0 0;background:linear-gradient(transparent,#010b19f5)}
+.gameCard strong,.gameCard small{position:relative;z-index:1;display:block;line-height:1.15;overflow-wrap:anywhere}.gameCard strong{font-size:clamp(8px,.75vw,12px)}.gameCard small{font-size:8px;color:#bdd4e4;margin-top:4px}
+.galleryEmpty{grid-column:1/-1;padding:15px 8px;font-size:11px;text-align:center;color:#a5cce6;border:1px dashed #4c8bb173;border-radius:9px}
+@media(max-width:1000px){.hero:after{font-size:21px}.now{grid-template-columns:30fr 70fr}.gameCard{height:65px}.galleryHeading{font-size:8px}}
+@media(max-width:700px){.hero{width:80%}.hero:after{display:none}.gameGallery{gap:3px}.gameCard{padding:3px;height:52px}.gameCard strong{font-size:8px}.gameCard small{font-size:7px}.nowInfo .info{padding:3px 0}}
+
+/* PlayStation 1.6: Epson-approved photo-first composition.
+   Keep all live readouts, cards, links, activity, and JS unchanged. */
+:root{--line:#8dbacc53;--teal:#1c4a54;--border:#5a8991;--gold:#f3d09c}
+.stage:before{opacity:1;background-position:76% center}
+.stage:after{background:linear-gradient(90deg,#031524e9 0%,#071c2dd9 39%,#06172761 60%,#03111b05 85%),linear-gradient(0deg,#03111b85 0%,transparent 27%)}
+header{background:#041725e6;border-bottom:1px solid var(--line)}
+.brand strong{font-size:19px;letter-spacing:.1em}.brand small{color:var(--gold)}
+.panel{border-color:var(--line);background:linear-gradient(130deg,#051522d9,#071c2ab4);box-shadow:none;backdrop-filter:blur(2px)}
+main{grid-template-rows:minmax(0,15fr) minmax(0,75fr) minmax(0,10fr);gap:8px}
+.hero{width:54%;padding:9px 14px;background:linear-gradient(110deg,#061827dd,#07213bb9);border-color:#6fa3c45f;box-shadow:none}
+.hero h1{font-size:clamp(23px,2.55vw,33px)}.hero .ey{color:var(--gold)}
+.hero:after{font-size:clamp(19px,2.3vw,34px);color:#8dc5fb;opacity:.72;text-shadow:0 0 12px #3d7ac777;letter-spacing:.09em}
+.bodyGrid{display:flex;flex-direction:column;gap:8px;width:58%;min-width:0;min-height:0}
+.now{flex:1 1 auto;display:grid;grid-template-columns:minmax(0,26fr) minmax(0,74fr);gap:9px;padding:9px;min-height:0}
+.cover{border-color:#7ba0b26b;background:#091b2bba;box-shadow:none}
+.cover:not(.hasArt) .placeholder{gap:7px;padding:8px}
+.cover:not(.hasArt) .placeholder .psSymbol{font-size:32px;text-shadow:none}
+.cover:not(.hasArt) .placeholder strong{font-size:11px}
+.cover:not(.hasArt) .placeholder span:last-child{font-size:10px}
+.nowInfo{gap:6px;padding:3px 1px}.nowInfo h2{font-size:clamp(19px,2.05vw,28px)}
+.nowInfo .info{padding:5px 0}
+.sessionGallery{margin-top:auto;padding-top:5px}
+.gameCard{height:clamp(46px,8vh,78px)}
+.galleryEmpty{padding:9px 6px}
+.aside{flex:0 0 32%;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:8px}
+.statusPanel,.activity{min-height:0;padding:8px 10px;gap:4px;background:linear-gradient(130deg,#051522cf,#071c2ab4)}
+.aside h2{font-size:15px;margin:0 0 3px}
+.statRow{font-size:10px;padding:3px 0}.statRow strong{font-size:10px}
+.activityList{gap:3px}.activityItem{font-size:10px;padding-bottom:3px}.activityItem time{font-size:8px}
+.footer{width:100%;padding:7px 13px;border-color:var(--line);background:linear-gradient(120deg,#061723d6,#081e2db1);box-shadow:none}
+.footer strong{font-size:12px;margin-top:3px}
+.tools button,.tools a{background:var(--teal);border-color:var(--border)}
+.galleryHeading{color:#a7cbdc}
+.gameCard{border-color:#5a899188}
+@media(max-width:1100px){.bodyGrid{width:65%}.hero{width:60%}.now{grid-template-columns:minmax(0,25fr) minmax(0,75fr)}.statRow,.activityItem{font-size:9px}}
+@media(max-width:850px){main{grid-template-rows:minmax(0,15fr) minmax(0,73fr) minmax(0,12fr)}.bodyGrid{width:71%}.hero{width:68%}.hero:after{font-size:18px}.aside{flex-basis:36%}.nowInfo h2{font-size:18px}.footer strong{font-size:10px}.cover:not(.hasArt) .placeholder span:last-child{font-size:8px}}
+@media(max-width:650px){.bodyGrid{width:77%}.hero{width:74%}.hero:after{display:none}.now{grid-template-columns:minmax(0,23fr) minmax(0,77fr)}.aside{gap:4px}.statusPanel,.activity{padding:5px}.aside h2{font-size:12px}.statRow,.activityItem{font-size:8px}}
+</style></head><body><div class="stage"><header><div class="brand"><strong>ELDORET · PLAYSTATION 1.6</strong><small>JESSE'S PS5 · PLAYING NOW</small></div><div class="tools"><span class="stamp" id="checked">Checking…</span><button type="button" id="refresh">↻ REFRESH</button><a href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<main><section class="panel hero"><div><div class="ey">PLAYSTATION 5 · LIVE PRESENCE</div><h1>Jesse's PlayStation</h1><div class="small" id="statusText">Connecting to console and PlayStation Network…</div></div><span class="pill warn" id="badge">CHECKING</span></section>
+<div class="bodyGrid"><section class="panel now"><div class="cover" id="cover"><img alt="Artwork for currently reported PlayStation game" id="gameArtwork" referrerpolicy="no-referrer"><div class="placeholder" id="placeholder"><span class="psSymbol">◈</span><strong>GAME ARTWORK</strong><span>Appears here when PlayStation reports a game and cover image</span></div></div>
+<div class="nowInfo"><div class="headline">PLAYING NOW · PLAYSTATION NETWORK</div><h2 id="gameTitle">Waiting for a game…</h2><p class="small" id="gameStatus">A game title appears when shared by local PS5 discovery or PSN presence.</p><div class="info"><span>PSN presence</span><strong id="psn">—</strong></div><div class="info"><span>Platform</span><strong id="platform">—</strong></div><div class="info"><span>Game source</span><strong id="source">—</strong></div><div class="source" id="gameNote">Availability depends on PlayStation account privacy settings.</div><div class="sessionGallery"><div class="galleryHeading">RECENTLY OBSERVED GAMES <span id="galleryCount">0 verified</span></div><div class="gameGallery" id="gameGallery"><div class="galleryEmpty">Waiting for real game activity · no games assumed</div></div></div></div></section>
+<aside class="aside"><section class="panel statusPanel"><div class="ey">CONSOLE · STATUS</div><h2>PS5 information</h2><div class="statRow"><span>Console</span><strong id="console">—</strong></div><div class="statRow"><span>Console name</span><strong id="consoleName">—</strong></div><div class="statRow"><span>Firmware</span><strong id="version">—</strong></div><div class="statRow"><span>Local address</span><strong id="ip">—</strong></div><div class="statRow"><span>Discovery</span><strong id="discovery">—</strong></div></section>
+<section class="panel activity"><div class="ey">BULLDOG · OBSERVED</div><h2>Recent activity</h2><div class="activityList" id="activity"><div class="activityItem"><span>No observed game changes yet</span></div></div></section></aside></div>
+<section class="panel footer"><div><div class="ey">GAME SESSIONS OBSERVED</div><strong id="sessions">—</strong></div><div><div class="ey">PSN CONNECTION</div><strong id="psnConnection">—</strong></div><div><div class="ey">PSN DATA CHECKED</div><strong id="psnChecked">—</strong></div><div><div class="ey">LOCAL OBSERVATION</div><strong id="localChecked">—</strong></div></section></main></div>
+<script>
+(()=>{'use strict';const $=id=>document.getElementById(id),text=(id,value)=>{$(id).textContent=value==null||value===''?'—':String(value)},clock=s=>{const d=new Date(s||'');return Number.isFinite(d.getTime())?d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'};let busy=false;
+
+function gameCover(title,psn,currentTitle){
+ const t=String(title||'').trim();
+ if(t===currentTitle && typeof psn.game_artwork==='string' && /^https:\/\//i.test(psn.game_artwork) && psn.game_artwork.length<2000)return psn.game_artwork;
+ if(/^rocket league(?:®|\u00ae)?(?:\s|$)/i.test(t))return 'https://commons.wikimedia.org/wiki/Special:FilePath/Rocket_League_coverart.jpg';
+ if(/^EA SPORTS(?:™|\u2122)?\s*FC(?:™|\u2122)?\s*27(?:\s|$)/i.test(t))return 'https://store-images.s-microsoft.com/image/apps.47660.13743839398469485.db2131e0-e679-48e9-9a6a-8a24fa7716b1.c794348b-7cd8-4ff5-8d65-f3d37c533731';
+ return null;
+}
+function renderGameGallery(sessions,psn,currentTitle){
+ const gallery=$('gameGallery');gallery.replaceChildren();
+ // Only names from observed local sessions; no speculative PSN ownership or played games.
+ const seen=new Set(),games=[];
+ for(const s of [...sessions].reverse()){
+  const title=String(s&&s.game||'').trim();
+  if(!title||title==='Unknown game'||seen.has(title.toLowerCase()))continue;
+  seen.add(title.toLowerCase());games.push({title,at:s.started_at});if(games.length===4)break;
+ }
+ text('galleryCount',games.length+' observed');
+ if(!games.length){const e=document.createElement('div');e.className='galleryEmpty';e.textContent='No verified recent games · artwork will appear when game activity is observed';gallery.append(e);return;}
+ for(const g of games){
+  const card=document.createElement('div');card.className='gameCard';
+  const label=document.createElement('strong');label.textContent=g.title;
+  const sub=document.createElement('small');sub.textContent='OBSERVED '+clock(g.at);
+  card.append(label,sub);gallery.append(card);
+  const cover=gameCover(g.title,psn,currentTitle);
+  if(cover){const img=new Image();img.referrerPolicy='no-referrer';img.onload=()=>{card.style.backgroundImage='url('+JSON.stringify(cover)+')';card.classList.add('hasCover')};img.src=cover;}
+ }
+}
+
+function render(p){const local=p.live||{},psn=p.psn||{},connected=local.online===true,psnOk=psn.connected===true;
+$('badge').textContent=connected?'CONSOLE ONLINE':psnOk?'PSN CONNECTED':'NOT RESPONDING';
+$('badge').className='pill'+(connected?'':psnOk?' warn':' bad');
+text('statusText',connected?'Console responding to local discovery':psnOk?'PSN responding · console may be sleeping':'No local console response · may be in rest mode');
+const game=psn.game||local.running_app_name||'No game currently reported';
+text('gameTitle',game);text('gameStatus',psn.game_status||(psn.game?'Live game reported by PSN':local.running_app_name?'Game reported by console':'No game reported — this does not establish that no game is being played.'));
+text('psn',psn.connected?psn.online_status||'Connected':psn.detail||'Not available');text('platform',psn.platform||local.host_type||'—');
+text('source',psn.game?'PlayStation Network':local.running_app_name?'Local PS5 discovery':'Not reported');
+// Prefer Sony-supplied live artwork. For the game confirmed tonight, use a separately
+// licensed game-cover fallback while PSN withholds its artwork URL. Never guess a game.
+const title=String(game).trim();
+const rocketLeague=/^rocket league(?:®|\u00ae)?(?:\s|$)/i.test(title);
+const fc27=/^EA SPORTS(?:™|\u2122)?\s*FC(?:™|\u2122)?\s*27(?:\s|$)/i.test(title);
+const fallback=rocketLeague?'https://commons.wikimedia.org/wiki/Special:FilePath/Rocket_League_coverart.jpg':
+ fc27?'https://store-images.s-microsoft.com/image/apps.47660.13743839398469485.db2131e0-e679-48e9-9a6a-8a24fa7716b1.c794348b-7cd8-4ff5-8d65-f3d37c533731':null;
+const sonyArt=typeof psn.game_artwork==='string'&&/^https:\/\//i.test(psn.game_artwork)&&psn.game_artwork.length<2000?psn.game_artwork:null;
+text('gameNote',sonyArt?'Artwork supplied by PSN · updates may be cached up to 2 minutes':
+ fallback?(fc27?'EA SPORTS FC 27 cover artwork · publisher artwork via Microsoft Store CDN':'Rocket League cover art · licensed fallback while PSN does not supply artwork'):
+ 'Artwork appears when PSN provides a cover image for the reported game.');
+const art=$('gameArtwork'),cover=$('cover');cover.classList.remove('hasArt');art.removeAttribute('src');
+const sequence=[sonyArt,fallback].filter(Boolean);let next=0;
+art.onload=()=>cover.classList.add('hasArt');
+art.onerror=()=>{if(next<sequence.length){art.src=sequence[next++];}else{cover.classList.remove('hasArt');art.removeAttribute('src');}};
+if(sequence.length)art.src=sequence[next++];
+text('console',connected?'Online':'No response');text('consoleName',local.host_name||'—');text('version',local.system_version||'—');text('ip',local.ip||'—');
+text('discovery',connected?'UDP response':'Not available');
+const activity=$('activity');activity.replaceChildren();const events=Array.isArray(p.events)?p.events.slice(-3).reverse():[];
+if(events.length){for(const e of events){const line=document.createElement('div');line.className='activityItem';const name=document.createElement('span'),date=document.createElement('time');name.textContent=e.detail||e.kind||'Event';date.textContent=clock(e.at);line.append(name,date);activity.append(line);}}
+else{const line=document.createElement('div');line.className='activityItem';line.textContent='No changes recorded yet';activity.append(line);}
+const sessions=Array.isArray(p.sessions)?p.sessions:[];renderGameGallery(sessions,psn,title);text('sessions',sessions.length+(sessions.length>=30?'+':'')+' stored');text('psnConnection',psn.connected?'CONNECTED':psn.configured?'NOT REACHABLE':'NOT CONFIGURED');
+text('psnChecked',psn.checked_at?clock(psn.checked_at):'Not supplied by PSN');text('localChecked',clock(p.observed_at));text('checked','Checked '+clock(p.observed_at));
+}
+async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),45000);try{const r=await fetch('/api/playstation/activity',{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);render(await r.json());}catch(e){$('badge').className='pill bad';$('badge').textContent='READING UNAVAILABLE';text('statusText','PlayStation status is temporarily unavailable: '+e.message);}finally{clearTimeout(timer);busy=false;$('refresh').disabled=false;}}
+$('refresh').addEventListener('click',refresh);refresh();setInterval(()=>{if(!document.hidden)refresh();},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+})();
+</script></body></html>
