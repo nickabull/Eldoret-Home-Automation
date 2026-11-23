@@ -4976,6 +4976,9 @@ class Handler(BaseHTTPRequestHandler):
             "/home.js": ("home.js", "application/javascript; charset=utf-8"),
             "/velux.html": ("velux.html", "text/html; charset=utf-8"),
             "/pioneer.html": ("pioneer.html", "text/html; charset=utf-8"),
+            "/pioneer-ipad-v10.html": ("pioneer-ipad-v10.html", "text/html; charset=utf-8"),
+            # Stable action page; future approved Pioneer versions update only this mapping.
+            "/pioneer-control.html": ("pioneer-ipad-v10.html", "text/html; charset=utf-8"),
             "/engineering.html": ("engineering.html", "text/html; charset=utf-8"),
             "/design-centre.html": ("design-centre.html", "text/html; charset=utf-8"),
             "/design-centre.js": ("design-centre.js", "application/javascript; charset=utf-8"),
