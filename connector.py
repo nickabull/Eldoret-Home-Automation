@@ -4390,6 +4390,52 @@ def velux_homekit_readonly():
         return dict(data)
 
 
+# Manual, supervised VELUX HomeKit movement. No automatic comfort control.
+VELUX_COMMAND_LOCK = threading.Lock()
+VELUX_COMMAND_LAST = 0.0
+
+def velux_manual_command(aid, action):
+    global VELUX_COMMAND_LAST
+    if type(aid) is not int or aid not in (3, 4) or action not in ("test_open", "open", "close"):
+        return {"ok": False, "detail": "Unsupported window or action"}
+    target = {"test_open": 10, "open": 100, "close": 0}[action]
+    if not VELUX_COMMAND_LOCK.acquire(blocking=False):
+        return {"ok": False, "detail": "Another VELUX command is still processing"}
+    try:
+        if time.monotonic() - VELUX_COMMAND_LAST < 5:
+            return {"ok": False, "detail": "Please let previous movement settle"}
+        state = velux_homekit_readonly()
+        try:
+            age_seconds = (datetime.now(timezone.utc) - datetime.fromisoformat(state["checked_at"])).total_seconds()
+        except (KeyError, ValueError, TypeError):
+            age_seconds = 999
+        if not state.get("connected") or not -5 < age_seconds < 60:
+            return {"ok": False, "detail": "No recent HomeKit reading; no command sent"}
+        if not any(w.get("aid") == aid for w in state.get("windows", [])):
+            return {"ok": False, "detail": "Window not detected in HomeKit"}
+        python_bin = os.path.expanduser("~/velux-homekit-venv/bin/python")
+        script = os.path.expanduser("~/eldoret-connector/velux-window-command.py")
+        if not os.path.isfile(python_bin) or not os.path.isfile(script):
+            return {"ok": False, "detail": "VELUX manual writer not installed on Bulldog"}
+        VELUX_COMMAND_LAST = time.monotonic()
+        try:
+            result = subprocess.run([python_bin, script, str(aid), str(target)],
+                capture_output=True, text=True, timeout=20, check=False)
+            if result.returncode:
+                raise RuntimeError("VELUX writer returned an error")
+            parsed = json.loads(result.stdout)
+            if not isinstance(parsed, dict) or type(parsed.get("ok")) is not bool:
+                raise ValueError("Bad writer result")
+            if parsed["ok"]:
+                with _VELUX_READ_LOCK:
+                    _VELUX_READ_CACHE.update(at=0, data=None)
+            return parsed
+        except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
+            return {"ok": False, "detail": "Command outcome unknown; inspect window physically before retrying"}
+    finally:
+        VELUX_COMMAND_LOCK.release()
+
+
 # Pioneer XC-HM82D-K - manually initiated LAN control only.
 PIONEER_HOST = os.environ.get("PIONEER_HOST", "10.0.0.78")
 PIONEER_PORT = 8102
@@ -4977,6 +5023,8 @@ class Handler(BaseHTTPRequestHandler):
             "/home-briefing.js": ("home-briefing.js", "application/javascript; charset=utf-8"),
             "/home.js": ("home.js", "application/javascript; charset=utf-8"),
             "/velux.html": ("velux.html", "text/html; charset=utf-8"),
+            "/velux-ipad-v10.html": ("velux-ipad-v10.html", "text/html; charset=utf-8"),
+            "/velux-control.html": ("velux-ipad-v10.html", "text/html; charset=utf-8"),
             "/pioneer.html": ("pioneer.html", "text/html; charset=utf-8"),
             "/pioneer-ipad-v10.html": ("pioneer-ipad-v10.html", "text/html; charset=utf-8"),
             "/pioneer-ipad-v11.html": ("pioneer-ipad-v11.html", "text/html; charset=utf-8"),
@@ -5404,6 +5452,24 @@ class Handler(BaseHTTPRequestHandler):
                 if not isinstance(req,dict) or set(req)!={"action","temperature_c"}:
                     raise ValueError("Invalid climate payload")
                 result=ariya_control(req["action"],req["temperature_c"])
+                self.send_bytes(json.dumps(result).encode()); return
+            except (ValueError,TypeError,json.JSONDecodeError):
+                self.send_error(400); return
+        if urllib.parse.urlparse(self.path).path == "/api/velux/manual-window":
+            origin=self.headers.get("Origin","")
+            host=self.headers.get("Host","")
+            if (_remote_request(self) or
+                host not in ("10.0.0.34:8765","localhost:8765","127.0.0.1:8765") or
+                origin!="http://"+host or
+                self.headers.get("Content-Type","").split(";")[0].strip()!="application/json" or
+                length>160):
+                self.send_error(403); return
+            try:
+                request=json.loads(raw_body)
+                if (not isinstance(request,dict) or set(request)!={"aid","action","supervised"}
+                    or request["supervised"] is not True):
+                    raise ValueError("Invalid supervised request")
+                result=velux_manual_command(request["aid"],request["action"])
                 self.send_bytes(json.dumps(result).encode()); return
             except (ValueError,TypeError,json.JSONDecodeError):
                 self.send_error(400); return
