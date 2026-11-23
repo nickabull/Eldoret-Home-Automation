@@ -163,7 +163,7 @@ async function send(action){
      $('muted').textContent=muted?'MUTED · ESTIMATED':'NOT MUTED · ESTIMATED';
      $('muted').classList.toggle('active',muted);
    }
-   say(action.startsWith('source_')?'Source command '+(j.command||action)+' sent; +(j.reply?'receiver reply: '+j.reply:'no receiver reply')+'. Press REFRESH to confirm the current source.': 'Command sent'+(j.reply?' · receiver reply: '+j.reply:' · no receiver reply')+'. REFRESH confirms actual receiver state.');
+   say(action.startsWith('source_')?'Source command '+(j.command||action)+' sent; '+(j.reply?'receiver reply: '+j.reply:'no receiver reply')+'. Press REFRESH to confirm the current source.': 'Command sent'+(j.reply?' · receiver reply: '+j.reply:' · no receiver reply')+'. REFRESH confirms actual receiver state.');
  }catch(e){say('Command failed: '+e.message);busy=false;buttons();return}
  busy=false;buttons();
 }
