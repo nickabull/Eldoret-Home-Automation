@@ -1,0 +1,127 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><meta name="theme-color" content="#071520"><link rel="manifest" href="/eldoret.webmanifest"><title>Eldoret · VELUX 1.3</title><style>
+:root{color-scheme:dark;--teal:#1c4a54;--edge:#5a8991;--line:#afc4d342;--gold:#f3d09c}*{box-sizing:border-box}html,body{height:100%;width:100%;margin:0;overflow:hidden;background:#051521;color:#f0f9fc;font:14px/1.24 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,a,input,select{font:inherit}button{cursor:pointer}.stage{position:relative;isolation:isolate;height:100dvh;width:100vw;display:grid;grid-template-rows:54px minmax(0,1fr)}.stage:before{content:"";position:absolute;inset:0;z-index:-2;background:url('/eldoret-velux.jpg') center/cover no-repeat;opacity:.8}.stage:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#031421d9,#0517278a),linear-gradient(0deg,#041320ab,transparent)}
+header{min-width:0;background:#041725e3;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:5px 14px;gap:8px}.brand strong{font-size:19px;letter-spacing:.1em}.brand small{display:block;font-size:9px;color:var(--gold);letter-spacing:.13em}.tools{display:flex;align-items:center;gap:8px}.tools a,.tools button,.buttons button,.save{background:var(--teal);color:#fff;border:1px solid var(--edge);border-radius:10px;padding:8px 12px;text-decoration:none;font-weight:800;min-height:40px;white-space:nowrap}.tools button:disabled,.buttons button:disabled{opacity:.38;cursor:not-allowed}.stamp{font-size:10px;color:#bdcfd9}
+main{min-height:0;display:grid;grid-template-rows:minmax(0,14fr) minmax(0,51fr) minmax(0,35fr);gap:9px;padding:9px 12px 11px}.panel{min-width:0;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:linear-gradient(130deg,#051522db,#071c2ad6);backdrop-filter:blur(2px)}.summary{display:flex;align-items:center;gap:20px;padding:10px 18px}.summary h1{font-size:clamp(21px,2.5vw,32px);margin:3px 0}.summary .ey{color:var(--gold)}.summary .status{margin-left:auto;padding:7px 12px;border-radius:20px;background:#235b4c;border:1px solid #5caa94;font-size:10px;font-weight:800;white-space:nowrap}.summary .status.bad{background:#62343a;border-color:#d27a87}.ey{font-size:9px;letter-spacing:.15em;font-weight:800;color:var(--gold)}
+.middle{display:grid;grid-template-columns:minmax(0,42fr) minmax(0,58fr);gap:9px;min-height:0}.climate{padding:14px 18px;display:flex;flex-direction:column;gap:10px}.climate h2,.windows h2,.comfort h2{font-size:18px;margin:3px 0}.temp{font-weight:600;font-size:clamp(55px,8vw,102px);line-height:1.05;letter-spacing:-.06em}.temp small{font-size:21px;font-weight:400;color:#b9d7d9}.climateGrid{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}.smallPanel{background:#0a2738b8;border:1px solid #8abacb38;border-radius:10px;padding:10px}.smallPanel strong{display:block;font-size:clamp(19px,2.4vw,28px)}.smallPanel span,.muted{font-size:10px;color:#bdd0db}.windows{padding:12px 14px;display:flex;flex-direction:column;gap:8px}.windowGrid{min-height:0;flex:1;display:grid;grid-template-rows:repeat(2,minmax(0,1fr));gap:7px}.window{border:1px solid #79a1af65;border-radius:10px;background:#0b2432ca;padding:10px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}.window strong{font-size:17px}.window .position{font-size:20px;font-weight:800;color:#b3f5d8}.window .buttons{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}.buttons button{min-height:37px;padding:6px 11px;font-size:11px}.buttons .close{background:#52424b}.window select{background:#173843;color:#f5ffff;border:1px solid var(--edge);padding:4px;border-radius:7px;max-width:158px;font-size:10px}.window .sub{font-size:10px;color:#adcbd7}.window .id{color:var(--gold);font-size:9px}
+.bottom{display:grid;grid-template-columns:minmax(0,56fr) minmax(0,44fr);gap:9px;min-height:0}.comfort{padding:12px 16px}.comfort .rulers{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}.ruler label{display:flex;justify-content:space-between;gap:6px;color:#c7d9de;font-size:12px}.ruler output{font-weight:800;color:#ffe1b0}.ruler input{width:100%;accent-color:#8de3c5;height:24px}.draft{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}.draft .save{min-height:34px;font-size:11px}.rules{color:#acc7d0;font-size:10px}.safety{padding:12px 17px;display:flex;flex-direction:column;gap:6px}.safety h2{font-size:18px;margin:2px 0}.safety p{margin:0;color:#c1d5db;font-size:11px}.check{display:flex;align-items:center;gap:8px;font-weight:800;font-size:11px}.check input{accent-color:#93ebc7;width:19px;height:19px}.safety .message{font-size:10px;color:#f2d3a1;min-height:13px;margin-top:auto}
+.modal[hidden]{display:none!important}.modal{position:fixed;z-index:30;inset:0;background:#000b;display:grid;place-items:center;padding:20px}.dialog{background:#0d2434;border:2px solid #e2b77b;border-radius:17px;padding:25px;width:min(480px,90vw);display:grid;gap:13px;text-align:center}.dialog h2{margin:0;font-size:27px}.dialog p{margin:0;color:#e7e3d5}.dialog .buttons{display:flex;justify-content:center;gap:10px}.dialog button{min-height:46px;background:var(--teal);color:#fff;border:1px solid var(--edge);border-radius:10px;padding:8px 15px;font-weight:800}
+@media(max-width:850px){header{padding:5px 8px}.brand strong{font-size:15px}.stamp{display:none}.tools{gap:5px}.tools a,.tools button{min-height:33px;padding:5px 7px;font-size:10px}main{gap:5px;padding:5px}.middle,.bottom{gap:5px}.summary{padding:6px}.climate,.windows,.comfort,.safety{padding:8px}.window{padding:7px}.window strong{font-size:13px}.buttons button{min-height:30px;padding:5px}.window .position{font-size:16px}.climateGrid{gap:5px}.smallPanel{padding:5px}}
+
+/* VELUX 1.3 tidy layout: align readings and controls; reduce unused dead space. */
+main{grid-template-rows:minmax(0,13fr) minmax(0,57fr) minmax(0,30fr);gap:8px;padding:8px 11px 10px}
+.middle{grid-template-columns:minmax(0,38fr) minmax(0,62fr);gap:8px}
+.bottom{grid-template-columns:minmax(0,56fr) minmax(0,44fr);gap:8px}
+.summary{padding:9px 17px}.summary h1{font-size:clamp(22px,2.4vw,30px);margin:2px 0 4px}
+.climate{padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.climate>div:first-child{margin-bottom:3px}
+.climate h2,.windows h2,.comfort h2{font-size:18px;margin:3px 0}
+.temp{display:flex;align-items:baseline;gap:4px;font-size:clamp(56px,6.6vw,85px);line-height:1.04;letter-spacing:-.04em}
+.temp small{font-size:19px;letter-spacing:0}
+.climateGrid{margin-top:4px;gap:10px}.smallPanel{padding:13px 14px}.smallPanel strong{font-size:clamp(23px,2.4vw,32px)}
+.windows{padding:13px 16px;gap:9px}
+.windowGrid{display:grid;grid-template-rows:repeat(2,minmax(0,1fr));gap:9px}
+.window{padding:13px 16px;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.window>div:first-child{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.window strong{font-size:18px}.window .id{font-size:9px;letter-spacing:.05em}
+.window .sub{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;font-size:11px}
+.window .position{font-size:18px}.window select{margin-top:1px;max-width:170px;font-size:11px;min-height:29px}
+.window .buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-width:256px}
+.window .buttons button{min-height:44px;padding:7px 9px;font-size:11px}
+.comfort,.safety{padding:15px 17px}.comfort .rulers{margin-top:15px;gap:18px}
+.ruler label{font-size:12px}.ruler input{height:30px;margin-top:5px}
+.draft{margin-top:12px}.draft .save{min-height:38px}.safety{gap:9px}
+.safety .message{margin-top:auto;font-size:11px}
+@media(max-width:850px){
+ main{gap:5px;padding:5px}.middle,.bottom{gap:5px}.summary{padding:7px 9px}
+ .climate,.windows,.comfort,.safety{padding:8px 10px;gap:6px}
+ .temp{font-size:clamp(38px,7vw,56px)}.temp small{font-size:15px}
+ .climateGrid{gap:5px}.smallPanel{padding:7px}.smallPanel strong{font-size:19px}
+ .window{padding:7px 9px;gap:5px}.window>div:first-child{gap:2px}
+ .window strong{font-size:13px}.window .sub{font-size:9px}.window .position{font-size:15px}
+ .window .buttons{min-width:176px;gap:4px}.window .buttons button{font-size:9px;min-height:35px;padding:4px}
+ .comfort .rulers{margin-top:7px;gap:10px}.draft{margin-top:6px}.ruler input{height:23px}
+ .safety h2{font-size:14px}.safety p,.safety .message{font-size:9px}
+}
+
+/* ARTWORK-FIRST 1.2 — all controls in the compact left cockpit; keep the
+   original VELUX photograph genuinely visible in its own unobstructed lane. */
+.stage:before{background-position:64% center;opacity:.58}
+.stage:after{background:linear-gradient(90deg,#031421d9 0%,#06162477 67%,#04132022 100%)}
+main{width:74%;grid-template-rows:minmax(0,13fr) minmax(0,52fr) minmax(0,35fr);gap:7px;padding:9px 7px 11px 11px;position:relative;z-index:2}
+.art-view{position:absolute;right:11px;top:64px;bottom:12px;width:calc(26% - 22px);
+background:url('/eldoret-velux.jpg') center center/cover no-repeat;
+border-radius:11px;box-shadow:inset 0 0 35px #08172555;overflow:hidden;pointer-events:none;z-index:0}
+.art-view:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#04121b92,transparent 38%)}
+.art-credit{position:absolute;bottom:16px;right:15px;z-index:1;color:#fff9e4;
+font-size:10px;letter-spacing:.15em;font-weight:800;text-shadow:0 2px 7px #000d}
+.panel{background:linear-gradient(130deg,#051522d9,#071c2ad0)}
+.summary{padding:7px 13px}.summary h1{font-size:clamp(19px,2vw,27px);margin:2px 0}
+.middle{grid-template-columns:minmax(0,34fr) minmax(0,66fr);gap:7px}
+.bottom{grid-template-columns:minmax(0,54fr) minmax(0,46fr);gap:7px}
+.climate{padding:9px 12px;gap:8px;justify-content:space-evenly}
+.climate h2,.windows h2,.comfort h2,.safety h2{font-size:16px}
+.temp{font-size:clamp(45px,5vw,67px)}.temp small{font-size:15px}
+.climateGrid{gap:6px}.smallPanel{padding:7px 9px}.smallPanel strong{font-size:clamp(17px,2vw,26px)}
+.windows{padding:8px 10px;gap:5px}.windowGrid{gap:6px}
+.window{padding:8px 9px;gap:8px;grid-template-columns:minmax(0,1fr) auto}
+.window>div:first-child{gap:3px}.window strong{font-size:15px}
+.window .id{font-size:8px}.window .sub{font-size:9px}.window .position{font-size:16px}
+.window select{min-height:27px;margin:0;max-width:148px;font-size:10px}
+.window .buttons{min-width:190px;gap:5px}.window .buttons button{min-height:40px;font-size:10px;padding:6px}
+.comfort,.safety{padding:9px 11px;gap:5px}
+.comfort .rulers{gap:10px;margin-top:8px}.draft{margin-top:5px}.draft .save{min-height:32px}
+.ruler label{font-size:11px}.ruler input{height:24px}
+.safety p{font-size:10px}.safety .message{font-size:9px}
+@media(max-width:1150px){
+ main{width:78%}.art-view{width:calc(22% - 20px)}
+ .window .buttons{min-width:148px;gap:3px}.window .buttons button{font-size:9px;min-height:34px;padding:4px}
+ .window strong{font-size:13px}.window .sub{font-size:9px}
+ .climateGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .smallPanel{padding:5px}.smallPanel strong{font-size:17px}
+ .comfort,.safety{padding:8px}
+}
+@media(max-width:850px){
+ main{width:100%;padding:5px}.art-view{display:none}
+ .middle{grid-template-columns:minmax(0,35fr) minmax(0,65fr)}
+ .window .buttons{min-width:139px}
+ .temp{font-size:44px}
+}
+
+
+/* 1.3: reserve more of the commissioned skylight photograph. */
+main{width:72%;gap:6px;grid-template-rows:minmax(0,13fr) minmax(0,53fr) minmax(0,34fr)}
+.art-view{width:calc(28% - 22px);box-shadow:inset 0 0 25px #08172533}
+.panel{background:linear-gradient(130deg,#051522c4,#071c2aa6)}
+.stage:before{opacity:.75}.stage:after{background:linear-gradient(90deg,#031421cb 0%,#06162460 65%,#04132018 100%)}
+.climate{padding:8px 10px}.windows{padding:7px 9px}.window{padding:7px 8px}
+@media(max-width:1150px){main{width:77%}.art-view{width:calc(23% - 20px)}.window .buttons{min-width:142px}}
+@media(max-width:850px){main{width:100%}.art-view{display:none}}
+
+</style></head><body><div class="stage"><header><div class="brand"><strong>ELDORET · VELUX 1.3</strong><small>LIVE CLIMATE · TWO ROOF WINDOWS</small></div><div class="tools"><span class="stamp" id="checked">Checking…</span><button id="refresh" type="button">↻ REFRESH</button><a href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<div class="art-view" aria-hidden="true"><span class="art-credit">VELUX · ROOF WINDOWS</span></div>
+<main><section class="panel summary"><div><span class="ey">VELUX ACTIVE · LOCAL HOMEKIT</span><h1>Roof windows & climate</h1><span class="muted" id="summaryInfo">Reading HomeKit sensors…</span></div><span class="status bad" id="status">CONNECTING</span></section>
+<div class="middle"><section class="panel climate"><div><span class="ey">HOME CLIMATE</span><h2>Indoor temperature</h2></div><div class="temp"><span id="temperature">—</span><small>°C</small></div><div class="climateGrid"><div class="smallPanel"><strong id="humidity">—</strong><span>Humidity</span></div><div class="smallPanel"><strong id="co2">—</strong><span>CO₂ · ppm</span></div></div></section>
+<section class="panel windows"><div><span class="ey">MANUAL SUPERVISED CONTROL</span><h2>Windows</h2></div><div class="windowGrid">
+<div class="window" data-aid="3"><div><div class="id">HOMEKIT WINDOW 3 · ROOM TO IDENTIFY</div><strong id="name3">Window 3</strong><div class="sub">Position <span class="position" id="position3">—</span> · Target <span id="target3">—</span></div><select id="assign3" aria-label="Assign room for window 3"><option value="">Identify room…</option><option value="Back Kitchen">Back Kitchen</option><option value="Shower Room">Shower Room</option></select></div><div class="buttons"><button type="button" data-aid="3" data-action="test_open">TEST 10%</button><button type="button" data-aid="3" data-action="open">OPEN</button><button type="button" class="close" data-aid="3" data-action="close">CLOSE</button></div></div>
+<div class="window" data-aid="4"><div><div class="id">HOMEKIT WINDOW 4 · ROOM TO IDENTIFY</div><strong id="name4">Window 4</strong><div class="sub">Position <span class="position" id="position4">—</span> · Target <span id="target4">—</span></div><select id="assign4" aria-label="Assign room for window 4"><option value="">Identify room…</option><option value="Back Kitchen">Back Kitchen</option><option value="Shower Room">Shower Room</option></select></div><div class="buttons"><button type="button" data-aid="4" data-action="test_open">TEST 10%</button><button type="button" data-aid="4" data-action="open">OPEN</button><button type="button" class="close" data-aid="4" data-action="close">CLOSE</button></div></div>
+</div></section></div>
+<div class="bottom"><section class="panel comfort"><span class="ey">COMFORT ZONE · DRAFT ONLY</span><h2>Temperature thresholds</h2><div class="rulers"><div class="ruler"><label for="openAbove">Open above <output id="openValue">24°C</output></label><input type="range" id="openAbove" min="18" max="30" step=".5" value="24"></div><div class="ruler"><label for="closeBelow">Close below <output id="closeValue">20°C</output></label><input type="range" id="closeBelow" min="18" max="30" step=".5" value="20"></div></div><div class="draft"><button class="save" type="button" id="saveComfort">SAVE DRAFT</button><span id="comfortMessage" class="rules">Automation OFF · sliders do not move windows</span></div></section>
+<section class="panel safety"><span class="ey">SAFETY · MANUAL TESTS</span><h2>Confirm before moving</h2><label class="check"><input type="checkbox" id="supervised"> I am beside both windows and it is safe to move them</label><p>Use TEST 10% to identify each window before assigning its room. Full OPEN is unavailable until both names are assigned. Rain safety remains with VELUX; Eldoret cannot override it.</p><div class="message" role="status" id="message">No window commands sent. Live control requires Bulldog deployment.</div></section></div></main></div>
+<div class="modal" id="modal" hidden><div class="dialog"><span class="ey">MANUAL WINDOW MOVEMENT</span><h2 id="modalTitle">Confirm window</h2><p id="modalText">Send HomeKit command?</p><div class="buttons"><button id="cancel" type="button">CANCEL</button><button id="confirm" type="button">CONFIRM</button></div></div></div>
+<script>
+(()=>{'use strict';const $=id=>document.getElementById(id),fmt=n=>typeof n==='number'&&Number.isFinite(n)?String(Math.round(n*10)/10):'—';let busy=false,sending=false,active=null;
+let mapping={};try{mapping=JSON.parse(localStorage.getItem('eldoret-velux-window-rooms')||'{}')||{}}catch(_){}
+const names=['Back Kitchen','Shower Room'];function mappingValid(){return names.includes(mapping[3])&&names.includes(mapping[4])&&mapping[3]!==mapping[4]}
+function updateNames(){for(const aid of [3,4]){$('assign'+aid).value=mapping[aid]||'';$('name'+aid).textContent=mapping[aid]||'Window '+aid;}const enabled=$('supervised').checked&&!sending;document.querySelectorAll('[data-aid][data-action]').forEach(b=>b.disabled=!enabled||(b.dataset.action==='open'&&!mappingValid()));}
+for(const aid of [3,4])$('assign'+aid).addEventListener('change',e=>{const value=e.target.value;if(value&&mapping[aid===3?4:3]===value){e.target.value=mapping[aid]||'';alert('Each room must be assigned to exactly one window.');return;}mapping[aid]=value;try{localStorage.setItem('eldoret-velux-window-rooms',JSON.stringify(mapping))}catch(_){}updateNames();});
+$('supervised').addEventListener('change',updateNames);updateNames();
+function readComfort(){let a=Number($('openAbove').value),b=Number($('closeBelow').value);if(b>=a){if(document.activeElement===$('closeBelow'))a=Math.min(30,b+.5);else b=Math.max(18,a-.5);if(b>=a){a=30;b=29.5;}$('openAbove').value=a;$('closeBelow').value=b;}$('openValue').textContent=a+'°C';$('closeValue').textContent=b+'°C';$('comfortMessage').textContent='Draft only · open above '+a+'°C, close below '+b+'°C · automation OFF';}
+for(const id of ['openAbove','closeBelow'])$(id).addEventListener('input',readComfort);try{const p=JSON.parse(localStorage.getItem('eldoret-velux-comfort-draft')||'null');if(p&&p.open>p.close&&p.open<=30&&p.close>=18){$('openAbove').value=p.open;$('closeBelow').value=p.close}}catch(_){}readComfort();
+$('saveComfort').addEventListener('click',()=>{try{localStorage.setItem('eldoret-velux-comfort-draft',JSON.stringify({open:Number($('openAbove').value),close:Number($('closeBelow').value)}));$('comfortMessage').textContent='Draft saved on this device · automation OFF'}catch(_){$('comfortMessage').textContent='Could not save draft · automation OFF'}});
+async function read(){if(busy||sending||document.hidden)return;busy=true;$('refresh').disabled=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);try{const resp=await fetch('/api/velux/homekit',{cache:'no-store',signal:controller.signal});if(!resp.ok)throw Error('HTTP '+resp.status);const p=await resp.json();const age=Date.now()-Date.parse(p.checked_at);if(p.connected!==true||!Number.isFinite(age)||age>120000||age< -120000)throw Error(p.error||'No recent local reading');$('status').textContent='LOCAL CONNECTED';$('status').className='status';$('summaryInfo').textContent='Last sensor reading '+new Date(p.checked_at).toLocaleTimeString('en-GB');$('checked').textContent='Checked '+new Date(p.checked_at).toLocaleTimeString('en-GB');$('temperature').textContent=fmt(p.climate?.temperature);$('humidity').textContent=fmt(p.climate?.humidity)+'%';$('co2').textContent=fmt(p.climate?.co2_ppm);for(const aid of [3,4]){const w=(p.windows||[]).find(w=>w.aid===aid);$('position'+aid).textContent=w&&typeof w.current_position==='number'?fmt(w.current_position)+'%':'—';$('target'+aid).textContent=w&&typeof w.target_position==='number'?fmt(w.target_position)+'%':'—';}}catch(e){$('status').textContent='READING UNAVAILABLE';$('status').className='status bad';$('summaryInfo').textContent=e.message;$('temperature').textContent='—';$('humidity').textContent='—';$('co2').textContent='—';for(const aid of [3,4]){$('position'+aid).textContent='—';$('target'+aid).textContent='—';}}finally{clearTimeout(timer);busy=false;$('refresh').disabled=false;}}
+$('refresh').addEventListener('click',read);read();setInterval(read,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)read()});
+document.querySelectorAll('[data-aid][data-action]').forEach(btn=>btn.addEventListener('click',()=>{if(sending||!$('supervised').checked)return;const aid=Number(btn.dataset.aid),action=btn.dataset.action;if(action==='open'&&!mappingValid())return;active={aid,action};const title=mapping[aid]||'Unidentified Window '+aid;const verb={test_open:'TEST OPEN 10%',open:'OPEN FULLY',close:'CLOSE'}[action];$('modalTitle').textContent=title+' · '+verb;$('modalText').textContent='Move HomeKit accessory '+aid+'? Confirm you are watching the physical window. VELUX rain safety remains active.';$('modal').hidden=false;}));
+$('cancel').addEventListener('click',()=>{$('modal').hidden=true;active=null});
+$('confirm').addEventListener('click',async()=>{if(!active||sending)return;const request=active;active=null;$('modal').hidden=true;sending=true;updateNames();$('message').textContent='Sending one supervised command to window '+request.aid+'…';const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),27000);try{const r=await fetch('/api/velux/manual-window',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({aid:request.aid,action:request.action,supervised:true}),signal:controller.signal});if(!r.ok)throw Error('HTTP '+r.status);const p=await r.json();$('message').textContent=p.detail||(p.ok?'Command accepted':'Command failed');}catch(e){$('message').textContent='Command not confirmed. Check window physically before retrying.';}finally{clearTimeout(timer);sending=false;updateNames();setTimeout(read,1500);}});
+})();
+</script></body></html>
