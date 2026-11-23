@@ -45,7 +45,36 @@ main{min-height:0;display:grid;grid-template-rows:minmax(0,23fr) minmax(0,19fr) 
 (()=>{'use strict';const $=id=>document.getElementById(id),num=v=>typeof v==='number'&&Number.isFinite(v),fixed=(v,n=1)=>num(v)?v.toFixed(n):'—',time=x=>{const d=new Date(x||'');return Number.isFinite(d.getTime())?d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'},age=x=>Date.now()-Date.parse(x||'');
 let busyRouter=false,busyWifi=false;
 function chart(history){const el=$('plot'),data=(Array.isArray(history)?history:[]).slice(-60);while(el.firstChild)el.removeChild(el.firstChild);const ns='http://www.w3.org/2000/svg',max=Math.max(1,...data.flatMap(x=>[x.download,x.upload]).filter(num))*1.12;function path(key){let s='',previous=false;data.forEach((point,i)=>{if(!num(point[key])){previous=false;return;}const x=12+i*576/59,y=86-point[key]/max*74;s+=(previous?'L':'M')+x+','+y;previous=true;});return s;}for(const [key,color] of [['download','#82e3c0'],['upload','#91b9ff']]){const pathNode=document.createElementNS(ns,'path');pathNode.setAttribute('d',path(key));pathNode.setAttribute('stroke',color);pathNode.setAttribute('fill','none');pathNode.setAttribute('stroke-width','2');el.append(pathNode);}for(const y of [15,40,65,86]){const line=document.createElementNS(ns,'line');for(const [k,v] of Object.entries({x1:0,y1:y,x2:600,y2:y,stroke:'#7fa7b144','stroke-dasharray':'3 6'}))line.setAttribute(k,String(v));el.insertBefore(line,el.firstChild);}}
-async function loadRouter(){if(busyRouter)return;busyRouter=true;$('refresh').disabled=true;try{const r=await fetch('/api/router/status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const p=await r.json();const seconds=age(p.checked_at),live=p.online===true&&seconds<20000&&seconds>-5000;const waiting=p.online!==true&&!p.checked_at;const badge=$('routerBadge');badge.textContent=live?'ROUTER CONNECTED':waiting?'CONNECTING…':'READING UNAVAILABLE';badge.className='pill'+(live?'':waiting?' warn':' bad');$('routerMessage').textContent=live?(p.message||'Live read-only WAN2 data'):waiting?'Waiting for encrypted SNMP reply — may take several seconds.':(p.message||'Router data not current. See desktop diagnostics if this persists.');$('down').textContent=live?fixed(p.download_mbps,2):'—';$('up').textContent=live?fixed(p.upload_mbps,2):'—';$('cpu').textContent=live&&num(p.cpu_percent)?p.cpu_percent+'%':'—';$('memory').textContent=live&&num(p.memory_percent)?p.memory_percent+'%':'—';$('link').textContent=live?(p.link_up?'UP':'DOWN'):'—';$('uptime').textContent=live&&num(p.uptime_seconds)?Math.floor(p.uptime_seconds/86400)+'d '+Math.floor(p.uptime_seconds%86400/3600)+'h':'—';$('firmware').textContent=live?(p.firmware||'—'):'—';$('last').textContent=time(p.checked_at);$('trafficNote').textContent=live?'Recent read-only samples':'Waiting for fresh samples';chart(p.history);$('checked').textContent='Checked '+time(p.checked_at);}catch(e){$('routerBadge').className='pill bad';$('routerBadge').textContent='UNAVAILABLE';$('routerMessage').textContent='Router status request failed';for(const id of ['down','up','cpu','memory','link','uptime','firmware','last'])$(id).textContent='—';$('trafficNote').textContent='No current readings';chart([]);}finally{busyRouter=false;$('refresh').disabled=false;}}
+async function loadRouter(){if(busyRouter)return;busyRouter=true;$('refresh').disabled=true;
+ try{const r=await fetch('/api/router/status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const p=await r.json();
+ const elapsed=age(p.checked_at),hasReading=Number.isFinite(elapsed),fresh=hasReading&&elapsed>=-5000&&elapsed<20000;
+ const connected=p.online===true,live=connected&&fresh,lastKnown=connected&&!fresh;
+ const waiting=!connected&&!hasReading;
+ const badge=$('routerBadge');
+ badge.textContent=live?'ROUTER CONNECTED':lastKnown?'LAST KNOWN':waiting?'CONNECTING…':'READING UNAVAILABLE';
+ badge.className='pill'+(live?'':lastKnown||waiting?' warn':' bad');
+ $('routerMessage').textContent=live?(p.message||'Live read-only WAN2 data'):
+   lastKnown?'Last successful DrayTek reading: '+time(p.checked_at)+'. Waiting for a fresh sample.':
+   waiting?'Connecting to DrayTek SNMP — initial sample may take several seconds.':
+   (p.message||'Router query failed; check SNMP credentials and router connection.');
+ const show=connected;
+ $('down').textContent=show?fixed(p.download_mbps,2):'—';
+ $('up').textContent=show?fixed(p.upload_mbps,2):'—';
+ $('cpu').textContent=show&&num(p.cpu_percent)?p.cpu_percent+'%':'—';
+ $('memory').textContent=show&&num(p.memory_percent)?p.memory_percent+'%':'—';
+ $('link').textContent=show?(p.link_up?'UP':'DOWN'):'—';
+ $('uptime').textContent=show&&num(p.uptime_seconds)?Math.floor(p.uptime_seconds/86400)+'d '+Math.floor(p.uptime_seconds%86400/3600)+'h':'—';
+ $('firmware').textContent=show?(p.firmware||'—'):'—';
+ $('last').textContent=time(p.checked_at);
+ $('trafficNote').textContent=live?'Live samples':lastKnown?'Previous samples':'Awaiting fresh SNMP samples';
+ chart(p.history);
+ $('checked').textContent=hasReading?'Checked '+time(p.checked_at):'Connecting…';
+ }catch(e){$('routerBadge').className='pill bad';$('routerBadge').textContent='UNAVAILABLE';
+ $('routerMessage').textContent='Router status request failed: '+e.message;
+ for(const id of ['down','up','cpu','memory','link','uptime','firmware','last'])$(id).textContent='—';
+ $('trafficNote').textContent='No current readings';chart([]);
+ }finally{busyRouter=false;$('refresh').disabled=false;}
+}
 const expected=[['Office / Kitchen','10.0.0.6'],['Utility','10.0.0.7'],['Garden','10.0.0.8'],['Landing','10.0.0.9']];
 async function loadWifi(){if(busyWifi)return;busyWifi=true;$('wifiRefresh').disabled=true;try{const r=await fetch('/api/unifi/status',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const p=await r.json();const direct=p.source==='direct_snmp',live=age(p.checked_at)>=-5000&&age(p.checked_at)<90000&&(direct||p.controller_online===true),historical=!live&&Array.isArray(p.devices)&&p.devices.length>0&&!!p.last_seen_at;
 const devices=Array.isArray(p.devices)?p.devices:[];const online=devices.filter(d=>d.online===true).length;$('wifiStatus').textContent=live?online+' of '+devices.length+' access points responding':historical?'Last-known UniFi readings · not live':p.message||'Wi-Fi readings unavailable';
