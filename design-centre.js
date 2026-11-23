@@ -31,39 +31,92 @@ function select(id){selected=id;render()}
 $('stagewrap').addEventListener('pointerdown',ev=>{if(!ev.target.closest('.stage'))select(null)});
 $('stage').addEventListener('pointerdown',ev=>{if(ev.target===$('stage'))select(null)});
 $('stage').addEventListener('click',ev=>{if(ev.target===$('stage'))select(null)});
+/* Visual alignment: red guides for matching edges and centre lines, independent
+   of the coarse 10px canvas grid. Full-bleed artwork is not an alignment target. */
+function alignmentTargets(layer){
+ const xs=[{at:doc.width/2,reason:'canvas centre'}],ys=[{at:doc.height/2,reason:'canvas centre'}];
+ for(const other of doc.elements){
+   if(other.id===layer.id||other.hidden)continue;
+   if(other.x===0&&other.y===0&&other.w===doc.width&&other.h===doc.height)continue;
+   xs.push({at:other.x,reason:other.name},{at:other.x+other.w/2,reason:other.name},{at:other.x+other.w,reason:other.name});
+   ys.push({at:other.y,reason:other.name},{at:other.y+other.h/2,reason:other.name},{at:other.y+other.h,reason:other.name});
+ }
+ return {xs,ys};
+}
+function closestGuide(targets,positions,tolerance=6){
+ let best=null;
+ for(const t of targets)for(const p of positions){
+   const delta=t.at-p.at,dist=Math.abs(delta);
+   if(dist<=tolerance&&(!best||dist<best.distance))
+      best={target:t.at,delta,distance:dist,kind:p.kind};
+ }
+ return best;
+}
+function createGuides(stage){
+ const overlay=document.createElement('div');
+ overlay.className='alignment-overlay';
+ overlay.setAttribute('aria-hidden','true');
+ const vertical=document.createElement('div'),horizontal=document.createElement('div');
+ vertical.className='alignment-guide vertical';horizontal.className='alignment-guide horizontal';
+ overlay.append(vertical,horizontal);stage.append(overlay);
+ return {vertical,horizontal};
+}
+function displayGuides(guides,x,y){
+ guides.vertical.style.display=x?'block':'none';
+ guides.horizontal.style.display=y?'block':'none';
+ if(x)guides.vertical.style.left=x.target+'px';
+ if(y)guides.horizontal.style.top=y.target+'px';
+}
 function startDrag(event,id,resizing){
  if(event.button!==0&&event.pointerType!=='touch')return;
  event.preventDefault();event.stopPropagation();selected=id;
  const e=get();
  if(e.locked){
-   if(e.type==='image'&&e.x===0&&e.y===0&&e.w===doc.width&&e.h===doc.height)select(null);
-   else render();
-   return;
+  if(e.type==='image'&&e.x===0&&e.y===0&&e.w===doc.width&&e.h===doc.height)select(null);
+  else render();
+  return;
  }
  snapshot();
  const sx=event.clientX,sy=event.clientY,initial={x:e.x,y:e.y,w:e.w,h:e.h};
  const node=event.currentTarget.closest('.element');
  if(!node)return;
  node.setPointerCapture(event.pointerId);
+ const targets=alignmentTargets(e);
+ const guides=createGuides($('stage'));
  const grid=v=>snap?Math.round(v/10)*10:Math.round(v);
  const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
  const move=ev=>{
    const dx=(ev.clientX-sx)/stageScale,dy=(ev.clientY-sy)/stageScale;
+   let gx=null,gy=null;
    if(resizing){
-      e.w=clamp(grid(initial.w+dx),20,doc.width-e.x);
-      e.h=clamp(grid(initial.h+dy),20,doc.height-e.y);
+      // On resize compare the movable right/bottom edges with adjacent bounds and centres.
+      const rawW=clamp(initial.w+dx,20,doc.width-e.x);
+      const rawH=clamp(initial.h+dy,20,doc.height-e.y);
+      gx=closestGuide(targets.xs,[{at:e.x+rawW,kind:'right'}]);
+      gy=closestGuide(targets.ys,[{at:e.y+rawH,kind:'bottom'}]);
+      e.w=clamp(gx?Math.round(rawW+gx.delta):grid(rawW),20,doc.width-e.x);
+      e.h=clamp(gy?Math.round(rawH+gy.delta):grid(rawH),20,doc.height-e.y);
    }else{
-      e.x=clamp(grid(initial.x+dx),0,doc.width-e.w);
-      e.y=clamp(grid(initial.y+dy),0,doc.height-e.h);
+      const rawX=clamp(initial.x+dx,0,doc.width-e.w);
+      const rawY=clamp(initial.y+dy,0,doc.height-e.h);
+      gx=closestGuide(targets.xs,[{at:rawX,kind:'left'},{at:rawX+e.w/2,kind:'centre'},{at:rawX+e.w,kind:'right'}]);
+      gy=closestGuide(targets.ys,[{at:rawY,kind:'top'},{at:rawY+e.h/2,kind:'centre'},{at:rawY+e.h,kind:'bottom'}]);
+      e.x=clamp(gx?Math.round(rawX+gx.delta):grid(rawX),0,doc.width-e.w);
+      e.y=clamp(gy?Math.round(rawY+gy.delta):grid(rawY),0,doc.height-e.h);
    }
    node.style.left=e.x+'px';node.style.top=e.y+'px';
    node.style.width=e.w+'px';node.style.height=e.h+'px';
+   // Guides follow the ACTUAL snapped position, never a mismatched approximation.
+   const validX=gx&&Math.abs((resizing?e.x+e.w:gx.target)-gx.target)<1.1?gx:null;
+   const validY=gy&&Math.abs((resizing?e.y+e.h:gy.target)-gy.target)<1.1?gy:null;
+   displayGuides(guides,validX,validY);
  };
  const stop=()=>{
    node.removeEventListener('pointermove',move);
    node.removeEventListener('pointerup',stop);
    node.removeEventListener('pointercancel',stop);
-   render();notice('Unsaved changes'+(snap?' · snapped to 10px grid':''));
+   guides.vertical.parentNode?.remove();
+   render();notice('Unsaved changes · red guides align edges and centres');
  };
  node.addEventListener('pointermove',move);
  node.addEventListener('pointerup',stop);
