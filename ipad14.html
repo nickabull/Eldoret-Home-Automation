@@ -678,7 +678,8 @@ function wallRender(){
   wallRow('UniFi sampled',wallStamp(uni.checked_at),uni.checked_at?'ok':'unknown')
  ]);
  let tvrows=[
-  wallRow('Sky Q','SAFE MODE · NO AUTO-POLL','off'),
+  wallRow('Sky Q','REMOTE CONTROL AVAILABLE','off'),
+  wallRow('Sky Q readback','PAUSED · NO AUTO-POLL','unknown'),
   wallRow('Lounge TV',lounge.online===true?'ON · '+wallText(lounge.input||lounge.app_name||lounge.app):lounge.online===false?'NO RESPONSE':'UNKNOWN',wallState(lounge.online)),
   wallRow('Kitchen TV',kitchen.paired?'PAIRED · power unknown':kitchen.state==='waiting'?'PAIRING':'NOT PAIRED',kitchen.paired?'off':'unknown')
  ];
@@ -703,10 +704,10 @@ function wallRender(){
    return d||{name,connected:false,missing:true};
  });
  for(const d of devices)if(!ordered.some(o=>o===d||String(o.name||'').toLowerCase()===String(d.name||'').toLowerCase()))ordered.push(d);
- const hcProblem=hc.error_code||hc.error||(!engLatest['/api/home-connect/status']?'NO RESPONSE':null);
+ const hcProblem=hc.error_code||hc.error||(hc.stale?'CACHED DATA':null)||(!engLatest['/api/home-connect/status']?'NO RESPONSE':null);
  wallDraw('appliance',[
   wallRow('Home Connect',hcProblem?'UNAVAILABLE · '+wallText(hc.error_code||'NO RESPONSE'):devices.filter(d=>d.connected).length+' / '+devices.length+' connected',hcProblem?'bad':devices.length?(devices.every(d=>d.connected)?'ok':'off'):'unknown'),
-  ...ordered.map(d=>d.missing?wallRow(d.name,'NO LIVE DATA',hcProblem?'bad':'unknown'):wallAppliance(d)),
+  ...ordered.map(d=>d.missing?wallRow(d.name,'NO LIVE DATA',hcProblem?'bad':'unknown'):(hc.stale?wallRow(d.name,'LAST KNOWN · '+wallAppliance(d)[1],'unknown'):wallAppliance(d))),
   wallRow('Samsung fridge',fridge.connected?(fridge.fridge_c==null?'—':fridge.fridge_c+'°')+' / '+(fridge.freezer_c==null?'—':fridge.freezer_c+'°'):'NOT CONNECTED',fridge.connected?'ok':'unknown'),
   ...(fridge.connected?[
    wallRow('Fridge doors',Object.values(fridge.doors||{}).some(v=>v==='open')?'DOOR OPEN':Object.keys(fridge.doors||{}).length===3?'ALL CLOSED':'CHECK STATUS',Object.values(fridge.doors||{}).some(v=>v==='open')?'active':'ok'),
