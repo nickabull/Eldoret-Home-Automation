@@ -4809,6 +4809,7 @@ class Handler(BaseHTTPRequestHandler):
             "/ipad7.html": ("ipad7.html", "text/html; charset=utf-8"),
             "/ipad8.html": ("ipad8.html", "text/html; charset=utf-8"),
             "/ipad9.html": ("ipad9.html", "text/html; charset=utf-8"),
+            "/ipad10.html": ("ipad10.html", "text/html; charset=utf-8"),
             "/pioneer.js": ("pioneer.js", "application/javascript; charset=utf-8"),
             "/velux.js": ("velux.js", "application/javascript; charset=utf-8"),
             "/home.css": ("home.css", "text/css; charset=utf-8"),
