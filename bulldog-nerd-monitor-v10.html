@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071621"><title>Bulldog · Nerd Monitor 1.0</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071621;color:#e9f5f9;font:12px system-ui,-apple-system,sans-serif}
+#app{width:100vw;height:100dvh;display:grid;grid-template-rows:34px 28px minmax(0,1fr) 15px;gap:5px;padding:7px 9px;background:radial-gradient(ellipse at 50% 0%,#143245,#071621 90%)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}header strong{font-size:16px;letter-spacing:.12em}header small{display:block;font-size:9px;color:#edcfa5;letter-spacing:.12em;font-weight:800}
+.right{display:flex;gap:12px;align-items:baseline}.right .chapter{font-size:10px;color:#a1f1db;font-weight:800}.right #clock{font-weight:900;font-size:22px}
+#alertbar{border:1px solid #a2766865;background:#261a25ab;border-radius:7px;padding:5px 9px;display:flex;gap:8px;min-width:0;align-items:center}
+#alertbar strong{font-size:10px;color:#f4d6ab;white-space:nowrap}#alerts{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:#eaccc7}
+#shell{min-height:0;position:relative;overflow:hidden;border-radius:7px}#view{border:0;width:100%;height:100%;display:block;pointer-events:none;background:transparent}#loading{position:absolute;inset:0;display:grid;place-items:center;background:#0b2331;color:#bed3dc}#loading[hidden]{display:none}
+footer{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#a7c7cd;font-size:9px}#info{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pips{display:flex;gap:5px}.pip{height:4px;width:23px;border-radius:5px;background:#344f5d}.pip.on{background:#8cf0ca}
+</style></head><body><div id="app"><header><div><strong>ELDORET · BULLDOG</strong><small>NERD CENTRAL · AUTO DISPLAY 1.0</small></div><div class="right"><span class="chapter" id="chapter">HOUSE SYSTEMS</span><span id="clock">--:--</span></div></header>
+<div id="alertbar"><strong>● HOME ALERTS</strong><span id="alerts">Connecting to Nerd Central…</span></div>
+<div id="shell"><iframe id="view" src="/nerd-control.html?bulldog-view=1" title="Live Nerd Central in display-only mode" tabindex="-1"></iframe><div id="loading">Loading the same live Nerd Central dashboard…</div></div>
+<footer><span id="info">Read-only · no touch required · updates automatically</span><div class="pips"><i class="pip on"></i><i class="pip"></i><i class="pip"></i></div></footer></div><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),frame=$('view');
+const groups=[
+ ['INTERNET & WI-FI','AUDIO · PIONEER','LIGHTING · HUE','VELUX · CLIMATE'],
+ ['TELEVISIONS','NISSAN ARIYA','PRINTER · HOUSE DEVICES'],
+ ['APPLIANCES · HOME CONNECT','PLAYSTATION · MEDIA','BULLDOG · LIVE HEALTH']
+];
+const chapters=['HOUSE SYSTEMS','TELEVISIONS · ENERGY','APPLIANCES · MEDIA'];
+const css="\nhtml,body{height:100%!important;overflow:hidden!important;margin:0!important}\nbody:before{display:none!important}\n.shell{width:100%!important;max-width:none!important;height:100%!important;padding:0!important;overflow:hidden!important;margin:0!important}\n.top,#holdingTitle,#alertsDock,#statusLegend,#telemetry,#engineeringPanels,.new-alert-shade,.family-screen,.directory-panel{display:none!important}\n#nerdWall{display:block!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;overflow:hidden!important;position:relative!important;grid-template-rows:none!important;grid-template-columns:none!important}\n#nerdWall .bulldog-slide{position:absolute!important;inset:0!important;display:none!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:6px!important}\n#nerdWall .bulldog-slide.show{display:grid!important}\n#nerdWall .bulldog-slide>.nerd-module{grid-area:auto!important;min-height:0!important;padding:7px 8px!important;overflow:hidden!important}\n#nerdWall .bulldog-slide>.nerd-module[aria-label=\"TELEVISIONS\"],\n#nerdWall .bulldog-slide>.nerd-module[aria-label=\"APPLIANCES · HOME CONNECT\"]{grid-row:span 2!important}\n#nerdWall .bulldog-slide>.nerd-module .nerd-row{min-height:16px!important;font-size:10px!important}\n#nerdWall .bulldog-slide>.nerd-module .nerd-row b{font-size:10px!important}\n#nerdWall .bulldog-slide>.nerd-module .nerd-row>span:nth-child(2){font-size:10px!important}\n#nerdWall .bulldog-slide>.nerd-module h3{font-size:11px!important}\n#nerdWall .bulldog-slide>.nerd-module[aria-label=\"TELEVISIONS\"] .nerd-row,\n#nerdWall .bulldog-slide>.nerd-module[aria-label=\"APPLIANCES · HOME CONNECT\"] .nerd-row{min-height:26px!important;grid-template-columns:8px minmax(0,.85fr) minmax(0,1.15fr)!important}\n#nerdWall .bulldog-slide>.nerd-module[aria-label=\"TELEVISIONS\"] .nerd-row b,\n#nerdWall .bulldog-slide>.nerd-module[aria-label=\"APPLIANCES · HOME CONNECT\"] .nerd-row b{white-space:normal!important;font-size:9px!important;line-height:1.1!important}\n";
+let ready=false,active=0;
+function clock(){$('clock').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
+function show(i){active=i%3;$('chapter').textContent=chapters[active];const doc=frame.contentDocument;
+if(!doc)return;[...doc.querySelectorAll('.bulldog-slide')].forEach((node,j)=>node.classList.toggle('show',j===active));
+document.querySelectorAll('.pip').forEach((p,j)=>p.classList.toggle('on',j===active));}
+function install(){try{const doc=frame.contentDocument,wall=doc?.getElementById('nerdWall');if(!wall)throw Error('No live wall');
+const style=doc.createElement('style');style.textContent=css;doc.head.append(style);
+const cards=[...wall.children].filter(x=>x.classList.contains('nerd-module')),seen=new Set();
+const slides=groups.map((g,i)=>{const slide=doc.createElement('section');slide.className='bulldog-slide';slide.setAttribute('aria-label',chapters[i]);
+for(const name of g){const p=cards.find(x=>x.getAttribute('aria-label')===name||(name==='AUDIO · PIONEER'&&x.getAttribute('aria-label')?.startsWith(name)));if(p){slide.append(p);seen.add(p)}}
+wall.append(slide);return slide;});
+for(const c of cards)if(!seen.has(c))slides[2].append(c);
+ready=true;$('loading').hidden=true;show(0);inspect();
+}catch(_){$('loading').textContent='Presentation unavailable; original Heartbeat unchanged';$('info').textContent='Could not read Nerd Central on this host';}}
+function inspect(){if(!ready)return;try{const d=frame.contentDocument;
+const alerts=[...d.querySelectorAll('#alertsList .alert-item')].map(x=>x.textContent.replace(/^\s*●\s*/,'').trim()).filter(Boolean);
+$('alerts').textContent=alerts.length?alerts.join('  ·  '):(d.getElementById('alertCount')?.textContent||'SCANNING');
+$('info').textContent=(d.getElementById('health')?.textContent||'Checking live devices')+' · same Nerd Central source';}catch(_){}}
+frame.addEventListener('load',install);
+clock();setInterval(clock,10000);setInterval(()=>{if(ready)show(active+1)},18000);setInterval(inspect,3000);
+setInterval(()=>{ready=false;$('loading').hidden=false;frame.src='/nerd-control.html?bulldog-view=1&t='+Date.now();},900000);
+})();
+</script></body></html>
