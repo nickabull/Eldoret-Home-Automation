@@ -4900,6 +4900,7 @@ class Handler(BaseHTTPRequestHandler):
             "/ipad11.html": ("ipad11.html", "text/html; charset=utf-8"),
             "/ipad12.html": ("ipad12.html", "text/html; charset=utf-8"),
             "/ipad13.html": ("ipad13.html", "text/html; charset=utf-8"),
+            "/ipad14.html": ("ipad14.html", "text/html; charset=utf-8"),
             "/eldoret-artwork-v1.css": ("eldoret-artwork-v1.css", "text/css; charset=utf-8"),
             "/eldoret-network.jpg": ("eldoret-network.jpg", "image/jpeg"),
             "/eldoret-televisions.jpg": ("eldoret-televisions.jpg", "image/jpeg"),
