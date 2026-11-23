@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ARIYA 1.1 · Eldoret Design Preview</title>
+<style>
+:root{color-scheme:dark;--ink:#f2fbff;--muted:#acc3d0;--gold:#f2d2a8;--line:#afc4d342;--panel:#051522eb}*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030b13;color:var(--ink);font:14px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+button,a{font:inherit}button{cursor:pointer}
+.stage{position:relative;height:100dvh;width:100vw;max-width:100vw;display:grid;grid-template-rows:54px minmax(0,1fr);isolation:isolate}
+.stage:before{content:"";position:absolute;inset:0;z-index:-2;background:url('/eldoret-ariya.jpg') center/cover no-repeat;transform:scaleX(-1);opacity:.63}
+.stage:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#03111ff5,#04121cc9 48%,#0813209c),linear-gradient(0deg,#020b14ed,transparent 65%)}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid #d9e3ef35;padding:8px 18px;background:#031321da;min-width:0}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand strong{letter-spacing:.12em;font-size:19px}.brand small{display:block;color:var(--gold);font-size:9px;letter-spacing:.2em;font-weight:700}
+.headRight{display:flex;align-items:center;gap:9px;white-space:nowrap}.stamp{font-size:11px;color:#c7d8e4}
+.nav{color:#e7faff;text-decoration:none;border:1px solid #9dbac966;background:#143342df;border-radius:8px;padding:9px 12px;font-weight:700}
+.nav:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #ffd18b;outline-offset:2px}
+.refresh{border:1px solid #d4e6f266;background:#1c4a54;color:#fff;border-radius:8px;padding:9px 13px;font-weight:800}
+main{min-height:0;display:grid;grid-template-rows:minmax(0,43fr) minmax(0,57fr);gap:8px;padding:8px 12px 10px}
+.top{min-height:0;display:grid;grid-template-columns:1.3fr 1fr;gap:8px}
+.panel{min-width:0;min-height:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:linear-gradient(145deg,#061a2af0,#0b2333e5);box-shadow:inset 0 1px 0 #e9f6ff0d}
+.panelHead{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 5px;border-bottom:1px solid #d1e9ea21;gap:8px}
+.ey{font-size:10px;font-weight:800;letter-spacing:.17em;color:var(--gold)}.title{font-size:19px;font-weight:800;letter-spacing:.045em;margin:0}.sub{font-size:11px;color:var(--muted)}
+.climate{display:flex;flex-direction:column}.climateBody{padding:8px 12px;display:grid;gap:9px;align-content:start;min-height:0}
+.tempLine{display:flex;align-items:center;gap:12px}.tempLine input{width:100%;min-width:0;accent-color:#e6bd8b}.tempLine b{font-size:27px;white-space:nowrap;font-variant-numeric:tabular-nums;color:#f6dfbd}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.act{border:1px solid #d9ccbb80;border-radius:10px;padding:10px 8px;min-height:46px;background:#1b5b53;color:#f5fffc;font-weight:800;letter-spacing:.045em}.act.stop{background:#493743}.act:disabled{opacity:.48;cursor:not-allowed}
+.controlState{font-size:11px;color:#bfd3da;line-height:1.3;min-height:14px}
+.quick{padding:7px 12px 10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;min-height:0}
+.quick article{padding:9px 10px;border:1px solid #c3d3d22a;border-radius:9px;background:#081d2db8;min-width:0}
+.quick b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.quick span{font-size:10px;color:#b2cad5}
+.bottom{min-height:0;display:grid;grid-template-columns:1.15fr 1fr;gap:8px}
+.details{display:flex;flex-direction:column;min-height:0}.stats{padding:8px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:7px;flex:1}
+.stat{min-width:0;padding:7px 9px;border-radius:9px;border:1px solid #bcd6e02b;background:#041725a9;display:flex;flex-direction:column;justify-content:space-between}
+.stat span{font-size:10px;color:#bed1dc}.stat strong{font-weight:750;font-size:clamp(15px,2vw,26px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.stat small{font-size:9px;color:#a4b7c7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.footer{display:flex;justify-content:space-between;gap:6px;padding:6px 10px;font-size:10px;color:#b7cad4;border-top:1px solid #cce7ed22}
+.pill{border-radius:20px;padding:5px 9px;background:#153e43;color:#caffea;border:1px solid #8cc0b055;font-size:10px;font-weight:800;letter-spacing:.035em;white-space:nowrap}
+.pill.warn{background:#573a25;color:#ffe1b8;border-color:#f3b97788}
+.pill.bad{background:#4b222d;color:#ffb8b7;border-color:#ea999c55}
+.notice{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,90vw);border:2px solid #f8cc94;border-radius:16px;padding:19px;background:#071725f7;box-shadow:0 0 0 100vmax #020608c4,0 14px 65px #000b;z-index:9}
+.notice[hidden]{display:none}.notice h2{margin:0 0 8px;font-size:23px}.notice p{font-size:14px;color:#d0dfea}.notice .actions{margin-top:15px}.notice button{min-height:52px;font-size:16px}
+.note{font-size:10px;color:#b7cdd5;padding:0 12px 8px}
+@media(max-width:800px){header{padding:6px 9px}.brand strong{font-size:15px}.headRight .stamp{display:none}main{padding:5px;gap:5px}.top,.bottom{gap:5px}.panelHead{padding:5px 8px}.title{font-size:15px}.ey{font-size:9px}.climateBody{gap:6px;padding:6px}.quick{gap:4px;padding:4px}.quick article{padding:5px}.stat{padding:5px}.stats{padding:5px;gap:4px}.stat strong{font-size:15px}.footer{font-size:9px}}
+@media(orientation:portrait){main{grid-template-rows:1fr 1.4fr}.top,.bottom{grid-template-columns:1fr 1fr}.brand strong{font-size:15px}}
+
+/* Ariya v1.1: less chrome, more of the original photographic art; consistent grid baselines. */
+main{grid-template-rows:minmax(0,34fr) minmax(0,66fr)}
+.top,.bottom{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+.panel{background:linear-gradient(130deg,#051522d8,#071c2aca);backdrop-filter:blur(2px)}
+.stage:before{opacity:.83}
+.climateBody{padding:9px 12px;gap:11px}
+.mapPanel{display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.mapCanvas{position:relative;margin:7px 10px 0;min-height:0;overflow:hidden;border:1px solid #b9dddb35;border-radius:8px;background:linear-gradient(30deg,#0a2637b0,#2343547a),repeating-linear-gradient(18deg,transparent 0 24px,#8caeae25 25px 26px),repeating-linear-gradient(106deg,transparent 0 40px,#a2c4be25 41px 42px)}
+.mapCanvas:before{content:"";position:absolute;inset:0;background:linear-gradient(70deg,transparent 28%,#91adab4d 29%,#91adab4d 31%,transparent 32%),linear-gradient(150deg,transparent 62%,#91adab4d 63%,#91adab4d 66%,transparent 67%)}
+.mapPin{position:absolute;top:30%;left:50%;font-size:34px;filter:drop-shadow(0 5px 5px #000);transform:translate(-50%,-20%)}
+.mapHint{position:absolute;bottom:6px;left:8px;right:8px;font-size:9px;text-align:center;letter-spacing:.11em;color:#dde8e6;background:#081a27cf;padding:5px;border-radius:4px}
+.mapMeta{display:flex;justify-content:space-between;gap:5px;padding:6px 11px 7px;font-size:10px;color:#d8ecec}
+.mapMeta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-rows:auto}
+.stat strong{font-size:clamp(13px,1.45vw,19px);white-space:normal;overflow-wrap:anywhere;line-height:1.12;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stat span{font-size:10px}.stat small{font-size:9px}
+.activeValue{color:#ffd46d!important;text-shadow:0 0 7px #ffce5544}
+.pill{font-size:10px}
+.footer{font-size:9px;align-items:center;max-height:32px}
+@media(max-width:800px){.stat strong{font-size:13px}.mapHint{font-size:8px}.mapMeta{font-size:9px}}
+</style></head>
+<body><div class="stage">
+<header><div class="brand"><div><strong>ELDORET · ARIYA 1.1</strong><small>VEHICLE & HOME CHARGING</small></div><span id="nBadge" class="pill warn">NISSAN CHECKING</span><span id="zBadge" class="pill warn">ZAPPI CHECKING</span></div>
+<div class="headRight"><span id="checked" class="stamp">No update yet</span><button class="refresh" id="refresh" type="button">↻ REFRESH</button><a class="nav" href="nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<main>
+<div class="top">
+<section class="panel climate" aria-label="Nissan climate commands"><div class="panelHead"><div><div class="ey">NISSANCONNECT · COMMANDS</div><h2 class="title">Cabin climate</h2></div><span id="climateBadge" class="pill warn">CHECKING</span></div>
+<div class="climateBody">
+<div class="tempLine"><label class="sub" for="temp">TARGET</label><input id="temp" type="range" min="16" max="26" value="25" step="1"><b id="tempShow">25°C</b></div>
+<div class="actions"><button id="start" class="act" disabled>▶ START CLIMATE</button><button id="stop" class="act stop" disabled>■ STOP CLIMATE</button></div>
+<div id="message" role="status" class="controlState">Checking whether remote climate is available…</div>
+</div><div class="note">Tap an action, then confirm within 10 seconds. Commands are sent only after confirmation. Zappi controls are not yet enabled.</div></section>
+<section class="panel mapPanel" aria-label="Ariya location preview"><div class="panelHead"><div><div class="ey">NISSAN · LAST POSITION FIX</div><h2 class="title">Vehicle location</h2></div><span class="pill warn" id="mapBadge">CHECKING</span></div><div class="mapCanvas" role="img" aria-label="Schematic placeholder only, not a geographic map"><div class="mapRoute"></div><div class="mapPin">🚙</div><div class="mapHint">GEOGRAPHIC MAP PENDING SECURE COORDINATES</div></div><div class="mapMeta"><span id="mapStatus">Awaiting last known fix</span><span id="mapWhen">No coordinates exposed</span></div></section>
+</div>
+<div class="bottom">
+<section class="panel details"><div class="panelHead"><div><div class="ey">NISSAN API · LAST REPORTED</div><h2 class="title">Vehicle telemetry</h2></div><span class="pill" id="nFresh">AWAITING</span></div>
+<div class="stats">
+<div class="stat"><span>BATTERY LEVEL</span><strong id="battery">—</strong><small>Nissan</small></div>
+<div class="stat"><span>ESTIMATED RANGE</span><strong id="range">—</strong><small>miles</small></div>
+<div class="stat"><span>PLUG STATUS</span><strong id="plug">—</strong><small>Vehicle report</small></div>
+<div class="stat"><span>CABIN TEMPERATURE</span><strong id="cabin">—</strong><small>°C</small></div>
+<div class="stat"><span>CLIMATE SYSTEM</span><strong id="climState">—</strong><small>Last reported</small></div>
+<div class="stat"><span>LOCATION FIX</span><strong id="location">—</strong><small>No coordinates displayed</small></div>
+</div><div class="footer"><span id="vehicleTime">Last vehicle update unknown</span><span id="nDetail">Private Nissan connection</span></div></section>
+<section class="panel details"><div class="panelHead"><div><div class="ey">MYENERGI API · READ ONLY</div><h2 class="title">Zappi home charger</h2></div><span class="pill" id="zFresh">AWAITING</span></div>
+<div class="stats">
+<div class="stat"><span>CHARGING STATE</span><strong id="zState">—</strong><small>Zappi</small></div>
+<div class="stat"><span>LIVE POWER</span><strong id="zPower">—</strong><small>kW</small></div>
+<div class="stat"><span>REPORTED ENERGY</span><strong id="zEnergy">—</strong><small>kWh</small></div>
+<div class="stat"><span>CHARGE MODE</span><strong id="zMode">—</strong><small>Fast · Eco · Eco+ · Stop</small></div>
+<div class="stat"><span>CABLE / PLUG</span><strong id="zPlug">—</strong><small>Last gateway report</small></div>
+<div class="stat"><span>GATEWAY TIME</span><strong id="zTime">—</strong><small>Charger clock</small></div>
+</div><div class="footer"><span id="zChecked">Last charger update unknown</span><span id="zDetail">No charger commands sent</span></div></section>
+</div></main>
+<section id="confirm" class="notice" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle"><div class="ey">PHYSICAL COMMAND CONFIRMATION</div><h2 id="confirmTitle">Confirm climate</h2><p id="confirmText"></p><div class="actions"><button id="approve" class="act" type="button">CONFIRM</button><button id="cancel" class="act stop" type="button">CANCEL</button></div><p class="sub">Selection expires after 10 seconds.</p></section>
+</div><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),n=(v,s='')=>typeof v==='number'&&Number.isFinite(v)?(Math.round(v*10)/10)+s:'—';
+let available=false,pending=null,expiry=null,loading=false,sending=false;
+const date=v=>{if(!v)return'Unknown';const d=new Date(v);return Number.isNaN(d.getTime())?'Unknown':d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});};
+const put=(id,v)=>{const el=$(id);if(el)el.textContent=v==null?'—':String(v)};
+const active=(id,on)=>{const el=$(id);if(el)el.classList.toggle('activeValue',!!on)};
+function stopPending(){pending=null;clearTimeout(expiry);$('confirm').hidden=true}
+function badge(id,ok,no){$(id).textContent=ok?'CONNECTED':no;$(id).className='pill '+(ok?'':'warn')}
+function applyN(a){
+ const good=!!a.connected;
+ badge('nBadge',good,a.configured?'NO LIVE DATA':'NOT LINKED');badge('nFresh',good,good?'NO LIVE DATA':'UNAVAILABLE');
+ put('battery',n(a.battery_percent,'%'));put('batteryTop',n(a.battery_percent,'%'));
+ put('range',typeof a.range_miles==='number'?Math.round(a.range_miles)+' mi':'—');put('rangeTop',typeof a.range_miles==='number'?Math.round(a.range_miles)+' mi':'—');
+ const plug=a.plugged_in===true?(a.charging?'CHARGING':'PLUGGED IN'):a.plugged_in===false?'UNPLUGGED':'—';
+ put('plug',plug);put('chargeTop',plug);
+ put('cabin',n(a.cabin_temperature_c,'°C'));put('cabinTop',n(a.cabin_temperature_c,'°C'));
+ put('climState',a.climate_active===true?'ON':a.climate_active===false?'OFF':'—');active('climState',a.climate_active===true);active('plug',a.plugged_in===true||a.charging===true);
+ put('location',a.location_available===true?'AVAILABLE':'UNKNOWN');badge('mapBadge',a.location_available===true,'NO FIX');put('mapStatus',a.location_available===true?'Last vehicle fix available':'No current GPS fix');put('mapWhen','Last fix: '+date(a.last_location_update));
+ put('vehicleTime','Vehicle last updated: '+date(a.last_vehicle_update));put('nDetail',a.detail||'Nissan cloud');
+ available=good&&a.climate_command_enabled===true;
+ $('start').disabled=!available||sending;$('stop').disabled=!available||sending;
+ badge('climateBadge',available,good?'NO COMMAND ACCESS':'NOT CONNECTED');
+ if(!pending&&!sending)put('message',available?'Remote climate is available. Select an action to confirm.':'Climate commands currently unavailable.');
+}
+function applyZ(z){
+ badge('zBadge',!!z.connected,z.configured?'NO LIVE DATA':'NOT LINKED');badge('zFresh',!!z.connected,'UNAVAILABLE');
+ put('zState',z.charging_state==='Vehicle unplugged'?'Unplugged':z.charging_state||'—');put('zPower',n(z.charge_power_kw,' kW'));put('zEnergy',n(z.session_energy_kwh,' kWh'));
+ put('zMode',z.charge_mode||'—');put('zPlug',z.plug_status==='Vehicle unplugged'?'Unplugged':z.plug_status||'—');put('zTime',date(z.checked_at));active('zState',z.raw_plug_code==='C2'||/charging/i.test(z.charging_state||''));active('zPlug',z.raw_plug_code!=='A'&&z.raw_plug_code!=null);active('zPower',typeof z.charge_power_kw==='number'&&z.charge_power_kw>0);
+ put('zChecked','Charger checked: '+date(z.checked_at));put('zDetail','Read-only Zappi');
+}
+async function read(url,fn,badgeId){try{const c=new AbortController(),tid=setTimeout(()=>c.abort(),15000);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});if(!r.ok)throw Error('HTTP '+r.status);fn(await r.json())}finally{clearTimeout(tid)}}catch(e){$(badgeId).textContent='NO RESPONSE';$(badgeId).className='pill warn';if(badgeId==='nBadge'){available=false;$('start').disabled=true;$('stop').disabled=true;put('message','Nissan connection unavailable. No command can be sent.')}}}
+async function refresh(){if(loading||sending||document.hidden)return;loading=true;$('refresh').disabled=true;stopPending();await Promise.all([read('/api/ariya/status',applyN,'nBadge'),read('/api/zappi/status',applyZ,'zBadge')]);put('checked','Dashboard checked '+new Date().toLocaleTimeString('en-GB'));$('refresh').disabled=false;loading=false}
+function select(action){if(!available||sending)return;stopPending();pending={action,temperature_c:Number($('temp').value)};put('confirmTitle',action==='start'?'START CLIMATE':'STOP CLIMATE');put('confirmText',action==='start'?'Start Nissan cabin climate at '+pending.temperature_c+'°C?':'Stop Nissan cabin climate?');$('confirm').hidden=false;expiry=setTimeout(stopPending,10000)}
+$('temp').addEventListener('input',()=>{put('tempShow',$('temp').value+'°C');stopPending()});
+$('start').addEventListener('click',()=>select('start'));$('stop').addEventListener('click',()=>select('stop'));
+$('cancel').addEventListener('click',stopPending);
+$('approve').addEventListener('click',async()=>{if(!pending||!available||sending)return;const p=pending;stopPending();sending=true;$('start').disabled=true;$('stop').disabled=true;put('message','Sending request to Nissan…');try{const r=await fetch('/api/ariya/climate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();put('message',j.ok?'Request accepted by Nissan; verify at the vehicle.':(j.detail||'Command was not confirmed.'))}catch(e){put('message','Request failed or timed out. Verify at the vehicle before retrying.')}finally{sending=false;$('start').disabled=!available;$('stop').disabled=!available}});
+$('refresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});document.addEventListener('keydown',e=>{if(e.key==='Escape')stopPending()});refresh();setInterval(refresh,120000);
+})();
+</script></body></html>
