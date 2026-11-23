@@ -45,7 +45,7 @@ const game=psn.game||local.running_app_name||'No game currently reported';
 text('gameTitle',game);text('gameStatus',psn.game_status||(psn.game?'Live game reported by PSN':local.running_app_name?'Game reported by console':'No game reported — this does not establish that no game is being played.'));
 text('psn',psn.connected?psn.online_status||'Connected':psn.detail||'Not available');text('platform',psn.platform||local.host_type||'—');
 text('source',psn.game?'PlayStation Network':local.running_app_name?'Local PS5 discovery':'Not reported');
-text('gameNote',psn.game_artwork?'Game image supplied by PSN presence':'Artwork will appear when PSN provides a game image.');
+text('gameNote',psn.game_artwork?'Game image supplied by PSN presence · cached up to 2 minutes':'Artwork will appear when PSN provides a game image. PSN updates may be cached for 2 minutes.');
 const art=$('gameArtwork'),cover=$('cover');cover.classList.remove('hasArt');art.removeAttribute('src');const url=psn.game_artwork;
 if(typeof url==='string'&&url.length<2000&&/^https:\/\//i.test(url)){art.onload=()=>cover.classList.add('hasArt');art.onerror=()=>cover.classList.remove('hasArt');art.src=url;}
 text('console',connected?'Online':'No response');text('consoleName',local.host_name||'—');text('version',local.system_version||'—');text('ip',local.ip||'—');
@@ -54,9 +54,9 @@ const activity=$('activity');activity.replaceChildren();const events=Array.isArr
 if(events.length){for(const e of events){const line=document.createElement('div');line.className='activityItem';const name=document.createElement('span'),date=document.createElement('time');name.textContent=e.detail||e.kind||'Event';date.textContent=clock(e.at);line.append(name,date);activity.append(line);}}
 else{const line=document.createElement('div');line.className='activityItem';line.textContent='No changes recorded yet';activity.append(line);}
 const sessions=Array.isArray(p.sessions)?p.sessions:[];text('sessions',sessions.length+(sessions.length>=30?'+':'')+' stored');text('psnConnection',psn.connected?'CONNECTED':psn.configured?'NOT REACHABLE':'NOT CONFIGURED');
-text('psnChecked',clock(psn.checked_at));text('localChecked',clock(p.observed_at));text('checked','Checked '+clock(p.observed_at));
+text('psnChecked',psn.checked_at?clock(psn.checked_at):'Not supplied by PSN');text('localChecked',clock(p.observed_at));text('checked','Checked '+clock(p.observed_at));
 }
 async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),45000);try{const r=await fetch('/api/playstation/activity',{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);render(await r.json());}catch(e){$('badge').className='pill bad';$('badge').textContent='READING UNAVAILABLE';text('statusText','PlayStation status is temporarily unavailable: '+e.message);}finally{clearTimeout(timer);busy=false;$('refresh').disabled=false;}}
-$('refresh').addEventListener('click',refresh);refresh();setInterval(()=>{if(!document.hidden)refresh();},120000);
+$('refresh').addEventListener('click',refresh);refresh();setInterval(()=>{if(!document.hidden)refresh();},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
 })();
 </script></body></html>
