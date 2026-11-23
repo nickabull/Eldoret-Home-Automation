@@ -2,7 +2,7 @@
 
 ## One permanent user-facing address
 - **http://10.0.0.34:8765/nerd-control.html** is the permanent iPad Home Screen URL.
-- The Python `connector.py` static route maps that exact URL to the current approved **versioned file**. As of 23 November 2026 ~15:42, GitHub source maps to `ipad15.html` — screen title **NERD CENTRAL 2.15**. Deployment to Bulldog and iPad verification remain outstanding.
+- The Python `connector.py` static route maps that exact URL to the current approved **versioned file**. As of 23 November 2026 ~15:46, GitHub source maps to `ipad16.html` — screen title **NERD CENTRAL 2.16**. Deployment to Bulldog and iPad verification remain outstanding.
 - Do not rename the stable URL; do not make users change their bookmark when a new release is approved.
 - Device pages (including `ariya-ipad.html` and `ariya-ipad-v11-approved.html`) must link Home to `nerd-control.html`, not `index.html` or a specific `ipadXX.html`.
 
@@ -29,3 +29,4 @@ Source commits do **not** prove the Bulldog installation has been updated. The o
 
 ## 23 Nov 2026 15:42 promotion
 The user uploaded their personally adjusted Design Centre JSON (26 layers), then accepted the precisely aligned revision. Both original JSON and aligned JSON were shared in conversation, but the **working functional HTML** now implements those approved layout proportions. Original map removed. Climate API still restricted to 16–26°C pending validated change in Nissan integration (Nissan mobile app shows 30°C as a setting); do not offer unsupported 30°C commands. User must deploy connector and new static pages. No vehicle commands have been sent.
+\n## 23 Nov 2026 ~15:46 — Pioneer controls\n- `ipad16.html` archives 2.15 and adds one change: full Pioneer tile goes to stable `/pioneer-control.html` (commit `dde65828`).\n- `/pioneer-control.html` maps to `pioneer-ipad-v10.html`, a new fixed-height 4:3 artwork panel featuring manual check, 1-step volume/rotary, mute, 10-second confirm for power and source, manual diagnostics. No automatic TCP polling, no power cycling, no direct source codes guessed. Existing `pioneer.html` remains untouched. Source `d6a75c1f`, routes `072792a2` and `94619a2b`.\n- Commands are real via existing local-only `/api/pioneer/control` and require physical testing; only user clicking sends. Validate volume safely with receiver at low physical volume.\n
