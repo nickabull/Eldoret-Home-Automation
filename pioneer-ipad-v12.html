@@ -98,7 +98,7 @@ main{min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:minm
       <div class="panelHead"><div><div class="ey">PIONEER · LAST REPORTED</div><h2>Receiver information</h2></div><span class="pill warn" id="checked">MANUAL ONLY</span></div>
       <div class="grid">
         <div class="fact"><span>POWER</span><strong id="power">—</strong><small>Last receiver check</small></div>
-        <div class="fact"><span>INPUT SOURCE</span><strong id="input">—</strong><small>Raw code · *user-reported source</small></div>
+        <div class="fact"><span>INPUT SOURCE</span><strong id="input">—</strong><small>Source · observed code</small></div>
         <div class="fact"><span>MUTE</span><strong id="muted">—</strong><small>Yellow = engaged</small></div>
         <div class="fact"><span>NETWORK</span><strong id="network">—</strong><small id="host">No receiver query yet</small></div>
       </div>
@@ -130,7 +130,8 @@ async function check(silent=false){
    volume=j.volume!=null&&/^\d+$/.test(String(j.volume))?String(j.volume):null;
    muted=j.mute==='Muted'?true:j.mute==='Not muted'?false:null;
    const calibrated=volume==='081'?'15':volume==='101'?'20':null;
-   $('volume').textContent=calibrated??volume??'—';$('volumeLabel').textContent=calibrated?'FRONT PANEL · RAW '+volume:'RAW RECEIVER CODE';$('power').textContent=j.power??'—';$('input').textContent=j.input==='59'?'59 · DIGITAL IN*':(j.input??'—');
+   $('volume').textContent=calibrated??volume??'—';$('volumeLabel').textContent=calibrated?'FRONT PANEL · RAW '+volume:'RAW RECEIVER CODE';$('power').textContent=j.power??'—';const inputNames={'01':'CD','02':'FM','17':'iPod','38':'INTERNET RADIO','44':'MUSIC SERVER','45':'FAVOURITES','51':'FRONT AUDIO IN','52':'LINE 1','55':'DAB','56':'BT AUDIO','58':'LINE 2','59':'DIGITAL IN'};
+   $('input').textContent=j.input!=null?(inputNames[String(j.input).padStart(2,'0')]?inputNames[String(j.input).padStart(2,'0')]+' · '+String(j.input).padStart(2,'0'):String(j.input)):'—';
    $('muted').textContent=muted===null?'Unknown':muted?'MUTED':'NOT MUTED';$('muted').classList.toggle('active',muted===true);
    $('network').textContent=online?'Connected':'Unavailable';$('host').textContent=j.host||'—';
    setPill('connBadge',online?'CONNECTED':'UNAVAILABLE',online?'good':'bad');
