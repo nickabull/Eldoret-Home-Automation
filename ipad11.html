@@ -659,10 +659,10 @@ function wallRender(){
  wallDraw('appliance',[
   wallRow('Home Connect',devices.filter(d=>d.connected).length+' / '+devices.length+' connected',devices.length?(devices.every(d=>d.connected)?'ok':'off'):'unknown'),
   ...ordered.map(wallAppliance),
-  wallRow('Samsung fridge',fridge.connected?'CONNECTED · '+(fridge.fridge_c==null?'—':fridge.fridge_c+'°C')+' / '+(fridge.freezer_c==null?'—':fridge.freezer_c+'°C'):'SMARTTHINGS NOT READY',fridge.connected?'ok':'unknown'),
+  wallRow('Samsung fridge',fridge.connected?(fridge.fridge_c==null?'—':fridge.fridge_c+'°')+' / '+(fridge.freezer_c==null?'—':fridge.freezer_c+'°'):'NOT CONNECTED',fridge.connected?'ok':'unknown'),
   ...(fridge.connected?[
-   wallRow('Fridge doors',Object.entries(fridge.doors||{}).map(([k,v])=>k+': '+v).join(' · ')||'—',Object.values(fridge.doors||{}).some(v=>v==='open')?'active':'ok'),
-   wallRow('FlexZone / Ice',wallEnum(fridge.flexzone_mode)+' · ice '+wallText(fridge.ice_maker),fridge.ice_maker_state==='running'?'active':'ok'),
+   wallRow('Fridge doors',Object.values(fridge.doors||{}).some(v=>v==='open')?'DOOR OPEN':Object.keys(fridge.doors||{}).length===3?'ALL CLOSED':'CHECK STATUS',Object.values(fridge.doors||{}).some(v=>v==='open')?'active':'ok'),
+   wallRow('FlexZone · Ice',wallEnum(fridge.flexzone_mode).replace(/^CV_FDR_/,'')+' · '+(fridge.ice_maker==='on'?'ON':wallText(fridge.ice_maker)),fridge.ice_maker_state==='running'?'active':'ok'),
    wallRow('Water filter',fridge.water_filter_status==='replace'?'REPLACE NOW':wallText(fridge.water_filter_status),fridge.water_filter_status==='replace'?'active':'ok')
   ]:[])
  ]);
