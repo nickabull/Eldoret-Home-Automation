@@ -1,10 +1,10 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "created": "2026-11-23",
   "visual_preview": "ipad12.html",
   "legacy_fallback": "ipad11.html",
-  "asset_package": "Eldoret-Artwork-v1.zip (download from chat and upload JPGs to repository root)",
-  "instructions": "Upload only the twelve individual JPG files from the package to the repository root, keeping exact names. Static routes and CSS are already registered. Do not upload the ZIP as an asset. Check iPad 16:9 2.12 before promoting; use same assets for 4:3 detail pages.",
+  "asset_package": "Eldoret-Artwork-v1.1.zip (eleven JPG files; existing real-house art reused from repository)",
+  "instructions": "Upload the ELEVEN new JPG files in the package to the repository root. Home Summary already uses existing /eldoret-house-night.webp, which is the user's real house; do not upload generated generic eldoret-home.jpg. Check iPad 2.12 visual appearance before promoting.",
   "images": [
     {
       "module": "network",
@@ -98,12 +98,12 @@
     },
     {
       "module": "home",
-      "path": "/eldoret-home.jpg",
+      "path": "/eldoret-house-night.webp",
       "usage": [
         "16:9 Nerd Central tile",
         "4:3 iPad detail hero"
       ],
-      "status": "asset awaiting upload"
+      "status": "existing actual-house artwork already in repository"
     },
     {
       "module": "sources",
