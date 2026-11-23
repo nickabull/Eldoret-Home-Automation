@@ -392,6 +392,9 @@ body:before{content:"";position:fixed;inset:0;background:linear-gradient(#06111c
 /* New audio header and 7 rows within single-height tile. */
 .nerd-module[aria-label="AUDIO · PIONEER + OTHERS"] .nerd-row{min-height:19px!important;font-size:9px!important}
 .nerd-module[aria-label="APPLIANCES · HOME CONNECT"] .nerd-row b{font-size:9px!important}
+.ariya-link-tile{cursor:pointer!important;outline-offset:-4px}
+.ariya-link-tile:hover{border-color:#f2d3a1!important}
+.ariya-link-tile:focus-visible{outline:3px solid #f2d3a1!important}
 </style><link rel="stylesheet" href="eldoret-artwork-v1.css?v=1"></head>
 <body><main class="shell">
 <header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>NERD CENTRAL 2.14</small></h1></a><div class="top-right"><button class="mode-btn" id="modeBtn" type="button" aria-label="Open family controls">CONTROLS</button><button class="directory-trigger mode-btn directory-labelled" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open all Eldoret systems" title="All Eldoret systems">ALL SYSTEMS</button><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
@@ -417,7 +420,7 @@ body:before{content:"";position:fixed;inset:0;background:linear-gradient(#06111c
 <section class="nerd-module" aria-label="TELEVISIONS"><h3><span>📺</span>TELEVISIONS<a href="tvs.html">↗</a></h3><div id="mod-televisions" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
 <section class="nerd-module" aria-label="LIGHTING · HUE"><h3><span>💡</span>LIGHTING · HUE<a href="lights.html">↗</a></h3><div id="mod-lighting" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
 <section class="nerd-module" aria-label="APPLIANCES · HOME CONNECT"><h3><span>🍽️</span>APPLIANCES · HOME CONNECT<a href="appliances.html">↗</a></h3><div id="mod-appliance" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
-<section class="nerd-module" aria-label="NISSAN ARIYA"><h3><span>🚗</span>NISSAN ARIYA<a href="zappi.html#nissan">↗</a></h3><div id="mod-car" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module ariya-link-tile" aria-label="NISSAN ARIYA" role="link" tabindex="0" title="Open Ariya vehicle & charging controls"><h3><span>🚗</span>NISSAN ARIYA<a href="ariya-ipad.html" aria-label="Open Ariya controls">↗</a></h3><div id="mod-car" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
 <section class="nerd-module" aria-label="PRINTER · HOUSE DEVICES"><h3><span>🖨️</span>PRINTER · HOUSE DEVICES<a href="office.html">↗</a></h3><div id="mod-devices" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
 <section class="nerd-module" aria-label="PLAYSTATION · MEDIA"><h3><span>🎮</span>PLAYSTATION · MEDIA<a href="av.html#ps5Panel">↗</a></h3><div id="mod-gaming" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
 <section class="nerd-module" aria-label="VELUX · CLIMATE"><h3><span>🪟</span>VELUX · CLIMATE<a href="velux.html">↗</a></h3><div id="mod-windows" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
@@ -802,4 +805,10 @@ async function refresh(){if(busy||document.hidden)return;busy=true;$('refresh').
 $('refresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});refresh();setInterval(refresh,120000);
 })();
 </script>
-</body></html>
+<script>
+/* Entire Ariya artwork tile navigates, preserving its existing detail link. */
+(()=>{const tile=document.querySelector('.ariya-link-tile');if(!tile)return;
+tile.addEventListener('click',e=>{if(e.target.closest('a,button'))return;location.href='ariya-ipad.html'});
+tile.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target===tile){e.preventDefault();location.href='ariya-ipad.html'}});
+})();
+</script></body></html>
