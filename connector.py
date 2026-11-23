@@ -4805,6 +4805,7 @@ class Handler(BaseHTTPRequestHandler):
             "/ipad3.html": ("ipad3.html", "text/html; charset=utf-8"),
             "/ipad4.html": ("ipad4.html", "text/html; charset=utf-8"),
             "/ipad5.html": ("ipad5.html", "text/html; charset=utf-8"),
+            "/ipad6.html": ("ipad6.html", "text/html; charset=utf-8"),
             "/pioneer.js": ("pioneer.js", "application/javascript; charset=utf-8"),
             "/velux.js": ("velux.js", "application/javascript; charset=utf-8"),
             "/home.css": ("home.css", "text/css; charset=utf-8"),
