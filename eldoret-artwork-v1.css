@@ -1,0 +1,22 @@
+/* Eldoret shared photography library v1.0. Used by Nerd Central 2.12 and future 4:3 iPad pages.
+   Photographic files are delivered separately in Eldoret-Artwork-v1.zip until deployed.
+   Do not modify functional telemetry, polling, or device controls. */
+.nerd-module:before{opacity:.92!important;background-position:62% 50%!important;background-size:cover!important;filter:saturate(1.09) contrast(1.03)}
+.nerd-module:after{background:linear-gradient(90deg,#041221da 0%,#041221a0 45%,#04122153 100%)!important}
+.nerd-module[aria-label="INTERNET & WI-FI"]:before{background-image:url('/eldoret-network.jpg')!important;}
+.nerd-module[aria-label="TELEVISIONS"]:before{background-image:url('/eldoret-televisions.jpg')!important;}
+.nerd-module[aria-label="LIGHTING · HUE"]:before{background-image:url('/eldoret-lighting.jpg')!important;}
+.nerd-module[aria-label="APPLIANCES · HOME CONNECT"]:before{background-image:url('/eldoret-appliances.jpg')!important;}
+.nerd-module[aria-label="NISSAN ARIYA"]:before{background-image:url('/eldoret-ariya.jpg')!important;}
+.nerd-module[aria-label="PRINTER · HOUSE DEVICES"]:before{background-image:url('/eldoret-printer.jpg')!important;}
+.nerd-module[aria-label="PLAYSTATION · MEDIA"]:before{background-image:url('/eldoret-playstation.jpg')!important;}
+.nerd-module[aria-label="VELUX · CLIMATE"]:before{background-image:url('/eldoret-velux.jpg')!important;}
+.nerd-module[aria-label="AUDIO · PIONEER"]:before{background-image:url('/eldoret-audio.jpg')!important;}
+.nerd-module[aria-label="BULLDOG · LIVE HEALTH"]:before{background-image:url('/eldoret-bulldog.jpg')!important;}
+.nerd-module[aria-label="HOME · STATUS SUMMARY"]:before{background-image:url('/eldoret-home.jpg')!important;}
+.nerd-module[aria-label="SOURCES · SYSTEM HEALTH"]:before{background-image:url('/eldoret-sources.jpg')!important;}
+/* Portrait and landscape detail-page art uses the exact same image URL.
+   --eldoret-art set to url('/eldoret-<module>.jpg') on the page container. */
+.eldoret-detail-hero{position:relative;isolation:isolate;background-color:#0a1c2a;overflow:hidden}
+.eldoret-detail-hero:before{content:"";position:absolute;inset:0;z-index:-2;background-image:var(--eldoret-art);background-size:cover;background-position:var(--eldoret-crop,center);opacity:.92}
+.eldoret-detail-hero:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#041221e0,#04122170)}
