@@ -13,7 +13,8 @@
 .nerd-module[aria-label="VELUX · CLIMATE"]:before{background-image:url('/eldoret-velux.jpg')!important;}
 .nerd-module[aria-label="AUDIO · PIONEER"]:before{background-image:url('/eldoret-audio.jpg')!important;}
 .nerd-module[aria-label="BULLDOG · LIVE HEALTH"]:before{background-image:url('/eldoret-bulldog.jpg')!important;}
-.nerd-module[aria-label="HOME · STATUS SUMMARY"]:before{background-image:url('/eldoret-home.jpg')!important;}
+/* Reuse the existing brighter artwork made from the user's real house, not generated generic house. */
+.nerd-module[aria-label="HOME · STATUS SUMMARY"]:before{background-image:url('/eldoret-house-night.webp')!important;background-position:50% 55%!important;filter:brightness(1.25) saturate(1.12)!important;}
 .nerd-module[aria-label="SOURCES · SYSTEM HEALTH"]:before{background-image:url('/eldoret-sources.jpg')!important;}
 /* Portrait and landscape detail-page art uses the exact same image URL.
    --eldoret-art set to url('/eldoret-<module>.jpg') on the page container. */
