@@ -1,0 +1,104 @@
+{
+  "version": "1.1",
+  "source": "Eldoret original generated photography contact sheet 2026-11-23",
+  "note": "The HOME \u00b7 STATUS SUMMARY photo is NOT generated generic architecture. Eldoret uses the brighter existing artwork of the user\u2019s real house: /eldoret-house-night.webp from the site. Do not upload eldoret-home.jpg.",
+  "panels": [
+    {
+      "id": "network",
+      "title": "INTERNET & WI-FI",
+      "file": "eldoret-network.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "televisions",
+      "title": "TELEVISIONS",
+      "file": "eldoret-televisions.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "lighting",
+      "title": "LIGHTING \u00b7 HUE",
+      "file": "eldoret-lighting.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "appliances",
+      "title": "APPLIANCES \u00b7 HOME CONNECT",
+      "file": "eldoret-appliances.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "ariya",
+      "title": "NISSAN ARIYA",
+      "file": "eldoret-ariya.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "printer",
+      "title": "PRINTER \u00b7 HOUSE DEVICES",
+      "file": "eldoret-printer.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "playstation",
+      "title": "PLAYSTATION \u00b7 MEDIA",
+      "file": "eldoret-playstation.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "velux",
+      "title": "VELUX \u00b7 CLIMATE",
+      "file": "eldoret-velux.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "audio",
+      "title": "AUDIO \u00b7 PIONEER",
+      "file": "eldoret-audio.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "bulldog",
+      "title": "BULLDOG \u00b7 LIVE HEALTH",
+      "file": "eldoret-bulldog.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    },
+    {
+      "id": "home",
+      "title": "HOME \u00b7 STATUS SUMMARY",
+      "file": "eldoret-house-night.webp",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))",
+      "existing_repository_asset": true
+    },
+    {
+      "id": "sources",
+      "title": "SOURCES \u00b7 SYSTEM HEALTH",
+      "file": "eldoret-sources.jpg",
+      "crop_16_9": "right center",
+      "crop_4_3": "center center",
+      "overlay": "linear-gradient(90deg,rgba(4,16,29,.83),rgba(4,16,29,.38))"
+    }
+  ]
+}
