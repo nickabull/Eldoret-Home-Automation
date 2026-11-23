@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071520"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="/eldoret.webmanifest"><title>Eldoret · Epson 1.1</title><style>
+:root{color-scheme:dark;--line:#8bb4c544;--teal:#1c4a54;--border:#5a8991}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05121f;color:#eff9ff;font:14px/1.26 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,a{font:inherit}button{cursor:pointer}.stage{position:relative;isolation:isolate;width:100vw;height:100dvh;display:grid;grid-template-rows:54px minmax(0,1fr)}
+.stage:before{content:"";position:absolute;z-index:-2;inset:0;background:url("/epson-et3850-background.webp") center/cover no-repeat;opacity:.9}
+.stage:after{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,#031423ea,#071828c2 65%,#051321a0),linear-gradient(0deg,#03111bd8,transparent 70%)}
+header{display:flex;align-items:center;justify-content:space-between;min-width:0;gap:9px;padding:5px 14px;background:#041725e3;border-bottom:1px solid var(--line)}
+.brand strong{font-size:20px;letter-spacing:.1em}.brand small{display:block;font-size:9px;letter-spacing:.13em;color:#efce9d}
+.headTools{display:flex;gap:8px;align-items:center}.headTools button,.headTools a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 12px;border:1px solid var(--border);border-radius:11px;background:var(--teal);color:#fff;text-decoration:none;font-weight:800;white-space:nowrap}
+.headTools button:disabled{opacity:.45}.stamp{color:#c4d9df;font-size:11px;white-space:nowrap}
+.pill{border-radius:20px;padding:6px 10px;font-weight:800;font-size:10px;color:#bffbda;background:#135042b5;border:1px solid #75bfa78a;white-space:nowrap}.pill.warn{color:#ffe0aa;background:#594022b3;border-color:#cfa36b}.pill.bad{color:#ffd1d5;background:#602534b3;border-color:#d36a76}
+main{display:grid;grid-template-rows:minmax(0,24fr) minmax(0,65fr) minmax(0,11fr);min-height:0;gap:8px;padding:8px 12px 10px}
+.panel{min-width:0;min-height:0;border:1px solid var(--line);border-radius:13px;background:linear-gradient(125deg,#071827e8,#0b2434d8);overflow:hidden}
+.hero{display:flex;align-items:center;gap:13px;padding:10px 15px;max-width:73%}.printerIcon{width:55px;height:55px;flex:none;display:grid;place-items:center;border-radius:14px;font-size:31px;background:linear-gradient(145deg,#1686b4,#8a397e)}
+.ey{font-size:10px;font-weight:800;letter-spacing:.16em;color:#f3d09c}.hero h1{font-size:clamp(23px,3vw,31px);margin:3px 0}.subtitle{color:#bad4db;font-size:11px;margin:3px 0}.hero .pill{margin-left:auto;align-self:flex-start}
+.inkSection{min-height:0;display:flex;flex-direction:column;gap:6px}.sectionTitle{padding:0 4px;min-height:33px}.sectionTitle h2{margin:1px 0 0;font-size:19px}
+.inkGrid{min-height:0;flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.inkCard{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 8px 7px;border:1px solid #8fb7cb4a;border-radius:13px;background:linear-gradient(125deg,#0a1b2de8,#0c2031e2)}
+.inkCard.low{border-color:#d8ab5b99}.inkTitle{display:flex;align-items:center;align-self:stretch;gap:7px;font-size:14px;font-weight:800}.dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--ink)}.inkLabel{margin-left:auto;border:1px solid #8ca6b855;border-radius:20px;padding:4px 6px;font-size:8px;color:#c0d0da}.inkCard.low .inkLabel{color:#ffd782}
+.tank{position:relative;width:min(47%,110px);min-height:55px;flex:1;max-height:145px;border:1px solid #9ab9cd66;border-radius:15px;overflow:hidden;background:linear-gradient(145deg,#273b4f99,#03101be8);margin:4px 0}
+.tank:before{content:"";position:absolute;inset:8px auto 8px 8px;width:7px;border-radius:7px;background:linear-gradient(90deg,#ffffff28,transparent);z-index:2}
+.fill{position:absolute;bottom:0;left:0;right:0;height:0;background:var(--ink);transition:height .25s}
+.inkPercent{font-size:clamp(21px,3vw,31px);font-weight:800;font-variant-numeric:tabular-nums}.inkNote{font-size:9px;color:#b9ccd5;text-align:center}
+.footer{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 13px;align-items:center}.footStat{display:flex;flex-direction:column;gap:6px;min-width:0}.footStat strong{font-size:13px;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:850px){header{padding:5px 8px}.brand strong{font-size:15px}.brand small{font-size:8px}.headTools{gap:5px}.headTools button,.headTools a{min-height:35px;padding:5px 7px;font-size:10px}.stamp{display:none}main{gap:5px;padding:5px}.hero{max-width:78%;padding:7px}.printerIcon{width:42px;height:42px;font-size:22px}.hero h1{font-size:20px}.inkGrid{gap:5px}.inkCard{padding:6px 4px}.inkTitle{font-size:11px;gap:4px}.inkLabel{font-size:7px;padding:2px}.footer{padding:5px}.footStat strong{font-size:10px}}
+
+/* Epson 1.1: Ariya/Pioneer translucent navy cards; condensed cards expose approved photo. */
+:root{--line:#afc4d342}
+main{grid-template-rows:minmax(0,17fr) minmax(0,34fr) minmax(0,39fr) minmax(0,10fr);gap:8px}
+.panel{background:linear-gradient(130deg,#051522d8,#071c2aca);border-color:#afc4d342;backdrop-filter:blur(2px)}
+.hero{width:50%;max-width:50%;padding:9px 14px;gap:11px}
+.printerIcon{background:#174955;border:1px solid #60969c}
+.inkCard{background:linear-gradient(130deg,#051522d8,#071c2aca);border-color:#afc4d342;backdrop-filter:blur(2px);padding:7px 9px 6px}
+.inkCard.low{border-color:#d8ab5b99}
+.inkGrid{gap:9px}
+.tank{max-height:115px;width:min(36%,92px);min-height:42px;margin:2px 0}
+.inkPercent{font-size:clamp(19px,2.2vw,28px)}
+.inkNote{font-size:9px}
+.photoSpace{min-height:0;pointer-events:none}
+.footer{background:linear-gradient(130deg,#051522d8,#071c2aca);border-color:#afc4d342}
+@media(max-width:850px){main{gap:5px}.hero{max-width:50%;width:50%;padding:6px 8px}.inkCard{padding:5px}.inkGrid{gap:5px}.tank{width:min(40%,80px);max-height:93px}.inkPercent{font-size:19px}}
+</style></head><body><div class="stage">
+<header><div class="brand"><strong>ELDORET · EPSON 1.1</strong><small>OFFICE PRINTER · ET-3850</small></div><div class="headTools"><span id="checked" class="stamp">Checking…</span><button id="refresh" type="button">↻ REFRESH</button><a href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<main>
+<section class="panel hero"><span class="printerIcon" aria-hidden="true">🖨</span><div><div class="ey">EPSON ECOTANK</div><h1 id="name">ET-3850</h1><p class="subtitle" id="detail">Checking printer…</p></div><span id="badge" class="pill warn">CHECKING</span></section>
+<section class="inkSection"><div class="sectionTitle"><div class="ey">FOUR COLOURS · ONE CLEAR VIEW</div><h2>Ink levels</h2></div><div class="inkGrid">
+<article class="inkCard" id="card-Black" style="--ink:#080808"><div class="inkTitle"><span class="dot"></span>Black<span class="inkLabel" id="label-Black">UNKNOWN</span></div><div class="tank"><div class="fill" id="fill-Black"></div></div><strong class="inkPercent" id="percent-Black">—</strong><span class="inkNote" id="note-Black">Awaiting reading</span></article>
+<article class="inkCard" id="card-Cyan" style="--ink:#14c6ee"><div class="inkTitle"><span class="dot"></span>Cyan<span class="inkLabel" id="label-Cyan">UNKNOWN</span></div><div class="tank"><div class="fill" id="fill-Cyan"></div></div><strong class="inkPercent" id="percent-Cyan">—</strong><span class="inkNote" id="note-Cyan">Awaiting reading</span></article>
+<article class="inkCard" id="card-Magenta" style="--ink:#f63c9b"><div class="inkTitle"><span class="dot"></span>Magenta<span class="inkLabel" id="label-Magenta">UNKNOWN</span></div><div class="tank"><div class="fill" id="fill-Magenta"></div></div><strong class="inkPercent" id="percent-Magenta">—</strong><span class="inkNote" id="note-Magenta">Awaiting reading</span></article>
+<article class="inkCard" id="card-Yellow" style="--ink:#f3cf36"><div class="inkTitle"><span class="dot"></span>Yellow<span class="inkLabel" id="label-Yellow">UNKNOWN</span></div><div class="tank"><div class="fill" id="fill-Yellow"></div></div><strong class="inkPercent" id="percent-Yellow">—</strong><span class="inkNote" id="note-Yellow">Awaiting reading</span></article>
+</div></section>
+<div class="photoSpace" aria-hidden="true"></div>
+<section class="panel footer"><div class="footStat"><span class="ey">PRINTER STATUS</span><strong id="state">Checking…</strong></div><div class="footStat"><span class="ey">LAST CHECKED</span><strong id="last">—</strong></div><div class="footStat"><span class="ey">INK READBACK</span><strong id="inkSource">Awaiting status</strong></div></section>
+</main></div>
+<script>
+(()=>{'use strict';const $=x=>document.getElementById(x);let busy=false;
+const names=['Black','Cyan','Magenta','Yellow'];
+function setBadge(t,type){$('badge').textContent=t;$('badge').className='pill'+(type==='bad'?' bad':type==='warn'?' warn':'');}
+function clear(){for(const n of names){$('fill-'+n).style.height='0%';$('percent-'+n).textContent='—';$('label-'+n).textContent='UNKNOWN';$('note-'+n).textContent='Not reported';$('card-'+n).classList.remove('low');}}
+async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;try{const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),18000);let response;try{response=await fetch('/api/printer/status',{cache:'no-store',signal:controller.signal});}finally{clearTimeout(timeout);}if(!response.ok)throw Error('HTTP '+response.status);
+const p=await response.json();if(typeof p.online!=='boolean')throw Error('Invalid response');
+$('name').textContent=p.model||'Epson ET-3850';$('detail').textContent=p.detail||'Printer status';
+setBadge(p.online?'ONLINE':'NO RESPONSE',p.online?'ok':'bad');$('state').textContent=p.online?(p.state||'Available'):'No response';$('last').textContent=p.checked_at?new Date(p.checked_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—';$('checked').textContent='Checked '+$('last').textContent;
+clear();let count=0;for(const n of names){const v=(Array.isArray(p.ink)?p.ink:[]).find(x=>String(x.colour).toLowerCase()===n.toLowerCase())?.percent;const known=p.online&&typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=100;if(!known)continue;count++;$('fill-'+n).style.height=v+'%';$('percent-'+n).textContent=Math.round(v)+'%';$('label-'+n).textContent=v<=15?'LOW':p.ink_estimated?'ESTIMATED':'REPORTED';$('note-'+n).textContent=p.ink_estimated?'Derived from Epson gauge':'Reported by Epson';$('card-'+n).classList.toggle('low',v<=15);}
+$('inkSource').textContent=count?count+' colours · '+(p.ink_estimated?'gauge-derived':'reported'):'No numeric ink levels';
+if(!p.online){clear();$('inkSource').textContent='Printer unavailable';}
+}catch(e){clear();setBadge('UNAVAILABLE','bad');$('detail').textContent='Printer status could not be retrieved';$('state').textContent='Unavailable';$('last').textContent='—';$('checked').textContent='No live readback';$('inkSource').textContent='No live readings';}finally{busy=false;$('refresh').disabled=false;}}
+$('refresh').addEventListener('click',refresh);refresh();})();
+</script></body></html>
