@@ -95,10 +95,10 @@ main{min-height:0;display:grid;grid-template-columns:1fr;grid-template-rows:minm
           <option value="01">CD (01)</option><option value="02">FM (02)</option><option value="17">iPod (17)</option>
           <option value="38">Internet Radio (38)</option><option value="44">Music Server (44)</option><option value="45">Favourites (45)</option>
           <option value="52">Line 1 (52)</option><option value="55">DAB (55)</option><option value="56">Bluetooth Audio (56)</option><option value="58">Line 2 (58)</option>
-        </select><button id="applySource" type="button">TEST SELECTED SOURCE</button>
-        <div id="sourceMessage" class="sourceNote">TV and Airlite buttons launch a one-command test with CONFIRM. Other sources are read-only.</div>
+        </select><button id="applySource" type="button">SWITCH SELECTED SOURCE</button>
+        <div id="sourceMessage" class="sourceNote">TV AUDIO and AIRLITE STUDIO are working controls. Other inputs are listed for information until individually tested.</div>
       </div>
-        <div class="safety"><strong>TESTING SOURCE COMMANDS</strong><span>Source tests are experimental. Confirm once, then check the physical receiver and REFRESH.</span></div>
+        <div class="safety"><strong>SOURCE SAFETY</strong><span>TV and Airlite switching confirmed. Source changes require confirmation. No automatic retries.</span></div>
         <div id="message" class="status" role="status">Checking receiver once on opening. No repeated background status polling.</div>
       </div>
     </section>
@@ -163,7 +163,7 @@ async function send(action){
      $('muted').textContent=muted?'MUTED · ESTIMATED':'NOT MUTED · ESTIMATED';
      $('muted').classList.toggle('active',muted);
    }
-   say(action.startsWith('source_')?'TEST command '+(j.command||action)+' sent; '+(j.reply?'receiver reply: '+j.reply:'no receiver reply')+'. Check physical input, then REFRESH. NOT YET VERIFIED.': 'Command sent'+(j.reply?' · receiver reply: '+j.reply:' · no receiver reply')+'. REFRESH confirms actual receiver state.');
+   say(action.startsWith('source_')?'Source command '+(j.command||action)+' sent; +(j.reply?'receiver reply: '+j.reply:'no receiver reply')+'. Press REFRESH to confirm the current source.': 'Command sent'+(j.reply?' · receiver reply: '+j.reply:' · no receiver reply')+'. REFRESH confirms actual receiver state.');
  }catch(e){say('Command failed: '+e.message);busy=false;buttons();return}
  busy=false;buttons();
 }
@@ -178,8 +178,8 @@ $('up').addEventListener('click',()=>send('volume_up'));$('down').addEventListen
 $('on').addEventListener('click',()=>propose('power_on','Power on Pioneer','Send a single POWER ON command to the kitchen receiver?'));
 $('off').addEventListener('click',()=>propose('power_off','Standby Pioneer','Place the kitchen receiver into standby?'));
 const sourceNames={'01':'CD','02':'FM','17':'iPod','38':'Internet Radio','44':'Music Server','45':'Favourites','51':'Front Audio In (Airlite)','52':'Line 1','55':'DAB','56':'Bluetooth Audio','58':'Line 2','59':'Digital In (TV)'};
-function chooseSource(code){$('sourceChoice').value=code;$('sourceMessage').textContent='Selected '+sourceNames[code]+'. Press TEST SELECTED SOURCE to try switching.';}
-function testSource(code){chooseSource(code);if(!['59','51'].includes(code)){$('sourceMessage').textContent='Selection '+sourceNames[code]+' is read-only; no command sent.';return;}propose(code==='59'?'source_tv_test':'source_studio_test','CONFIRM '+sourceNames[code],'Send one experimental Pioneer input command for '+sourceNames[code]+'? Confirm after checking the physical receiver. No retries.');}
+function chooseSource(code){$('sourceChoice').value=code;$('sourceMessage').textContent=['59','51'].includes(code)?'Selected '+sourceNames[code]+'. Press SWITCH SELECTED SOURCE or use its dedicated button.':'Selected '+sourceNames[code]+'. This input is not yet enabled for switching.';}
+function testSource(code){chooseSource(code);if(!['59','51'].includes(code)){$('sourceMessage').textContent=sourceNames[code]+' is mapped but switching has not been physically validated. Nothing sent.';return;}propose(code==='59'?'source_tv_test':'source_studio_test','CONFIRM '+sourceNames[code],'Switch Pioneer to '+sourceNames[code]+'? This may interrupt current audio. One command, no automatic retries.');}
 $('selectTv').addEventListener('click',()=>testSource('59'));$('selectStudio').addEventListener('click',()=>testSource('51'));$('sourceChoice').addEventListener('change',()=>chooseSource($('sourceChoice').value));
 $('applySource').addEventListener('click',()=>{const code=$('sourceChoice').value;testSource(code);});
 $('approve').addEventListener('click',()=>{if(!pending)return;const action=pending;cancel();send(action)});
