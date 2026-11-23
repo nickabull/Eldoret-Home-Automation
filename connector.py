@@ -2593,6 +2593,10 @@ def bulldog_health():
 # Home Connect: read-only, bounded API; credentials and tokens remain on Bulldog.
 HOME_CONNECT_LOCK = threading.Lock()
 HOME_CONNECT_CACHE = {"expires":0,"data":None}
+# A single bounded snapshot every 2 hours; changes between snapshots arrive via SSE.
+HOME_CONNECT_SNAPSHOT_INTERVAL = 7200
+HOME_CONNECT_LAST_GOOD_FILE = os.path.expanduser("~/.config/eldoret/home-connect-last-good.json")
+HOME_CONNECT_COOLDOWN_FILE = os.path.expanduser("~/.config/eldoret/home-connect-cooldown.json")
 # On HTTP 429, pause new Home Connect cloud requests for one hour.
 HOME_CONNECT_RATE_LIMIT_UNTIL = 0
 HOME_CONNECT_CONFIG = os.path.expanduser("~/.config/home-connect.json")
@@ -2652,11 +2656,61 @@ def _hc_token():
     _hc_write_private(HOME_CONNECT_TOKENS,new)
     return new["access_token"]
 
+
+def _hc_private_snapshot_write(path,payload):
+    """Write only safe appliance telemetry/cooldown values; never store IDs or credentials."""
+    try:
+        folder=os.path.dirname(path)
+        os.makedirs(folder,mode=0o700,exist_ok=True)
+        os.chmod(folder,0o700)
+        target=path+".new"
+        fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+        with os.fdopen(fd,"w",encoding="utf-8") as stream:
+            json.dump(payload,stream,separators=(",",":"))
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(target,path)
+        os.chmod(path,0o600)
+    except (OSError,ValueError,TypeError):
+        pass
+
+def _hc_private_snapshot_read(path):
+    try:
+        value=_hc_read_private(path)
+        return value if isinstance(value,dict) else None
+    except (OSError,ValueError,TypeError):
+        return None
+
+def _hc_set_cooldown(seconds=3600):
+    global HOME_CONNECT_RATE_LIMIT_UNTIL
+    HOME_CONNECT_RATE_LIMIT_UNTIL=max(HOME_CONNECT_RATE_LIMIT_UNTIL,time.monotonic()+seconds)
+    _hc_private_snapshot_write(HOME_CONNECT_COOLDOWN_FILE,
+        {"retry_after_epoch":time.time()+seconds})
+
+def _hc_cooldown_seconds():
+    global HOME_CONNECT_RATE_LIMIT_UNTIL
+    saved=_hc_private_snapshot_read(HOME_CONNECT_COOLDOWN_FILE)
+    if saved and isinstance(saved.get("retry_after_epoch"),(int,float)):
+        wait=max(0,min(86400,saved["retry_after_epoch"]-time.time()))
+        if wait>0:
+            HOME_CONNECT_RATE_LIMIT_UNTIL=max(HOME_CONNECT_RATE_LIMIT_UNTIL,time.monotonic()+wait)
+    return max(0,int(HOME_CONNECT_RATE_LIMIT_UNTIL-time.monotonic()))
+
+def _hc_safe_snapshot(devices,checked_at):
+    """Only local display fields. Avoid remote account IDs, device IDs and secrets."""
+    keys=("name","brand","model","type","connected","status","active_program",
+          "program_options","remaining_updated_at")
+    safe=[]
+    for d in devices[:16]:
+        if not isinstance(d,dict):continue
+        safe.append({k:d.get(k) for k in keys if k in d})
+    return {"devices":safe,"checked_at":checked_at}
+
 def _hc_get(token, endpoint):
     from urllib.error import HTTPError
     global HOME_CONNECT_RATE_LIMIT_UNTIL
     # A request during the cooldown must never hit Home Connect.
-    if time.monotonic()<HOME_CONNECT_RATE_LIMIT_UNTIL:
+    if _hc_cooldown_seconds()>0:
         return {},429
     req=urllib.request.Request(HOME_CONNECT_BASE+endpoint,headers={
         "Authorization":"Bearer "+token, "Accept":HOME_CONNECT_ACCEPT})
@@ -2665,85 +2719,123 @@ def _hc_get(token, endpoint):
             return json.load(response).get("data",{}),None
     except HTTPError as exc:
         if exc.code==429:
-            HOME_CONNECT_RATE_LIMIT_UNTIL=max(HOME_CONNECT_RATE_LIMIT_UNTIL,time.monotonic()+3600)
+            _hc_set_cooldown(3600)
         # 404 is normal when no active programme is available.
         return {},exc.code
 
 def home_connect_status():
+    """Low-volume Home Connect snapshot with persistent last-good fallback.
+
+    Browser refreshes read a local cache. SSE delivers mid-cycle updates. A 429
+    is respected across restarts; never request more during the cooldown.
+    """
     with HOME_CONNECT_LOCK:
         now=time.monotonic()
+        remaining=_hc_cooldown_seconds()
         if HOME_CONNECT_CACHE["data"] is not None and now<HOME_CONNECT_CACHE["expires"]:
-            return HOME_CONNECT_CACHE["data"]
+            cached=HOME_CONNECT_CACHE["data"]
+            if remaining and not cached.get("stale"):
+                return dict(cached,stale=True,error_code="cloud_http_429",
+                    error="Home Connect API rate limit; showing last-known readings",
+                    retry_after_seconds=remaining)
+            if remaining and cached.get("stale"):
+                return dict(cached,retry_after_seconds=remaining)
+            return cached
+        checked=datetime.now(timezone.utc).isoformat()
         result={"configured":False,"source":"Home Connect cloud","devices":[],
-                "checked_at":datetime.now(timezone.utc).isoformat()}
-        try:
-            token=_hc_token()
-            result["configured"]=True
-            listing,error=_hc_get(token,"/homeappliances")
-            if error:
-                raise RuntimeError("Home Connect appliance list HTTP "+str(error))
-            all_devices=listing.get("homeappliances",[])
-            if not isinstance(all_devices,list):
-                raise RuntimeError("Unexpected Home Connect response")
-            def probe(ap):
-                aid=ap.get("haId","")
-                item={"name":ap.get("name","Appliance"),"brand":ap.get("brand"),
-                      "model":ap.get("vib"),"type":ap.get("type"),
-                      "connected":ap.get("connected",False),"status":{},
-                      "active_program":None,"program_options":[]}
-                if not aid or not item["connected"]:
+                "checked_at":checked,"stale":False}
+        previous=_hc_private_snapshot_read(HOME_CONNECT_LAST_GOOD_FILE)
+        if previous and not isinstance(previous.get("devices"),list):
+            previous=None
+        if remaining:
+            result.update(configured=True,stale=True,error_code="cloud_http_429",
+                error="Home Connect API rate limit; showing last-known readings",
+                retry_after_seconds=remaining)
+        else:
+            try:
+                token=_hc_token()
+                result["configured"]=True
+                listing,error=_hc_get(token,"/homeappliances")
+                if error:
+                    raise RuntimeError("Home Connect appliance list HTTP "+str(error))
+                all_devices=listing.get("homeappliances",[])
+                if not isinstance(all_devices,list):
+                    raise RuntimeError("Unexpected Home Connect response")
+                # Limit read calls: one appliance-list request every two hours,
+                # then one status and one active-program request per connected device.
+                # SSE handles events between snapshots; no browser-driven cloud reads.
+                def probe(ap):
+                    aid=ap.get("haId","")
+                    item={"name":ap.get("name","Appliance"),"brand":ap.get("brand"),
+                          "model":ap.get("vib"),"type":ap.get("type"),
+                          "connected":ap.get("connected",False),"status":{},
+                          "active_program":None,"program_options":[]}
+                    if not aid or not item["connected"]:
+                        return item
+                    endpoint="/homeappliances/"+urllib.parse.quote(aid,safe="")
+                    details,err=_hc_get(token,endpoint+"/status")
+                    if err==429:
+                        raise RuntimeError("Home Connect appliance list HTTP 429")
+                    if not err and isinstance(details.get("status"),list):
+                        item["status"]={v["key"].split(".")[-1]:v.get("value")
+                                        for v in details["status"] if isinstance(v,dict) and v.get("key")}
+                    program,err=_hc_get(token,endpoint+"/programs/active")
+                    if err==429:
+                        raise RuntimeError("Home Connect appliance list HTTP 429")
+                    if not err and isinstance(program.get("program"),dict):
+                        active=program["program"]
+                        item["active_program"]=active.get("key")
+                        item["remaining_updated_at"]=datetime.now(timezone.utc).isoformat()
+                        item["program_options"]=[{"key":str(v.get("key","")).split(".")[-1],
+                            "value":v.get("value"),"unit":v.get("unit")}
+                            for v in active.get("options",[]) if isinstance(v,dict)]
                     return item
-                endpoint="/homeappliances/"+urllib.parse.quote(aid,safe="")
-                details,err=_hc_get(token,endpoint+"/status")
-                if not err and isinstance(details.get("status"),list):
-                    item["status"]={v["key"].split(".")[-1]:v.get("value")
-                                    for v in details["status"] if isinstance(v,dict) and v.get("key")}
-                program,err=_hc_get(token,endpoint+"/programs/active")
-                if not err and isinstance(program.get("program"),dict):
-                    active=program["program"]
-                    item["active_program"]=active.get("key")
-                    item["remaining_updated_at"]=datetime.now(timezone.utc).isoformat()
-                    item["program_options"]=[{"key":str(v.get("key","")).split(".")[-1],
-                        "value":v.get("value"),"unit":v.get("unit")}
-                        for v in active.get("options",[]) if isinstance(v,dict)]
-                return item
-            HOME_CONNECT_DEVICE_IDS.clear()
-            HOME_CONNECT_DEVICE_IDS.update({str(ap.get("name")): str(ap.get("haId")) for ap in all_devices
-                                            if ap.get("name") and ap.get("haId")})
-            with ThreadPoolExecutor(max_workers=3) as pool:
-                result["devices"]=list(pool.map(probe,all_devices[:16]))
-            result["online_count"]=sum(bool(d["connected"]) for d in result["devices"])
-            _hc_record_activity(result["devices"])
-            result["events"]=HOME_CONNECT_EVENTS[-60:]
-        except (OSError,ValueError,KeyError,RuntimeError,urllib.error.URLError) as exc:
-            # Safe structured diagnostics. Never expose upstream bodies, URLs, keys or tokens.
-            message=str(exc)
-            import re
-            http_match=re.fullmatch(r"Home Connect appliance list HTTP ([1-5][0-9]{2})",message)
-            if http_match:
-                code=int(http_match.group(1))
-                result["error_code"]="cloud_http_"+str(code)
-                if code in (401,403):
-                    result["error"]="Home Connect rejected the appliance-list request (HTTP "+str(code)+"); check authorisation and API permissions"
-                elif code==429:
-                    result["error"]="Home Connect rate limit reached (HTTP 429); retry later"
+                # Avoid concurrent bursts, and prevent one 429 being hidden by other successes.
+                devices=[]
+                for ap in all_devices[:16]:
+                    devices.append(probe(ap))
+                HOME_CONNECT_DEVICE_IDS.clear()
+                HOME_CONNECT_DEVICE_IDS.update({str(ap.get("name")):str(ap.get("haId"))
+                    for ap in all_devices if ap.get("name") and ap.get("haId")})
+                result["devices"]=devices
+                result["online_count"]=sum(bool(d["connected"]) for d in devices)
+                _hc_record_activity(devices)
+                result["events"]=HOME_CONNECT_EVENTS[-60:]
+                _hc_private_snapshot_write(HOME_CONNECT_LAST_GOOD_FILE,
+                    _hc_safe_snapshot(devices,checked))
+            except (OSError,ValueError,KeyError,RuntimeError,urllib.error.URLError) as exc:
+                message=str(exc)
+                import re
+                http_match=re.fullmatch(r"Home Connect appliance list HTTP ([1-5][0-9]{2})",message)
+                if http_match:
+                    code=int(http_match.group(1))
+                    result["error_code"]="cloud_http_"+str(code)
+                    if code==429:
+                        _hc_set_cooldown(3600)
+                        result["error"]="Home Connect API rate limit; showing last-known readings"
+                    elif code in (401,403):
+                        result["error"]="Home Connect rejected API access; verify authorisation"
+                    else:
+                        result["error"]="Home Connect cloud request failed (HTTP "+str(code)+")"
+                elif "refresh token" in message.lower() or "authorisation" in message.lower():
+                    result["error_code"]="auth"
+                    result["error"]="Home Connect needs reauthorisation"
                 else:
-                    result["error"]="Home Connect appliance-list request failed (HTTP "+str(code)+")"
-            elif isinstance(exc,urllib.error.URLError) or isinstance(exc,TimeoutError):
-                result["error_code"]="cloud_network"
-                result["error"]="Home Connect cloud network connection or timeout failed"
-            elif "authorisation" in message.lower() or "refresh token" in message.lower():
-                result["error_code"]="auth"
-                result["error"]="Home Connect needs reauthorisation"
-            elif "Unexpected Home Connect response" in message:
-                result["error_code"]="cloud_response"
-                result["error"]="Home Connect returned an unexpected appliance-list response"
-            else:
-                result["error_code"]="unknown"
-                result["error"]="Home Connect temporarily unavailable"
-        # Error 429 needs a long cooldown; browser refreshes must not create new cloud calls.
-        cooldown=3600 if result.get("error_code")=="cloud_http_429" else (1800 if result.get("devices") else 120)
-        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+cooldown)
+                    result["error_code"]="cloud_unavailable"
+                    result["error"]="Home Connect cloud temporarily unavailable"
+                result["stale"]=True
+        if result.get("stale") and previous:
+            result["devices"]=previous["devices"]
+            result["last_successful_at"]=previous.get("checked_at")
+            result["online_count"]=sum(bool(d.get("connected")) for d in result["devices"])
+        elif result.get("stale"):
+            result["devices"]=[]
+        if result.get("stale"):
+            result["retry_after_seconds"]=_hc_cooldown_seconds()
+        # Cache cloud successes 2 hours; errors until next safe retry window.
+        ttl=(max(120,_hc_cooldown_seconds()) if result.get("error_code")=="cloud_http_429"
+            else (600 if result.get("stale") else HOME_CONNECT_SNAPSHOT_INTERVAL))
+        HOME_CONNECT_CACHE.update(data=result,expires=time.monotonic()+ttl)
         return result
 
 
@@ -2960,7 +3052,7 @@ def _hc_event_loop():
             HOME_CONNECT_SSE_CONNECTED=False
             failures+=1
             if exc.code==429:
-                HOME_CONNECT_RATE_LIMIT_UNTIL=max(HOME_CONNECT_RATE_LIMIT_UNTIL,time.monotonic()+3600)
+                _hc_set_cooldown(3600)
         except Exception:
             HOME_CONNECT_SSE_CONNECTED=False
             failures+=1
