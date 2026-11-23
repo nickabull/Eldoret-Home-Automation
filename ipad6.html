@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071520"><title>Eldoret 2.6 · Whole House</title>
+<style>
+:root{color-scheme:dark;--bg:#06121c;--card:#102638;--line:#285369;--muted:#93afbb;--bright:#c9fbe9;--good:#78e3bd;--warn:#f3c177}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 65% -15%,#1b544d,transparent 50%),var(--bg);color:#eff7f7;font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.shell{max-width:1440px;margin:auto;padding:14px 18px 18px}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:70px}.brand{display:flex;align-items:center;gap:13px;text-decoration:none;color:inherit}.logo{width:45px;height:45px;border-radius:12px;background:#103d42;display:grid;place-items:center;font-size:28px;color:var(--good)}h1{font-size:23px;letter-spacing:.13em;margin:0}h1 small{display:block;color:#83c4bf;font-size:9px;letter-spacing:.24em;margin-top:4px}.top-right{display:flex;align-items:center;gap:18px}.clock{font-size:28px;font-variant-numeric:tabular-nums;font-weight:650}.clock small{display:block;font-size:10px;color:var(--muted);text-align:right}.refresh{border:1px solid #377268;background:#143f3a;border-radius:12px;color:#dcfff2;padding:10px 15px;min-height:43px;font-weight:700;cursor:pointer}.refresh:disabled{opacity:.5}
+.section{display:flex;align-items:center;justify-content:space-between;margin:9px 1px 11px}.section strong{font-size:13px;letter-spacing:.16em;color:#b3e5d7}.section span{color:var(--muted);font-size:11px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.tile{min-width:0;min-height:98px;display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr) 13px;align-items:center;gap:11px;padding:12px 14px;border:1px solid var(--line);border-radius:15px;text-decoration:none;color:inherit;background:linear-gradient(140deg,#183447ee,#0c1d2eeb);box-shadow:0 7px 24px #0004;transition:border-color .15s}
+.tile:focus-visible,.tile:hover{border-color:#8edbbf;outline:none}
+.tile-ident{min-width:0;display:flex;align-items:center;gap:10px;text-align:left}
+.tile .symbol{font-size:23px;flex-shrink:0;line-height:1}
+.tile-namegroup{min-width:0;display:flex;flex-direction:column;gap:5px}
+.tile .name{font-weight:760;font-size:15px;overflow-wrap:anywhere;line-height:1.1}
+.tile .hint{font-size:10px;color:#93afbb;line-height:1.3}
+.tile-data{min-width:0;text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.tile .primary{font-size:21px;font-weight:750;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-variant-numeric:tabular-nums}
+.tile .secondary{color:#bcd4dc;font-size:11px;line-height:1.3;min-height:14px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%}
+.tile .state{font-size:9px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.tile[data-status="ok"] .state{color:var(--good)}
+.tile[data-status="warning"] .state{color:var(--warn)}
+.tile .chevron{color:#aac8ce;font-size:13px;align-self:center}
+.tile.highlight{background:linear-gradient(140deg,#15423b,#0c2532);border-color:#4c9080}
+.footer{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--muted);padding-top:13px}.footer a{color:#9be7d3;text-decoration:none}.small{font-size:10px}
+@media(min-width:900px) and (max-height:820px){.shell{padding:8px 14px}.top{min-height:58px}.section{margin:5px 1px 8px}.tiles{gap:7px}.tile{min-height:94px;padding:10px 12px}.footer{padding-top:8px}}
+@media(max-width:820px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tile{grid-template-columns:minmax(0,40%) minmax(0,1fr) 12px;gap:7px;padding:10px}.tile .name{font-size:13px}.tile .primary{font-size:18px}.tile .symbol{font-size:20px}}
+@media(max-width:620px){.shell{padding:12px}.tiles{grid-template-columns:1fr}.tile{min-height:86px;grid-template-columns:minmax(0,42%) minmax(0,1fr) 12px}.top-right{gap:8px}.clock{font-size:20px}h1{font-size:18px}.logo{width:37px;height:37px}}
+.alert-dock{position:sticky;top:0;z-index:10;margin:0 0 10px;border:1px solid #6d6044;background:#192633f2;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:13px;padding:10px 13px;box-shadow:0 5px 16px #0005}
+.alert-head{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:#f3d7a2;letter-spacing:.05em}.alert-head span{font-size:11px;color:#d5cfbc;letter-spacing:0}
+.alert-list{margin-top:7px;display:flex;gap:7px;flex-wrap:wrap;max-height:86px;overflow:auto}
+.alert-item{display:inline-flex;align-items:center;gap:7px;min-height:30px;border:1px solid #745e39;color:#f5d9a8;background:#3a2c25;padding:5px 10px;border-radius:9px;font-size:11px;text-decoration:none;max-width:100%}
+.alert-item:focus-visible{outline:2px solid #ffe0a0}
+.alert-empty{font-size:11px;color:#a7c7b7}
+.alert-dock[data-clear="true"]{border-color:#31584d;background:#122b2bf2}.alert-dock[data-clear="true"] .alert-head{color:#a4edcf}
+@media(max-width:620px){.alert-dock{top:0;padding:9px 10px}.alert-list{max-height:76px}.alert-item{font-size:11px;min-height:34px}}
+/* High-density readout: minimal labels, maximum operational telemetry. */
+.section{margin:3px 1px 7px}.section strong{font-size:11px}
+.tile{min-height:88px;padding:9px 12px}
+.tile .hint{font-size:9px;letter-spacing:.03em}.tile .secondary{font-size:11px}
+.tile .primary{font-size:20px}.tile .name{font-size:15px}
+.tile .state{font-size:9px}
+.alert-dock{margin-bottom:8px;padding:8px 12px}
+.footer{padding-top:7px}
+@media(max-width:620px){.tile{min-height:80px;padding:10px 11px}.tile .primary{font-size:18px}.alert-dock{padding:9px}}
+.directory-trigger{min-width:28px;width:28px;height:30px;padding:0;border:1px solid #355d66;border-radius:8px;background:#112a39;color:#a8dacd;font-size:12px;font-weight:850;cursor:pointer;line-height:1}
+.directory-trigger[aria-expanded="true"]{color:#03191b;background:#a8e8cf}
+.directory-panel{position:fixed;z-index:70;top:72px;right:14px;width:min(420px,calc(100vw - 28px));max-height:calc(100dvh - 86px);overflow:auto;background:#0d2230f7;border:1px solid #477269;border-radius:14px;box-shadow:0 18px 55px #000b;padding:13px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.directory-panel[hidden]{display:none}
+.directory-head{display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:.12em;color:#a1d6c7;margin-bottom:10px}
+.directory-head button{color:#e1f9ed;background:#1a3842;border:1px solid #46736d;border-radius:7px;width:32px;height:30px;font-size:22px;cursor:pointer}
+.directory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.directory-grid a{display:flex;align-items:center;min-height:39px;background:#173445;border:1px solid #345869;border-radius:9px;color:#e0f8f1;text-decoration:none;padding:8px 10px;font-size:12px;font-weight:600}
+.directory-grid a:focus-visible,.directory-grid a:hover{background:#27514f;border-color:#80bdac}
+@media(max-width:620px){.directory-panel{top:55px;right:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 65px)}}
+
+#telemetry[hidden],#holdingTitle[hidden]{display:none!important}
+/* Eldoret 2.0: dedicated 4:3 holding wall + family-first controls; no existing pages modified. */
+.mode-btn,.small-btn,.nerd-toggle,.family-tab,.drawer-nerd{font:inherit;cursor:pointer}
+.mode-btn{min-height:36px;border:1px solid #87cdb6;border-radius:10px;background:#1a5148;color:#d8ffed;padding:6px 12px;font-size:12px;letter-spacing:.08em;font-weight:800}
+.mode-btn:focus-visible,.small-btn:focus-visible,.family-tab:focus-visible,.nerd-toggle:focus-visible,.drawer-nerd:focus-visible{outline:2px solid #baf8dd;outline-offset:2px}
+#telemetry{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#telemetry .tile{min-height:104px;padding:10px;grid-template-columns:37% minmax(0,1fr) 10px}
+#telemetry .tile .primary{font-size:19px}
+#telemetry .tile .hint{font-size:9px}
+#telemetry .tile .name{font-size:14px}
+#holdingTitle{cursor:pointer}
+.family-screen[hidden],.drawer-scrim[hidden],.device-drawer[hidden]{display:none!important}
+.family-screen{min-height:450px}
+.family-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:13px 0 12px}
+.family-heading small{font-size:10px;letter-spacing:.12em;color:#96cfc1}
+.family-heading h2{font-size:clamp(19px,2.6vw,27px);margin:4px 0 0;letter-spacing:-.02em}
+.small-btn{background:#173445;border:1px solid #476774;border-radius:10px;padding:8px 11px;color:#deeee9;min-height:36px;font-size:11px;font-weight:740}
+.family-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.family-tab{min-height:46px;background:#142c3c;border:1px solid #345364;color:#bfd5d5;border-radius:11px;font-size:14px;font-weight:800;letter-spacing:.06em}
+.family-tab.active{background:#246353;color:#eafff1;border-color:#78cfac}
+.family-search{display:flex;align-items:center;gap:9px;padding:0 13px;min-height:42px;border:1px solid #31586a;border-radius:11px;background:#0d2332;color:#b3dacf}
+.family-search span{font-size:23px}.family-search input{border:0;outline:0;color:#fff;background:transparent;min-width:0;width:100%;font-size:15px}
+.family-search input::placeholder{color:#92aebb}.family-search button{border:0;background:transparent;color:#d3eee8;font-size:22px}
+.family-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:13px 0}
+.family-card{min-height:113px;display:flex;flex-direction:column;align-items:flex-start;gap:9px;text-align:left;border:1px solid #365f6d;border-radius:17px;background:linear-gradient(145deg,#173a43,#102432);color:#eff8f5;padding:15px;cursor:pointer}
+.family-card:focus-visible,.family-card:hover{border-color:#91e0c5;outline:none;background:#214b4c}
+.family-card .family-icon{font-size:27px}.family-card strong{font-size:17px;line-height:1.2}.family-card small{font-size:11px;color:#a9c9c7;line-height:1.3}
+.family-empty{grid-column:1/-1;color:#bbcbcd;padding:15px}
+.family-bottom{display:flex;align-items:center;justify-content:space-between;margin:14px 2px;color:#89aaaa;font-size:10px;letter-spacing:.1em}
+.nerd-toggle{padding:9px 12px;border:1px solid #416978;background:#142d3e;border-radius:10px;color:#b9e4d6;font-size:11px;font-weight:800}
+.nerd-toggle[aria-pressed="true"]{background:#315948;color:#fff}
+.drawer-scrim{position:fixed;inset:0;z-index:79;background:#020c14b8;backdrop-filter:blur(2px)}
+.device-drawer{position:fixed;right:0;top:0;bottom:0;z-index:80;width:min(490px,100vw);padding:20px 20px 25px;background:linear-gradient(165deg,#173845,#071722 75%);border-left:1px solid #47756d;box-shadow:-12px 0 55px #0009;overflow:auto}
+.drawer-heading{display:flex;align-items:center;justify-content:space-between;gap:9px}.drawer-heading #drawerBadge{font-size:11px;letter-spacing:.15em;color:#93cfc0}
+.drawer-main{display:flex;align-items:center;gap:15px;margin:23px 0 17px}.drawer-icon{width:63px;height:63px;border-radius:17px;background:#1e4a46;display:grid;place-items:center;font-size:32px;flex-shrink:0}
+.drawer-main h2{font-size:28px;margin:0 0 5px}.drawer-main p{font-size:13px;color:#b3cfcf;margin:0}
+.drawer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.drawer-action{min-height:78px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;background:#1b3944;border:1px solid #497174;color:#ecfaf5;text-decoration:none;border-radius:14px;padding:13px;font-weight:700;font-size:15px}
+.drawer-action:hover,.drawer-action:focus-visible{border-color:#a8e8d0;background:#2b524f;outline:none}
+.drawer-action span{font-size:20px}.drawer-meta{border-top:1px solid #31555b;margin-top:22px;padding-top:13px;color:#afcdca;font-size:12px;line-height:1.6}
+.drawer-nerd{display:flex;width:100%;justify-content:space-between;align-items:center;margin-top:18px;padding:13px;border:1px solid #427164;border-radius:11px;background:#172c36;color:#bde7da;font-size:11px;font-weight:800;letter-spacing:.07em}
+.drawer-advanced{margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.drawer-advanced[hidden]{display:none}
+.drawer-advanced a{color:#d8f4ec;background:#132d3c;padding:11px;border:1px solid #36596a;border-radius:9px;text-decoration:none;font-size:12px}
+@media(min-width:920px) and (max-height:800px){#telemetry .tile{min-height:98px}.family-card{min-height:100px}}
+@media(min-width:1250px){#telemetry{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:850px){#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}.family-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.shell{padding:9px}.top{min-height:53px}.top-right{gap:7px}.mode-btn{min-height:32px;font-size:10px;padding:5px 8px}.clock{font-size:19px}
+#telemetry{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}#telemetry .tile{min-height:106px;grid-template-columns:minmax(0,1fr);gap:3px;padding:9px}#telemetry .tile .chevron{display:none}#telemetry .tile .name{font-size:12px}#telemetry .tile .hint{display:none}#telemetry .tile .primary{font-size:16px}#telemetry .tile-data{align-items:flex-start;text-align:left}#telemetry .tile .secondary{font-size:10px}
+.family-heading{margin:10px 0}.family-heading h2{font-size:20px}.family-tab{min-height:43px}.family-card{min-height:108px;padding:12px}.family-card strong{font-size:15px}.family-card .family-icon{font-size:24px}
+.device-drawer{width:100%;top:auto;bottom:0;max-height:92dvh;border-left:0;border-top:1px solid #508176;border-radius:23px 23px 0 0;padding:16px 14px 23px}.drawer-main{margin:15px 0}.drawer-main h2{font-size:24px}.drawer-action{min-height:74px;font-size:14px}
+}
+@media(max-width:360px){.family-cards{grid-template-columns:1fr}#telemetry{grid-template-columns:1fr}.device-drawer{max-height:97dvh}}
+
+/* Eldoret 2.0 luxury visual layer — purposely isolated from every legacy page. */
+:root{--bg:#090d14;--card:#141821;--line:#ffffff26;--muted:#b4aeb4;--bright:#ffe1bd;--good:#b3f0c5;--warn:#ffc875}
+body{background:#090d14;color:#fff3e6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:linear-gradient(100deg,#070911e8 0%,#0a0c15bd 55%,#13101d82 100%),linear-gradient(0deg,#080811c9 0%,transparent 65%),url("eldoret-house-night.webp?v=2") center center/cover no-repeat}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 90% 8%,#ff9f4a24,transparent 35%),radial-gradient(circle at 10% 100%,#9542c71c,transparent 45%)}
+.shell{max-width:1560px}
+.brand .logo{color:#fff0dc;background:linear-gradient(145deg,#a65d3b,#432b48);box-shadow:0 5px 25px #a25b3850}
+h1{letter-spacing:.20em;font-size:23px}h1 small{color:#f3c597;letter-spacing:.25em}
+.clock{font-weight:300;letter-spacing:-.025em;font-size:32px;color:#fff5e8}
+.clock small{color:#d3aaa0}
+.mode-btn{background:linear-gradient(115deg,#d49b58,#a85e52);border:1px solid #ffdfa9;color:#24140f;box-shadow:0 5px 20px #dd8b4933;font-weight:850}
+.refresh,.directory-trigger{background:#241b27b8;border-color:#f1c7a14a;color:#ffe2b8}
+.section strong{font-size:12px;letter-spacing:.15em;color:#f4c8a2}.section span{color:#d6b6ab}
+.alert-dock{background:#22171fd9;border-color:#ca795f75;box-shadow:0 11px 28px #0007}
+.alert-dock[data-clear="true"]{background:#161b22d9;border-color:#8ec5ac6b}
+.alert-head{color:#ffc69a}
+.alert-dock[data-clear="true"] .alert-head{color:#cbebd6}
+.alert-empty{color:#dbd1c5}
+.alert-item{background:#4c292c;border-color:#d18761;color:#fff0c9}
+#telemetry{gap:11px}
+#telemetry .tile{position:relative;isolation:isolate;overflow:hidden;border-radius:19px;min-height:126px;border:1px solid #ffffff40;box-shadow:0 10px 28px #0008;background:#181820c2;grid-template-columns:minmax(0,1fr) auto;align-content:space-between;align-items:start;padding:14px}
+#telemetry .tile::before{content:"";position:absolute;z-index:-1;inset:0;opacity:.85;background:radial-gradient(ellipse at 100% 0%,var(--shine,#ce915b55),transparent 67%),linear-gradient(115deg,var(--tone,#251b2cbb),#101018c7 90%);transition:opacity .2s,transform .2s}
+#telemetry .tile::after{content:var(--art,"✦");position:absolute;z-index:-1;right:12px;top:10px;font-size:70px;line-height:1;color:#ffffff17;filter:drop-shadow(0 9px 8px #0006);transform:rotate(-11deg)}
+#telemetry .tile:hover::before{opacity:1;transform:scale(1.05)}
+#telemetry .tile:hover{border-color:#f5d3ad}
+#telemetry .tile-ident{grid-column:1/-1;align-items:flex-start;gap:9px}
+#telemetry .tile .symbol{font-size:23px;filter:drop-shadow(0 3px 8px #0008)}
+#telemetry .tile-namegroup{gap:5px}
+#telemetry .tile .name{font-size:14px;font-weight:830;text-shadow:0 2px 6px #000a;color:#ffeddc}
+#telemetry .tile .hint{color:#e6c7b7;font-size:9px;letter-spacing:.09em}
+#telemetry .tile-data{grid-column:1/-1;align-items:flex-start;text-align:left;margin-top:10px}
+#telemetry .tile .primary{font-size:clamp(18px,1.95vw,28px);font-weight:760;color:#fff7ef;text-shadow:0 2px 9px #000d}
+#telemetry .tile .secondary{font-size:11px;color:#e5d4d0}
+#telemetry .tile .state{font-size:9px;color:#c4c6d2;font-weight:750}
+#telemetry .tile[data-status="ok"] .state{color:#9aefbf}
+#telemetry .tile .chevron{position:absolute;right:13px;bottom:12px;color:#e7bd9d;opacity:.8}
+#telemetry #energy{--tone:#442d1c;--shine:#ffa53a86;--art:"⚡"}
+#telemetry #ps5{--tone:#281d57;--shine:#9067ff7a;--art:"◈"}
+#telemetry #pioneer{--tone:#31192d;--shine:#db59b67d;--art:"♫"}
+#telemetry #hue{--tone:#35271a;--shine:#ffc25e7c;--art:"☀"}
+#telemetry #sky{--tone:#331c40;--shine:#c973e37d;--art:"◉"}
+#telemetry #tvs{--tone:#1b2546;--shine:#6893ed7d;--art:"▣"}
+#telemetry #appliances{--tone:#3b231b;--shine:#dc835981;--art:"◌"}
+#telemetry #velux{--tone:#1c3331;--shine:#68d4bb7f;--art:"☼"}
+#telemetry #network{--tone:#27232c;--shine:#ac95d77f;--art:"⌁"}
+#telemetry #printer{--tone:#2d2837;--shine:#eab3a27d;--art:"▤"}
+.family-heading small{color:#d69fa2}.family-heading h2{font-size:clamp(24px,3vw,37px);font-weight:730;letter-spacing:-.04em;text-shadow:0 5px 25px #000b}
+.family-nav{gap:9px}
+.family-tab{min-height:54px;background:#281f2cbf;border-color:#e2b28b45;color:#e7d2cb;box-shadow:0 7px 18px #0005;letter-spacing:.08em}
+.family-tab.active{background:linear-gradient(110deg,#bd7856,#724970);border-color:#f6cca6;color:white;box-shadow:0 8px 25px #d3875944}
+.family-search{min-height:50px;border-color:#e7a97851;background:#211b25d9;color:#f2c7a0}
+.family-search input::placeholder{color:#cfaeac}
+.family-cards{gap:12px}
+.family-card{position:relative;overflow:hidden;isolation:isolate;border-radius:20px;min-height:145px;border:1px solid #ffffff47;background:linear-gradient(130deg,#403040de,#17151cde);box-shadow:0 9px 25px #0008;padding:18px;gap:11px}
+.family-card::before{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 100% 3%,var(--item-shine,#f7af7954),transparent 74%),linear-gradient(130deg,var(--item-tone,#3b2838a8),transparent 85%)}
+.family-card::after{content:"";position:absolute;z-index:-1;right:4px;top:-7px;width:110px;height:110px;opacity:.24;border-radius:35% 65% 40% 60%;border:1px solid #ffeadf66;box-shadow:inset 0 0 30px #ffdcc83c;transform:rotate(35deg)}
+.family-card:nth-child(6n+1){--item-tone:#8e4d29bb;--item-shine:#ffa84e87}
+.family-card:nth-child(6n+2){--item-tone:#513668bb;--item-shine:#bb7aff70}
+.family-card:nth-child(6n+3){--item-tone:#744427bb;--item-shine:#ffd36b66}
+.family-card:nth-child(6n+4){--item-tone:#205e5cbb;--item-shine:#54e3cd73}
+.family-card:nth-child(6n+5){--item-tone:#773a62bb;--item-shine:#ee73ca74}
+.family-card:nth-child(6n){--item-tone:#393f75bb;--item-shine:#86a1ff70}
+.family-card:hover,.family-card:focus-visible{background:#432f38;transform:translateY(-1px);border-color:#fff0cf}
+.family-card .family-icon{font-size:36px;filter:drop-shadow(0 6px 12px #0008)}
+.family-card strong{font-size:19px;font-weight:780;text-shadow:0 2px 9px #0009}
+.family-card small{color:#e5c7c3;font-size:11px}
+.small-btn,.nerd-toggle{background:#281f2bd9;border-color:#ca9a8d66;color:#f2d9cb}
+.nerd-toggle[aria-pressed="true"]{background:#6c4166}
+.drawer-scrim{background:#08040ac9}
+.device-drawer{background:linear-gradient(165deg,#3a2838,#17121d 55%,#0b1019);border-color:#d5988166}
+.drawer-icon{background:linear-gradient(140deg,#b67c5b,#65426f);box-shadow:0 9px 24px #0008}
+.drawer-heading #drawerBadge{color:#f5c79f}
+.drawer-main h2{color:#fff4e6}
+.drawer-main p,.drawer-meta{color:#dfc2bc}
+.drawer-action{border-color:#cf97745e;background:linear-gradient(120deg,#513544,#292335);color:#fff2e1}
+.drawer-action:hover,.drawer-action:focus-visible{border-color:#f7d3a4;background:#664653}
+.drawer-nerd{border-color:#c7977a66;background:#2e2430;color:#f0cba8}
+.drawer-advanced a{background:#2b2332;border-color:#9b7c81;color:#ffe9d5}
+.directory-panel{background:#1e1724f7;border-color:#c7927c77}.directory-grid a{background:#322733;border-color:#946f78}.directory-grid a:hover{background:#574050}
+@media(max-width:850px){#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}#telemetry .tile{min-height:119px}.family-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){#telemetry .tile{min-height:108px;padding:11px}#telemetry .tile .hint{display:none}#telemetry .tile .primary{font-size:17px}.family-card{min-height:123px;padding:13px}.family-card .family-icon{font-size:28px}.family-card strong{font-size:16px}.family-heading h2{font-size:23px}.mode-btn{font-size:10px}.drawer-action{min-height:84px}}
+
+/* Eldoret 2.1 — high-art family actions, compact real telemetry underneath */
+.hero-home{margin-top:10px}
+.hero-home[hidden],.telemetry-heading[hidden]{display:none!important}
+.hero-topline{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 1px 10px}
+.hero-topline .micro{font-size:9px;letter-spacing:.22em;color:#f4b88d;font-weight:750}
+.hero-topline h2{font-size:clamp(21px,2.6vw,36px);margin:4px 0 0;font-weight:700;letter-spacing:-.045em;color:#fff2e4}
+.hero-topline-right{font-size:10px;font-weight:750;letter-spacing:.1em;color:#ebccb4;white-space:nowrap}
+.hero-topline-right span{color:#f8ba87;margin-left:5px}
+.hero-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.hero-action{appearance:none;position:relative;isolation:isolate;overflow:hidden;text-align:left;min-height:141px;padding:13px 16px;display:flex;flex-direction:column;align-items:flex-start;border:1px solid #ffffff5a;border-radius:18px;background:#14121b;color:#fff6e9;cursor:pointer;box-shadow:0 13px 27px #0008;transition:transform .15s,border-color .15s}
+.hero-action::before{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(92deg,#0a0b13db 0%,#14101cc7 42%,#2513274a 100%),var(--hero-bg,linear-gradient(110deg,#37263a,#121826));background-position:center;background-size:cover;transform:scale(1.01);transition:transform .22s}
+.hero-action::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 87% 18%,var(--hero-glow,#f4b27b88),transparent 50%),linear-gradient(0deg,#101019cf 0%,transparent 75%)}
+.hero-action:hover,.hero-action:focus-visible{border-color:#ffe3ba;transform:translateY(-1px);outline:none}
+.hero-action:hover::before{transform:scale(1.065)}
+.hero-action .hero-meta{font-size:9px;font-weight:830;letter-spacing:.16em;color:#f7c49c;z-index:1}
+.hero-action strong{font-size:clamp(21px,2.15vw,28px);font-weight:760;letter-spacing:-.035em;margin-top:16px;line-height:1.06;z-index:1;text-shadow:0 3px 10px #000b}
+.hero-action .hero-sub{font-size:11px;color:#f4dbd1;margin-top:7px;z-index:1}
+.hero-action .hero-reading{font-size:10px;color:#efceac;margin-top:auto;padding-top:6px;z-index:1;max-width:90%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero-action .hero-arrow{position:absolute;bottom:13px;right:14px;color:#ffe7b7;font-size:17px}
+.hero-illustration{position:absolute;right:19px;top:23px;font-size:67px;line-height:1;opacity:.70;filter:drop-shadow(0 13px 11px #000b);transform:rotate(-9deg);pointer-events:none}
+.hero-warmcar{--hero-glow:#ffba589c;--hero-bg:linear-gradient(110deg,#5f332b,#8f5632 62%,#211525)}
+.hero-watch{--hero-glow:#905ce6b6;--hero-bg:linear-gradient(110deg,#252047,#38318a 68%,#1a1531)}
+.hero-lighting{--hero-glow:#ffc64eb1;--hero-bg:linear-gradient(110deg,#5b371f,#936a21 70%,#251625)}
+.hero-windows{--hero-glow:#79e0cf99;--hero-bg:linear-gradient(110deg,#174549,#225c6c 70%,#102a3d)}
+.hero-music{--hero-glow:#ee62aeb3;--hero-bg:linear-gradient(110deg,#582843,#8d2f67 70%,#20182f)}
+.hero-status{--hero-glow:#91b0ffc1;--hero-bg:linear-gradient(110deg,#2e395c,#536485 65%,#1b243a)}
+.telemetry-heading{display:flex;align-items:center;gap:10px;margin:13px 1px 7px}
+.telemetry-heading strong{font-size:11px;letter-spacing:.16em;color:#f4cba6}
+.telemetry-heading span{font-size:9px;color:#cfb7ad;letter-spacing:.06em}
+.telemetry-heading button{margin-left:auto;border:1px solid #ba937258;color:#f7d1af;background:#2b2029a3;border-radius:8px;font-size:9px;letter-spacing:.06em;padding:6px 9px;cursor:pointer}
+#telemetry{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+#telemetry .tile{min-height:78px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;border-radius:12px;padding:9px;background:#16141bdc}
+#telemetry .tile::after{font-size:39px;right:4px;top:10px;opacity:.54}
+#telemetry .tile-ident{gap:6px;align-items:center}
+#telemetry .tile .symbol{font-size:14px}
+#telemetry .tile .name{font-size:11px}
+#telemetry .tile .hint,#telemetry .tile .chevron{display:none}
+#telemetry .tile-data{margin-top:2px;align-items:flex-start}
+#telemetry .tile .primary{font-size:14px}
+#telemetry .tile .secondary{font-size:9px;-webkit-line-clamp:1}
+#telemetry .tile .state{font-size:8px}
+@media(min-width:900px) and (max-height:830px){
+ .hero-action{min-height:126px;padding:10px 13px}.hero-action strong{margin-top:11px;font-size:22px}.hero-illustration{font-size:55px}
+ .hero-grid{gap:8px}.hero-topline{margin-bottom:7px}
+ #telemetry .tile{min-height:70px;padding:7px}.telemetry-heading{margin-top:9px}
+}
+@media(max-width:900px){#telemetry{grid-template-columns:repeat(5,minmax(0,1fr))}.hero-illustration{font-size:56px;right:11px}.hero-action strong{font-size:22px}}
+@media(max-width:700px){.hero-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#telemetry{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-action{min-height:126px}.hero-topline-right{display:none}}
+@media(max-width:420px){.hero-action{min-height:124px;padding:10px}.hero-action strong{font-size:19px}.hero-action .hero-meta{font-size:8px}.hero-action .hero-sub{font-size:10px}.hero-illustration{font-size:47px;top:17px;right:8px}#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}.telemetry-heading span{display:none}.hero-topline h2{font-size:23px}}
+
+/* Category-personalised second-level remote surfaces */
+.device-drawer{--drawer-glow:#ebaa7265;--drawer-tone:#3f2d37}
+.device-drawer::before{content:"";position:sticky;display:block;z-index:-1;top:-20px;height:0;pointer-events:none;box-shadow:0 0 175px 85px var(--drawer-glow);opacity:.42}
+.device-drawer[data-category="warmcar"],.device-drawer[data-category="car"],.device-drawer[data-category="outside"]{--drawer-glow:#ffa45c8a;--drawer-tone:#503125}
+.device-drawer[data-category="watch"],.device-drawer[data-category="television"],.device-drawer[data-category="lounge"]{--drawer-glow:#9364e58a;--drawer-tone:#3e2d62}
+.device-drawer[data-category="lighting"],.device-drawer[data-category="hue"]{--drawer-glow:#ffcb7b91;--drawer-tone:#594126}
+.device-drawer[data-category="music"],.device-drawer[data-category="av"]{--drawer-glow:#ed75c38a;--drawer-tone:#5b2a52}
+.device-drawer[data-category="windows"],.device-drawer[data-category="velux"]{--drawer-glow:#78ddc38c;--drawer-tone:#244c4c}
+.device-drawer[data-category="network"]{--drawer-glow:#af95f093;--drawer-tone:#353152}
+.device-drawer .drawer-main{background:linear-gradient(110deg,var(--drawer-tone),#17172370);border:1px solid #ffffff27;border-radius:20px;padding:13px;margin:18px 0 18px;min-height:104px}
+.device-drawer .drawer-action{position:relative;overflow:hidden;border-radius:16px;min-height:94px;background:linear-gradient(145deg,var(--drawer-tone),#221b2ee0);box-shadow:0 8px 18px #0006}
+.device-drawer .drawer-action::after{content:"↗";position:absolute;right:12px;top:11px;color:#f6d8bbad;font-size:14px}
+.device-drawer .drawer-action span{font-size:27px}
+.device-drawer .drawer-action:hover{transform:translateY(-1px)}
+@media(max-width:600px){.device-drawer .drawer-main{min-height:88px}.device-drawer .drawer-action{min-height:83px}}
+
+/* Eldoret 2.2 — live data is the default home; family hero actions appear on entry */
+.hero-home[hidden],.family-cards[hidden],.family-heading[hidden]{display:none!important}
+#telemetry{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#telemetry .tile{min-height:118px;padding:12px;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+#telemetry .tile .symbol{font-size:22px}
+#telemetry .tile .name{font-size:15px}
+#telemetry .tile .hint{display:block;font-size:9px}
+#telemetry .tile .primary{font-size:clamp(18px,2vw,27px)}
+#telemetry .tile .secondary{font-size:11px;-webkit-line-clamp:2}
+#telemetry .tile .state{font-size:9px}
+#telemetry .tile::after{font-size:66px}
+#telemetry .tile .chevron{display:block}
+.hero-home{margin:9px 0}.hero-action{min-height:145px}
+@media(min-width:900px) and (max-height:820px){#telemetry .tile{min-height:111px;padding:10px}.hero-action{min-height:127px}}
+@media(max-width:850px){#telemetry{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}#telemetry .tile{min-height:103px}#telemetry .tile .name{font-size:12px}#telemetry .tile .hint{display:none}#telemetry .tile .primary{font-size:17px}}
+
+/* Eldoret 2.3 experimental dense telemetry surface, isolated from ipad2 */
+body{background:#07111b;font-size:12px}
+.shell{max-width:1920px;padding:7px 12px}
+.top{min-height:47px}.logo{width:30px;height:30px;font-size:18px}h1{font-size:16px}.clock{font-size:19px}
+#holdingTitle{margin:4px 0}.alert-dock{padding:6px 9px!important;margin:4px 0!important}
+#telemetry{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+#telemetry[hidden]{display:none!important}
+#telemetry .tile{min-height:67px;max-height:90px;padding:6px 9px;border-radius:5px;gap:2px}
+#telemetry .tile .tile-ident{gap:5px}#telemetry .tile .symbol{font-size:14px}#telemetry .tile .name{font-size:11px}
+#telemetry .tile .hint{display:none}#telemetry .tile .tile-data{gap:1px}
+#telemetry .tile .primary{font-size:clamp(12px,1.2vw,17px);line-height:1.12}
+#telemetry .tile .secondary{font-size:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;display:block}
+#telemetry .tile .state{font-size:8px}#telemetry .tile::after{font-size:32px}
+.telemetry-heading{margin:5px 0!important}
+#engineeringPanels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:7px}
+#engineeringPanels[hidden]{display:none!important}
+.engine-panel{background:rgba(4,14,25,.89);border:1px solid #365468;border-radius:5px;padding:8px;min-height:146px;overflow:hidden}
+.engine-panel h3{margin:0 0 6px;color:#90ead5;font-size:10px;letter-spacing:.12em}
+.engine-lines{display:grid;gap:3px;font:11px/1.27 ui-monospace,SFMono-Regular,Consolas,monospace}
+.engine-line{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(150,190,190,.10);padding-bottom:2px}
+.engine-line span:first-child{color:#9ab6c2}.engine-line b{font-weight:600;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%}
+.engine-warn{color:#efc18c}.engine-good{color:#85e3bc}
+@media(max-width:1000px){#telemetry{grid-template-columns:repeat(4,minmax(0,1fr))}#engineeringPanels{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){#telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}#engineeringPanels{grid-template-columns:1fr}}
+
+
+/* 2.4 engineering wall: nearly all viewport belongs to source-grounded device readouts */
+#telemetry,#engineeringPanels{display:none!important}#nerdWall[hidden]{display:none!important}
+body{background:#07111b;color:#e4f2f0}
+body:before{content:"";position:fixed;inset:0;background:linear-gradient(#06111ce6,#05101aed);pointer-events:none;z-index:-1}
+.shell{max-width:1920px;padding:6px 9px}
+.top{min-height:44px}.top-right{gap:8px}
+#holdingTitle{margin:3px 0}.alert-dock{margin:3px 0 6px!important;min-height:53px!important;padding:7px 10px!important}
+.telemetry-heading{display:none!important}
+#nerdWall{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:6px;height:calc(100dvh - 166px);min-height:510px}
+.nerd-module{min-width:0;min-height:0;overflow:hidden;border:1px solid #315565a8;background:linear-gradient(145deg,#081a28e8,#06121ee8);border-radius:7px;padding:7px 9px}
+.nerd-module h3{font-size:11px;letter-spacing:.09em;margin:0 0 4px;line-height:1.2;display:flex;gap:6px;align-items:center;color:#a0e9d7;border-bottom:1px solid #ffffff19;padding-bottom:5px}
+.nerd-module h3 span{font-size:15px}.nerd-module h3 a{margin-left:auto;color:#b2d7d3;text-decoration:none;font-size:13px}
+.nerd-rows{display:flex;flex-direction:column;gap:0}
+.nerd-row{display:grid;grid-template-columns:8px minmax(0,1fr) minmax(0,1fr);align-items:center;gap:5px;min-height:17px;border-bottom:1px solid #ffffff10;font:10px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace}
+.nerd-row>span:nth-child(2){color:#c3d8dc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nerd-row b{font-weight:600;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#7893a1}.status-dot.ok{background:#64e5ac;box-shadow:0 0 6px #64e5ac77}.status-dot.off{background:#e9ba65}.status-dot.bad{background:#ec7c75}.status-dot.unknown{background:#738ca1}
+.family-screen:not([hidden]){display:block}
+@media(max-width:1050px){#nerdWall{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));height:calc(100dvh - 166px)}.nerd-row{font-size:9px;min-height:15px}}
+@media(max-width:690px){#nerdWall{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));height:auto}.nerd-module{min-height:145px}.nerd-row{font-size:9px}}
+
+.directory-labelled{font-size:11px!important;letter-spacing:.055em!important;white-space:nowrap;min-width:104px;padding:9px 12px!important;display:inline-flex!important;align-items:center;justify-content:center}
+@media(max-width:680px){.directory-labelled{min-width:auto;padding:8px!important;font-size:9px!important}}
+.status-dot.active{background:#ffd057;box-shadow:0 0 9px #ffc44d99}
+.nerd-row.running{background:linear-gradient(90deg,#9c691f29,transparent);border-left:2px solid #ffd057;margin-left:-2px}
+.nerd-row.running>span:nth-child(2),.nerd-row.running>b{color:#ffe18d!important;font-weight:750}
+</style></head>
+<body><main class="shell">
+<header class="top"><a class="brand" href="index.html"><span class="logo">⌂</span><h1>ELDORET<small>NERD CENTRAL 2.6</small></h1></a><div class="top-right"><button class="mode-btn" id="modeBtn" type="button" aria-label="Open family controls">CONTROLS</button><button class="directory-trigger mode-btn directory-labelled" id="directoryTrigger" type="button" aria-controls="directoryPanel" aria-expanded="false" aria-label="Open all Eldoret systems" title="All Eldoret systems">ALL SYSTEMS</button><div class="clock"><time id="clock">--:--</time><small id="today"></small></div><button class="refresh" id="refresh" type="button" aria-label="Refresh live data">↻</button></div></header>
+<nav class="directory-panel" id="directoryPanel" aria-label="All Eldoret controls" hidden><div class="directory-head"><strong>ELDORET DIRECTORY</strong><button type="button" id="directoryClose" aria-label="Close directory">×</button></div><div class="directory-grid"><a href="ipad2.html">Home 2.0</a><a href="zappi.html">Nissan + Zappi</a><a href="av.html#ps5Panel">PlayStation</a><a href="pioneer.html">Kitchen Audio</a><a href="lights.html">Lights</a><a href="house.html">House Hue</a><a href="utility.html">Utility Hue</a><a href="sky.html">Sky Q</a><a href="tvs.html">Televisions</a><a href="appliances.html">Appliances</a><a href="velux.html">VELUX</a><a href="network.html">Network</a><a href="office.html">Printer / Office</a><a href="bulldog.html">Bulldog</a><a href="radio.html">Radio</a><a href="engineering.html">Diagnostics</a><a href="index.html">Desktop View</a></div></nav><div class="section" id="holdingTitle"><strong>NERD CENTRAL 2.6 · WHOLE HOUSE</strong><span id="health">Checking devices…</span></div>
+<aside class="alert-dock" id="alertsDock" aria-labelledby="alertsTitle"><div class="alert-head"><strong id="alertsTitle">⚠ HOME ALERTS</strong><span id="alertCount" aria-live="polite">Checking…</span></div><div class="alert-list" id="alertsList"><span class="alert-empty">Scanning…</span></div></aside>
+
+<div class="telemetry-heading"><strong>LIVE SYSTEMS</strong><span>BATTERY · ENERGY · NETWORK · HOME</span><button type="button" id="showAllSystems" aria-label="View all systems">CONTROLS ↗</button></div><section class="tiles" id="telemetry" hidden aria-label="Live home systems">
+<a class="tile highlight" href="zappi.html" id="energy"><div class="tile-ident"><span class="symbol" aria-hidden="true">🚗</span><div class="tile-namegroup"><span class="name">Nissan + Zappi</span><span class="hint">BATTERY · kW · RANGE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="av.html#ps5Panel" id="ps5"><div class="tile-ident"><span class="symbol" aria-hidden="true">🎮</span><div class="tile-namegroup"><span class="name">Jesse's PS5</span><span class="hint">GAME · PRESENCE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="pioneer.html" id="pioneer"><div class="tile-ident"><span class="symbol" aria-hidden="true">♫</span><div class="tile-namegroup"><span class="name">Pioneer Audio</span><span class="hint">PWR · VOL · INPUT</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="lights.html" id="hue"><div class="tile-ident"><span class="symbol" aria-hidden="true">💡</span><div class="tile-namegroup"><span class="name">Philips Hue</span><span class="hint">HOUSE · UTILITY</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="sky.html" id="sky"><div class="tile-ident"><span class="symbol" aria-hidden="true">📺</span><div class="tile-namegroup"><span class="name">Sky Q</span><span class="hint">PROGRAMME · SOURCE</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="tvs.html" id="tvs"><div class="tile-ident"><span class="symbol" aria-hidden="true">🖥️</span><div class="tile-namegroup"><span class="name">LG Televisions</span><span class="hint">ROOMS · INPUTS</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="appliances.html" id="appliances"><div class="tile-ident"><span class="symbol" aria-hidden="true">🍽️</span><div class="tile-namegroup"><span class="name">Appliances</span><span class="hint">CYCLES · STATUS</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="velux.html" id="velux"><div class="tile-ident"><span class="symbol" aria-hidden="true">🪟</span><div class="tile-namegroup"><span class="name">VELUX</span><span class="hint">TEMP · WINDOWS</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+<a class="tile" href="network.html" id="network"><div class="tile-ident"><span class="symbol" aria-hidden="true">📶</span><div class="tile-namegroup"><span class="name">Internet + Wi-Fi</span><span class="hint">WAN · APs · CLIENTS</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+
+<a class="tile" href="office.html#epson" id="printer"><div class="tile-ident"><span class="symbol" aria-hidden="true">🖨️</span><div class="tile-namegroup"><span class="name">Epson Printer</span><span class="hint">K · C · M · Y</span></div></div><div class="tile-data"><div class="primary">—</div><div class="secondary">—</div><span class="state">CHECKING</span></div><span class="chevron" aria-hidden="true">↗</span></a>
+</section>
+
+<section id="nerdWall" aria-label="Whole-house engineering wall">
+<section class="nerd-module" aria-label="INTERNET & WI-FI"><h3><span>🌐</span>INTERNET & WI-FI<a href="network.html">↗</a></h3><div id="mod-internet" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="TELEVISIONS"><h3><span>📺</span>TELEVISIONS<a href="tvs.html">↗</a></h3><div id="mod-televisions" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="LIGHTING · HUE"><h3><span>💡</span>LIGHTING · HUE<a href="lights.html">↗</a></h3><div id="mod-lighting" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="APPLIANCES · HOME CONNECT"><h3><span>🍽️</span>APPLIANCES · HOME CONNECT<a href="appliances.html">↗</a></h3><div id="mod-appliance" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="NISSAN ARIYA"><h3><span>🚗</span>NISSAN ARIYA<a href="zappi.html#nissan">↗</a></h3><div id="mod-car" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="BULLDOG · LIVE HEALTH"><h3><span>🖥️</span>BULLDOG · LIVE HEALTH<a href="bulldog.html">↗</a></h3><div id="mod-charging" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="PLAYSTATION · MEDIA"><h3><span>🎮</span>PLAYSTATION · MEDIA<a href="av.html#ps5Panel">↗</a></h3><div id="mod-gaming" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="VELUX · CLIMATE"><h3><span>🪟</span>VELUX · CLIMATE<a href="velux.html">↗</a></h3><div id="mod-windows" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="AUDIO · PIONEER"><h3><span>♫</span>AUDIO · PIONEER<a href="pioneer.html">↗</a></h3><div id="mod-audio" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="PRINTER · HOUSE DEVICES"><h3><span>🖨️</span>PRINTER · HOUSE DEVICES<a href="office.html">↗</a></h3><div id="mod-devices" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="HOME · STATUS SUMMARY"><h3><span>⌂</span>HOME · STATUS SUMMARY<a href="engineering.html">↗</a></h3><div id="mod-engine" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+<section class="nerd-module" aria-label="SOURCES · SYSTEM HEALTH"><h3><span>🔍</span>SOURCES · SYSTEM HEALTH<a href="engineering.html">↗</a></h3><div id="mod-health" class="nerd-rows"><div class="nerd-row"><span class="status-dot unknown"></span><span>Checking data</span><b>—</b></div></div></section>
+</section><section id="engineeringPanels" hidden aria-label="Detailed engineering readouts">
+<article class="engine-panel"><h3>ENERGY + VEHICLE</h3><div id="eng0" class="engine-lines"><div class="engine-line"><span>Awaiting first poll</span><b>—</b></div></div></article>
+<article class="engine-panel"><h3>NETWORK + ACCESS POINTS</h3><div id="eng1" class="engine-lines"><div class="engine-line"><span>Awaiting first poll</span><b>—</b></div></div></article>
+<article class="engine-panel"><h3>ENVIRONMENT + WINDOWS</h3><div id="eng2" class="engine-lines"><div class="engine-line"><span>Awaiting first poll</span><b>—</b></div></div></article>
+<article class="engine-panel"><h3>APPLIANCES + PRINT</h3><div id="eng3" class="engine-lines"><div class="engine-line"><span>Awaiting first poll</span><b>—</b></div></div></article>
+<article class="engine-panel"><h3>API HEALTH + FRESHNESS</h3><div id="eng4" class="engine-lines"><div class="engine-line"><span>Awaiting first poll</span><b>—</b></div></div></article>
+<article class="engine-panel"><h3>HOME INTEGRATIONS</h3><div id="eng5" class="engine-lines"><div class="engine-line"><span>Awaiting first poll</span><b>—</b></div></div></article>
+<article class="engine-panel"><h3>SYSTEM FLAGS</h3><div id="eng6" class="engine-lines"><div class="engine-line"><span>Awaiting first poll</span><b>—</b></div></div></article>
+<article class="engine-panel"><h3>LIVE SOURCE LOG</h3><div id="eng7" class="engine-lines"><div class="engine-line"><span>Awaiting first poll</span><b>—</b></div></div></article>
+</section>
+<section class="family-screen" id="familyScreen" hidden>
+  <div class="family-heading"><div><small>ELDORET · FAMILY</small><h2 id="familyTitle">What shall we do?</h2></div><button type="button" class="small-btn" id="backToLive">◫ LIVE DATA</button></div>
+  <section id="heroHome" class="hero-home" aria-label="Everyday home controls">
+<div class="hero-topline"><div><span class="micro">ELDORET · THE HOUSE</span><h2>Everything at home.</h2></div><span class="hero-topline-right">ONE TAP TO CONTROL <span aria-hidden="true">↗</span></span></div>
+<div class="hero-grid"><button type="button" class="hero-action hero-warmcar" data-hero="warmcar" aria-label="Warm the car"><span class="hero-illustration" aria-hidden="true">🚗</span><span class="hero-meta">CAR</span><strong>Warm the car</strong><span class="hero-sub">Climate · charging</span><span class="hero-reading" id="heroReading-warmcar">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-watch" data-hero="watch" aria-label="Watch TV"><span class="hero-illustration" aria-hidden="true">📺</span><span class="hero-meta">TELEVISION</span><strong>Watch TV</strong><span class="hero-sub">Sky · rooms · volume</span><span class="hero-reading" id="heroReading-watch">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-lighting" data-hero="lighting" aria-label="Lights"><span class="hero-illustration" aria-hidden="true">💡</span><span class="hero-meta">LIGHTING</span><strong>Lights</strong><span class="hero-sub">Rooms · scenes</span><span class="hero-reading" id="heroReading-lighting">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-windows" data-hero="windows" aria-label="Windows"><span class="hero-illustration" aria-hidden="true">🪟</span><span class="hero-meta">WINDOWS</span><strong>Windows</strong><span class="hero-sub">VELUX · ventilation</span><span class="hero-reading" id="heroReading-windows">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-music" data-hero="music" aria-label="Play music"><span class="hero-illustration" aria-hidden="true">♫</span><span class="hero-meta">AUDIO</span><strong>Play music</strong><span class="hero-sub">Pioneer · radio</span><span class="hero-reading" id="heroReading-music">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button><button type="button" class="hero-action hero-status" data-hero="status" aria-label="House status"><span class="hero-illustration" aria-hidden="true">⌂</span><span class="hero-meta">HOUSE</span><strong>House status</strong><span class="hero-sub">Appliances · alerts</span><span class="hero-reading" id="heroReading-status">—</span><span class="hero-arrow" aria-hidden="true">↗</span></button></div>
+</section>
+<nav class="family-nav" aria-label="Home controls">
+    <button type="button" class="family-tab active" data-family-tab="do" aria-selected="true">⚡ DO</button>
+    <button type="button" class="family-tab" data-family-tab="rooms" aria-selected="false">⌂ ROOMS</button>
+    <button type="button" class="family-tab" data-family-tab="systems" aria-selected="false">▦ SYSTEMS</button>
+  </nav>
+  <div class="family-search"><span aria-hidden="true">⌕</span><input id="familySearch" type="search" autocomplete="off" aria-label="Find an action, room or device" placeholder="TV, warm car, kitchen, lights…"><button type="button" id="clearSearch" aria-label="Clear search" hidden>×</button></div>
+  <div class="family-cards" id="familyCards" aria-live="polite"></div>
+  <div class="family-bottom"><span>ALL CONTROLS · ALL ROOMS</span><button type="button" id="familyNerd" class="nerd-toggle" aria-pressed="false">⌘ NERD</button></div>
+</section>
+<div class="drawer-scrim" id="drawerScrim" hidden></div>
+<aside class="device-drawer" id="deviceDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+  <div class="drawer-heading"><button type="button" class="small-btn" id="drawerBack" aria-label="Back">‹ BACK</button><span id="drawerBadge">CONTROL</span><button type="button" class="small-btn" id="drawerClose" aria-label="Close">×</button></div>
+  <div class="drawer-main"><div class="drawer-icon" id="drawerIcon">⌂</div><div><h2 id="drawerTitle">Controls</h2><p id="drawerSubtitle"></p></div></div>
+  <div class="drawer-actions" id="drawerActions"></div>
+  <div class="drawer-meta" id="drawerMeta"></div>
+  <button type="button" class="drawer-nerd" id="drawerNerd" aria-expanded="false">⌘ NERD · DEVICE DETAILS <span>▾</span></button>
+  <div class="drawer-advanced" id="drawerAdvanced" hidden></div>
+</aside>
+<footer class="footer"><span id="checked">STATUS</span><span><a href="index.html">Desktop</a> · <a href="bulldog.html">Bulldog</a> · <a href="engineering.html">Diagnostics</a></span></footer>
+</main>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),time=s=>s?new Date(s).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+const num=v=>typeof v==='number'&&Number.isFinite(v);
+const label=v=>v===null||v===undefined||v===''?'—':String(v);
+const clock=()=>{const d=new Date();$('clock').textContent=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});$('today').textContent=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});};
+clock();setInterval(clock,30000);
+const dirButton=$('directoryTrigger'),dirPanel=$('directoryPanel');
+function toggleDirectory(open){dirPanel.hidden=!open;dirButton.setAttribute('aria-expanded',String(open));}
+dirButton.addEventListener('click',()=>toggleDirectory(dirPanel.hidden));
+$('directoryClose').addEventListener('click',()=>{toggleDirectory(false);dirButton.focus()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!dirPanel.hidden){toggleDirectory(false);dirButton.focus()}});
+document.addEventListener('pointerdown',e=>{if(!dirPanel.hidden&&!dirPanel.contains(e.target)&&!dirButton.contains(e.target))toggleDirectory(false)});
+
+function paint(id,state,primary,secondary,stamp){
+ const e=$(id);if(!e)return;
+ e.dataset.status=state;
+ e.querySelector('.state').textContent=state==='ok'?'CONNECTED':state==='warning'?'ATTENTION':'NO DATA';
+ e.querySelector('.primary').textContent=label(primary);
+ e.querySelector('.secondary').textContent=label(secondary);
+ if(stamp&&e.title!=='manual')e.title='Updated '+new Date(stamp).toLocaleString('en-GB');
+}
+let alerts=new Map(),alertSources=new Map();
+function setAlerts(source,items){
+ alertSources.set(source,items);
+ alerts.clear();for(const [key,values] of alertSources)for(const a of values)alerts.set(key+':'+a.key,a);
+ const dock=$('alertsDock'),list=$('alertsList');list.replaceChildren();
+ const entries=[...alerts.values()];
+ dock.dataset.clear=entries.length===0?'true':'false';
+ $('alertCount').textContent=entries.length?entries.length+' active':'ALL CLEAR';
+ if(!entries.length){const el=document.createElement('span');el.className='alert-empty';el.textContent='ALL CLEAR';list.append(el);return}
+ for(const a of entries.slice(0,8)){const el=document.createElement('a');el.href=a.href;el.className='alert-item';el.textContent='● '+a.text;list.append(el)}
+}
+let energy={car:null,zappi:null};
+let network={router:null,wifi:null};
+function networkPaint(){
+ const r=network.router||{},w=network.wifi||{};
+ const a=(w.devices||[]).filter(x=>['10.0.0.6','10.0.0.7','10.0.0.8','10.0.0.9'].includes(x.ip)),up=a.filter(x=>x.online).length;
+ const dl=num(r.download_mbps)?r.download_mbps.toFixed(1)+' Mb/s':'WAN —';
+ const clients=a.filter(x=>num(x.clients)).reduce((n,x)=>n+x.clients,0);
+ const known=a.some(x=>num(x.clients));
+ paint('network',r.online&&up===4?'ok':r.online||up?'warning':'unknown',dl+' · '+up+'/4 APs',known?clients+' Wi-Fi clients · DrayTek + UniFi':'WAN · UNIFI · CLIENTS —',r.checked_at||w.checked_at);
+ const issues=[];
+ if(r.online===true&&r.link_up===false)issues.push({key:'wan',text:'DrayTek WAN link down',href:'network.html'});
+ if(a.length===4&&up<4)issues.push({key:'aps',text:(4-up)+' UniFi access point(s) not responding',href:'network.html'});
+ setAlerts('network',issues);
+}
+function energyPaint(){
+ const a=energy.car||{},z=energy.zappi||{},connected=Boolean(a.connected||z.connected);
+ const battery=num(a.battery_percent)?Math.round(a.battery_percent)+'%':'Battery —';
+ const power=num(z.charge_power_kw)?z.charge_power_kw.toFixed(2)+' kW':'Power —';
+ const range=num(a.range_miles)?Math.round(a.range_miles)+' mi':'Range —';
+ const mode=z.charge_mode||'Mode —';
+ paint('energy',connected?'ok':'unknown',battery+' · '+power,range+' · '+mode,a.last_vehicle_update||z.checked_at);heroReading('warmcar',battery+' · '+range+' · '+power);
+}
+setAlerts('initial',[]);
+
+const catalogue=[{"id":"warmcar","group":"do","icon":"🚗","title":"Warm the car","sub":"Climate · battery · charging","actions":[["🌡️","Car climate","zappi.html#nissan"],["⚡","Charging","zappi.html"],["🚗","Car status","zappi.html#nissan"]],"nerd":[["Nissan diagnostics","zappi.html#nissan"],["Charging details","zappi.html"]]},{"id":"watch","group":"do","icon":"📺","title":"Watch television","sub":"Choose room · Sky Q · volume","actions":[["🖥️","Choose TV","tvs.html"],["📡","Sky Q","sky.html"],["🔊","Kitchen audio","pioneer.html"],["📋","TV guide","sky.html"]],"nerd":[["TV diagnostics","tvs.html"],["Sky engineering","sky.html"]]},{"id":"lighting","group":"do","icon":"💡","title":"Set the lights","sub":"Rooms · colours · scenes","actions":[["🏠","House lights","house.html"],["💡","Utility lights","utility.html"],["🎨","All scenes","lights.html"],["🌙","Lights overview","lights.html"]],"nerd":[["Bulbs + Hue sensors","lights.html"],["House bridge","house.html"],["Utility bridge","utility.html"]]},{"id":"windows","group":"do","icon":"🪟","title":"Open the windows","sub":"Roof windows · rain · temperature","actions":[["🪟","VELUX controls","velux.html"],["🌡️","Temperature","velux.html"]],"nerd":[["VELUX details","velux.html"],["Network inventory","network.html"]]},{"id":"music","group":"do","icon":"♫","title":"Play music","sub":"Kitchen · radio · volume","actions":[["🔊","Kitchen amplifier","pioneer.html"],["📻","Radio","radio.html"],["🎵","Music","music.html"]],"nerd":[["Pioneer monitoring","pioneer.html"],["Radio sources","radio.html"]]},{"id":"status","group":"do","icon":"🏠","title":"Check the house","sub":"Appliances · printer · alerts","actions":[["🍽️","Appliances","appliances.html"],["🖨️","Printer","office.html#epson"],["📶","Internet","network.html"],["🪟","Windows","velux.html"]],"nerd":[["Bulldog","bulldog.html"],["Engineering","engineering.html"]]},{"id":"kitchen","group":"rooms","icon":"🍳","title":"Kitchen","sub":"TV · lights · audio · appliances","actions":[["📺","Kitchen TV","tvs.html"],["🔊","Kitchen audio","pioneer.html"],["💡","Kitchen lights","house.html"],["🍽️","Dishwashers","appliances.html"],["🪟","Roof windows","velux.html"]],"nerd":[["TV devices","tvs.html"],["Pioneer diagnostics","pioneer.html"],["Hue bridge","house.html"]]},{"id":"lounge","group":"rooms","icon":"🛋️","title":"Lounge","sub":"TV · Sky Q · lights","actions":[["📺","Lounge TV","tvs.html"],["📡","Sky Q","sky.html"],["💡","Lounge lights","house.html"]],"nerd":[["TV engineering","tvs.html"],["Network","network.html"]]},{"id":"bedrooms","group":"rooms","icon":"🛏️","title":"Bedrooms","sub":"Lights · televisions","actions":[["💡","Bedroom lights","house.html"],["📺","Televisions","tvs.html"]],"nerd":[["Hue devices","house.html"],["TV inventory","tvs.html"]]},{"id":"utility","group":"rooms","icon":"🧺","title":"Utility","sub":"Lighting · VELUX · appliances","actions":[["💡","Utility lights","utility.html"],["🪟","Roof windows","velux.html"],["🍽️","Appliances","appliances.html"]],"nerd":[["Utility Hue bridge","utility.html"],["VELUX diagnostics","velux.html"]]},{"id":"office","group":"rooms","icon":"🖨️","title":"Office","sub":"Printer · network","actions":[["🖨️","Epson","office.html#epson"],["📶","Wi-Fi","network.html"]],"nerd":[["Printer diagnostics","office.html"],["Router","network.html"]]},{"id":"outside","group":"rooms","icon":"🌳","title":"Outside / driveway","sub":"Ariya · charger · lights","actions":[["🚗","Car climate","zappi.html#nissan"],["⚡","Car charger","zappi.html"],["💡","Outdoor lights","house.html"]],"nerd":[["Nissan details","zappi.html"],["Network","network.html"]]},{"id":"television","group":"systems","icon":"📺","title":"Television","sub":"Sky Q · all TVs","actions":[["🖥️","Choose television","tvs.html"],["📡","Sky Q","sky.html"],["🔊","Audio","pioneer.html"]],"nerd":[["TV configuration","tvs.html"],["Sky settings","sky.html"]]},{"id":"car","group":"systems","icon":"🚗","title":"Car + charging","sub":"Nissan · Zappi","actions":[["🌡️","Car climate","zappi.html#nissan"],["⚡","Charging","zappi.html"]],"nerd":[["Nissan telemetry","zappi.html"],["Charging telemetry","zappi.html"]]},{"id":"hue","group":"systems","icon":"💡","title":"Lighting","sub":"Rooms · scenes","actions":[["🏠","House lights","house.html"],["💡","Utility","utility.html"],["🎨","Scenes","lights.html"]],"nerd":[["Hue sensors","lights.html"],["Bridge devices","house.html"]]},{"id":"av","group":"systems","icon":"♫","title":"Audio","sub":"Pioneer · radio","actions":[["🔊","Pioneer","pioneer.html"],["📻","Radio","radio.html"]],"nerd":[["Amplifier diagnostics","pioneer.html"]]},{"id":"appliances","group":"systems","icon":"🍽️","title":"Appliances","sub":"Dishwashers · ovens","actions":[["🍽️","Appliances","appliances.html"]],"nerd":[["Home Connect status","appliances.html"]]},{"id":"velux","group":"systems","icon":"🪟","title":"VELUX","sub":"Roof windows · sensors","actions":[["🪟","Windows","velux.html"]],"nerd":[["VELUX gateway","velux.html"]]},{"id":"network","group":"systems","icon":"📶","title":"Internet + Wi-Fi","sub":"DrayTek · UniFi","actions":[["🌐","Internet status","network.html"],["📶","Wi-Fi devices","network.html"]],"nerd":[["DrayTek","network.html"],["UniFi access points","network.html"],["Engineering","engineering.html"]]},{"id":"printer","group":"systems","icon":"🖨️","title":"Printer","sub":"Ink · printing","actions":[["🖨️","Epson","office.html#epson"]],"nerd":[["Ink and diagnostic data","office.html#epson"]]},{"id":"playstation","group":"systems","icon":"🎮","title":"PlayStation","sub":"Jesse · games","actions":[["🎮","PS5 now playing","av.html#ps5Panel"]],"nerd":[["PSN presence","av.html#ps5Panel"]]},{"id":"engineering","group":"systems","icon":"⌘","title":"Engineering","sub":"Heartbeat · diagnostics","actions":[["💓","Bulldog heartbeat","bulldog.html"],["🧰","Engineering","engineering.html"],["📶","Network","network.html"]],"nerd":[["Device diagnostics","engineering.html"]]}];
+let pageMode='live',familyTab='do',familyNerd=false,chosen=null,drawerExpanded=false;
+const cards=$('familyCards'),search=$('familySearch'),drawer=$('deviceDrawer'),scrim=$('drawerScrim');
+const stop=()=>{};
+function familyCatalogue(){
+ const term=search.value.trim().toLowerCase();
+ const list=catalogue.filter(x=>term?[x.title,x.sub,x.group,...x.actions.map(a=>a[1])].join(' ').toLowerCase().includes(term):x.group===familyTab);
+ cards.replaceChildren();
+ if(!list.length){const empty=document.createElement('p');empty.className='family-empty';empty.textContent='NO MATCHES';cards.append(empty);}
+ for(const item of list){
+  const b=document.createElement('button');b.type='button';b.className='family-card';b.setAttribute('aria-label',item.title);
+  const icon=document.createElement('span');icon.className='family-icon';icon.textContent=item.icon;
+  const title=document.createElement('strong');title.textContent=item.title;
+  const sub=document.createElement('small');sub.textContent=item.sub;
+  b.append(icon,title,sub);b.addEventListener('click',()=>openDrawer(item));cards.append(b);
+ }
+ $('clearSearch').hidden=!term;
+ if(pageMode==='family')showFamilyContent();
+}
+function switchPage(to){
+ if(to==='family'){
+  $('nerdWall').hidden=true;
+  $('engineeringPanels').hidden=true;
+  pageMode='family';$('telemetry').hidden=true;document.querySelector('.telemetry-heading').hidden=true;$('holdingTitle').hidden=true;$('familyScreen').hidden=false;
+  $('modeBtn').textContent='LIVE';$('modeBtn').setAttribute('aria-label','Return to telemetry');
+  showFamilyContent();
+ }else{
+  $('nerdWall').hidden=false;
+  $('engineeringPanels').hidden=true;
+  pageMode='live';closeDrawer();$('telemetry').hidden=false;document.querySelector('.telemetry-heading').hidden=false;$('holdingTitle').hidden=false;$('familyScreen').hidden=true;
+  $('modeBtn').textContent='CONTROLS';$('modeBtn').setAttribute('aria-label','Open family controls');
+ }
+}
+function showFamilyContent(){
+ const heroVisible=familyTab==='do'&&!search.value.trim();
+ $('heroHome').hidden=!heroVisible;$('familyCards').hidden=heroVisible;
+ document.querySelector('.family-heading').hidden=heroVisible;
+}
+function detailLinks(container,links,technical){
+ container.replaceChildren();
+ for(const entry of links){
+  const a=document.createElement('a');a.className=technical?'':'drawer-action';a.href=entry[2]||entry[1];
+  if(!technical){const icon=document.createElement('span');icon.textContent=entry[0];a.append(icon);}
+  a.append(document.createTextNode(technical?entry[0]:entry[1]));container.append(a);
+ }
+}
+function openDrawer(item){
+ chosen=item;drawerExpanded=familyNerd;drawer.dataset.category=item.id;
+ $('drawerIcon').textContent=item.icon;$('drawerTitle').textContent=item.title;$('drawerSubtitle').textContent=item.sub;
+ $('drawerMeta').textContent='';
+ detailLinks($('drawerActions'),item.actions,false);
+ const tech=item.nerd.map(x=>[x[0],x[1]]);
+ detailLinks($('drawerAdvanced'),tech,true);
+ $('drawerAdvanced').hidden=!drawerExpanded;$('drawerNerd').setAttribute('aria-expanded',String(drawerExpanded));
+ scrim.hidden=false;drawer.hidden=false;document.body.style.overflow='hidden';
+ $('drawerClose').focus({preventScroll:true});
+}
+function closeDrawer(){scrim.hidden=true;drawer.hidden=true;document.body.style.overflow='';chosen=null}
+$('modeBtn').addEventListener('click',()=>switchPage(pageMode==='live'?'family':'live'));
+$('backToLive').addEventListener('click',()=>switchPage('live'));
+$('holdingTitle').addEventListener('click',()=>switchPage('family'));
+$('telemetry').addEventListener('pointerup',e=>{if(!e.target.closest('a,button'))switchPage('family')});
+// Touching the telemetry wall itself switches to family controls; tapping its tiles remains useful
+// and takes the visitor directly into the relevant household task instead of navigating away.
+const homeToFamily={energy:'warmcar',ps5:'playstation',pioneer:'music',hue:'lighting',sky:'watch',tvs:'television',appliances:'status',velux:'windows',network:'network',printer:'printer'};
+$('telemetry').addEventListener('click',e=>{if(e.target.closest('a.tile')){e.preventDefault();switchPage('family');}});
+document.querySelectorAll('[data-family-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+ familyTab=btn.dataset.familyTab;search.value='';
+ document.querySelectorAll('[data-family-tab]').forEach(b=>{const active=b===btn;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));});
+ $('familyTitle').textContent=familyTab==='do'?'What would you like to do?':familyTab==='rooms'?'Choose a room':'Choose a system';
+ familyCatalogue();
+}));
+search.addEventListener('input',()=>{familyCatalogue();showFamilyContent()});
+$('clearSearch').addEventListener('click',()=>{search.value='';familyCatalogue();search.focus()});
+$('familyNerd').addEventListener('click',()=>{
+ familyNerd=!familyNerd;$('familyNerd').setAttribute('aria-pressed',String(familyNerd));
+ familyTab=familyNerd?'systems':'do';document.querySelector('[data-family-tab="'+familyTab+'"]').click();
+ if(familyNerd)search.value='';
+});
+$('drawerNerd').addEventListener('click',()=>{drawerExpanded=!drawerExpanded;$('drawerAdvanced').hidden=!drawerExpanded;$('drawerNerd').setAttribute('aria-expanded',String(drawerExpanded))});
+$('drawerClose').addEventListener('click',closeDrawer);$('drawerBack').addEventListener('click',closeDrawer);
+scrim.addEventListener('click',closeDrawer);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!drawer.hidden){closeDrawer();e.stopPropagation()}});
+familyCatalogue();
+heroReading('watch','Sky Q · TV rooms · volume');heroReading('music','Pioneer · radio');
+document.querySelectorAll('[data-hero]').forEach(b=>b.addEventListener('click',()=>{switchPage('family');const item=catalogue.find(x=>x.id===b.dataset.hero);if(item)openDrawer(item)}));
+$('showAllSystems').addEventListener('click',()=>{switchPage('family');document.querySelector('[data-family-tab="do"]').click()});
+function heroReading(id,value){const el=$('heroReading-'+id);if(el)el.textContent=value||'—';}
+
+
+const engLatest={};
+function eVal(v){if(v===undefined||v===null||v==='')return '—';if(typeof v==='boolean')return v?'YES':'NO';if(typeof v==='number')return Number.isFinite(v)?String(Math.round(v*100)/100):'—';return String(v).slice(0,72)}
+function engSet(i,rows){
+ const host=$('eng'+i);if(!host)return;host.replaceChildren();
+ for(const [k,v] of rows.slice(0,10)){const d=document.createElement('div');d.className='engine-line';const a=document.createElement('span'),b=document.createElement('b');a.textContent=k;b.textContent=eVal(v);d.append(a,b);host.append(d)}
+}
+function engTick(){
+ const car=engLatest['/api/ariya/status']||{},zap=engLatest['/api/zappi/status']||{};
+ const uni=engLatest['/api/unifi/status']||{},router=engLatest['/api/router/status']||{};
+ const vel=engLatest['/api/velux/status']||{},hc=engLatest['/api/home-connect/status']||{},printer=engLatest['/api/printer/status']||{};
+ const hue=engLatest['/api/hue/group?bridge=house&group=0']||{},ps=engLatest['/api/playstation/activity']||{};
+ const aps=(uni.devices||[]).filter(d=>['10.0.0.6','10.0.0.7','10.0.0.8','10.0.0.9'].includes(d.ip));
+ engSet(0,[['Nissan connected',car.connected],['Battery',car.battery_percent==null?'—':car.battery_percent+'%'],['Vehicle range',car.range_miles==null?'—':car.range_miles+' mi'],['Car last report',car.last_vehicle_update],['Zappi connected',zap.connected],['Charge power',zap.charge_power_kw==null?'—':zap.charge_power_kw+' kW'],['Charge mode',zap.charge_mode],['Zappi checked',zap.checked_at]]);
+ engSet(1,[['Router online',router.online],['WAN link up',router.link_up],['Download rate',router.download_mbps==null?'—':router.download_mbps+' Mb/s'],['UniFi APs detected',aps.length],...aps.map(d=>[(d.name||d.ip).slice(0,26),(d.online?'UP':'DOWN')+' / '+(d.clients==null?'?':d.clients)+' clients'])]);
+ const ws=Array.isArray(vel.windows)?vel.windows:[];
+ engSet(2,[['VELUX connected',vel.connected],['Room temperature',vel.climate?.temperature==null?'—':vel.climate.temperature+' °C'],['Window count',ws.length],...ws.slice(0,4).map((w,i)=>['Window '+(i+1),w.current_position==null?'—':w.current_position+'%']),['Last reading',vel.checked_at],['Automation','NOT ENABLED']]);
+ const devices=Array.isArray(hc.devices)?hc.devices:[];const ink=Array.isArray(printer.ink)?printer.ink:[];
+ engSet(3,[['Home Connect',devices.filter(x=>x.connected).length+' / '+devices.length+' connected'],...devices.slice(0,5).map(d=>[(d.name||'Appliance').slice(0,27),d.connected?'CONNECTED':'UNAVAILABLE']),['Epson online',printer.online],...ink.slice(0,4).map(d=>['Ink '+d.colour,d.percent==null?'—':d.percent+'%'])]);
+ const jobsDone=Object.entries(engLatest);engSet(4,[['Last scan',new Date().toLocaleTimeString('en-GB')],['Responded',jobsDone.length+' / 9'],...jobsDone.slice(0,8).map(([path,v])=>[path.replace('/api/','').slice(0,25),v?.checked_at||v?.observed_at||'Response received'])]);
+ engSet(5,[['House Hue bulbs',Array.isArray(hue.lights)?hue.lights.length:'—'],['PS5 on LAN',ps.live?.online],['PSN game',ps.psn?.game],['PSN status',ps.psn?.online_status],['Sky passive reads','ISOLATED (DESIGN)'],['Airlite fader start','NOT VERIFIED'],['Mac audio independent','NOT VERIFIED']]);
+ const alertsNow=[...alerts.values()];engSet(6,[['Active warnings',alertsNow.length],...alertsNow.slice(0,7).map((x,i)=>['Warning '+(i+1),x.text]),['VELUX movement','DISABLED'],['Sky passive polling','DO NOT ENABLE']]);
+ engSet(7,[['Live polling','120-second interval'],['Source errors','Displayed as NO DATA'],['Last-known readings','May be cached'],['Source: Nissan',car.connected],['Source: Zappi',zap.connected],['Source: UniFi',uni.checked_at?'RESPONDED':'—'],['Source: Router',router.checked_at?'RESPONDED':'—'],['Source: Appliances',hc.checked_at?'RESPONDED':'—']]);
+}
+
+
+/* 2.4: status display only. No device POSTs, no direct Sky reads, no Pioneer TCP polling. */
+const wallExtra={};let wallErrors={};let lastWallFetch=0;
+function wallRow(name,value,state='unknown'){return [String(name),value==null||value===''?'—':String(value),state]}
+function isCharging(v){return typeof v==='string'&&/charging|boost/i.test(v)&&!/not charging|stopped|paused/i.test(v)}
+function wallText(v,fallback='—'){return v===null||v===undefined||v===''?fallback:String(v)}
+function wallStamp(v){if(!v)return '—';let t=new Date(v);return Number.isNaN(t.getTime())?'—':t.toLocaleTimeString('en-GB',{hour12:false})}
+function wallNum(v,suffix='',dec=1){return typeof v==='number'&&Number.isFinite(v)?v.toFixed(dec)+suffix:'—'}
+function wallBool(v){return v===true?'YES':v===false?'NO':'—'}
+function wallEnum(v){return typeof v==='string'?(v.split('.').pop().replace(/([a-z])([A-Z])/g,'$1 $2')):'—'}
+function wallState(v){return v===true?'ok':v===false?'bad':'unknown'}
+function wallDraw(id,rows){const root=$('mod-'+id);if(!root)return;root.replaceChildren();for(const [name,value,state] of rows.slice(0,11)){const row=document.createElement('div');row.className='nerd-row'+(state==='active'?' running':'');const dot=document.createElement('span');dot.className='status-dot '+(state||'unknown');const label=document.createElement('span');label.textContent=name;label.title=name;const v=document.createElement('b');v.textContent=value;v.title=value;row.append(dot,label,v);root.append(row)}}
+function wallAppliance(d){
+ const st=d.status||{};const options=Array.isArray(d.program_options)?d.program_options:[];
+ const rem=options.find(o=>/remainingprogramtime|remainingtime/i.test(o.key||''))?.value;
+ const salt=Object.entries(st).find(([k])=>/salt/i.test(k));
+ const mode=wallEnum(st.OperationState);const run=/^run(?:ning)?$/i.test(mode)||/^run$/i.test(String(st.OperationState).split('.').pop());
+ const detail=[d.active_program?wallEnum(d.active_program):mode];
+ if(typeof rem==='number')detail.push(Math.floor(rem/60)+'m left');
+ if(typeof st.CurrentCavityTemperature==='number')detail.push(st.CurrentCavityTemperature+'°C');
+ if(st.DoorState!=null)detail.push('door '+wallEnum(st.DoorState));
+ if(salt)detail.push('salt '+wallEnum(salt[1]));
+ return wallRow(d.name||'Appliance',d.connected?detail.filter(Boolean).join(' · '):'OFFLINE',d.connected?(run?'active':'off'):'bad');
+}
+function wallRender(){
+ const c=engLatest['/api/ariya/status']||{},z=engLatest['/api/zappi/status']||{},ps=engLatest['/api/playstation/activity']||{};
+ const router=engLatest['/api/router/status']||{},uni=engLatest['/api/unifi/status']||{};
+ const hc=engLatest['/api/home-connect/status']||{},printer=engLatest['/api/printer/status']||{};
+ const hue=engLatest['/api/hue/group?bridge=house&group=0']||{},utility=wallExtra['/api/hue/group?bridge=utility&group=0']||{};
+ const vel=wallExtra['/api/velux/homekit']||{},lounge=wallExtra['/api/lg/live']||{},kitchen=wallExtra['/api/lg/kitchen/status']||{},pio=wallExtra['/api/pioneer/monitor']||{},bulldog=wallExtra['/api/bulldog/status']||{};
+ const aps=Array.isArray(uni.devices)?uni.devices.filter(d=>['10.0.0.6','10.0.0.7','10.0.0.8','10.0.0.9'].includes(d.ip)):[];
+ wallDraw('internet',[
+  wallRow('DrayTek 2865',router.online?'CONNECTED':'UNAVAILABLE',wallState(router.online)),
+  wallRow('WAN download',wallNum(router.download_mbps,' Mb/s',2),wallState(router.online)),
+  wallRow('WAN upload',wallNum(router.upload_mbps,' Mb/s',2),wallState(router.online)),
+  ...aps.map(d=>wallRow(d.name||d.ip,(d.online?'CONNECTED':'OFFLINE')+' · '+wallText(d.clients,'?')+' clients',wallState(d.online))),
+  wallRow('Total AP clients',aps.reduce((a,d)=>a+(typeof d.clients==='number'?d.clients:0),0),aps.length?'ok':'unknown'),
+  wallRow('UniFi sampled',wallStamp(uni.checked_at),uni.checked_at?'ok':'unknown')
+ ]);
+ let tvrows=[
+  wallRow('Sky Q','SAFE MODE · NO AUTO-POLL','off'),
+  wallRow('Lounge LG',lounge.online===true?('ON · '+wallText(lounge.input||lounge.app_name||lounge.app)):lounge.online===false?'NO RESPONSE':'UNKNOWN',wallState(lounge.online)),
+  wallRow('Kitchen LG',kitchen.paired?'PAIRED · power unknown':'PAIRING UNKNOWN',kitchen.paired?'off':'unknown')
+ ];
+ if(lounge.online===true&&lounge.volume!=null)tvrows.push(wallRow('Lounge volume',lounge.volume+' · mute '+wallBool(lounge.muted),'ok'));
+ for(const name of ['bedroom','office']){const x=wallExtra['/api/lg/room/'+name+'/status'];if(x)tvrows.push(wallRow(name+' LG',x.paired?'PAIRED · power unknown':'UNAVAILABLE',x.paired?'off':'unknown'))}
+ wallDraw('televisions',tvrows);
+ let houseLights=Array.isArray(hue.lights)?hue.lights:[],utilLights=Array.isArray(utility.lights)?utility.lights:[];
+ wallDraw('lighting',[wallRow('House bridge',houseLights.length?'CONNECTED':'NO DATA',houseLights.length?'ok':'unknown'),
+ wallRow('House bulbs',houseLights.length,houseLights.length?'ok':'unknown'),
+ wallRow('Utility bridge',utilLights.length?'CONNECTED':'NO DATA',utilLights.length?'ok':'unknown'),
+ wallRow('Utility bulbs',utilLights.length,utilLights.length?'ok':'unknown'),
+ 
+ wallRow('Lights automation','Manual confirm preserved','off')]);
+ const devices=Array.isArray(hc.devices)?hc.devices:[];
+ wallDraw('appliance',devices.length?[wallRow('Home Connect',devices.filter(d=>d.connected).length+'/'+devices.length+' connected',devices.every(d=>d.connected)?'ok':'off'),...devices.map(wallAppliance),wallRow('Data checked',wallStamp(hc.checked_at),hc.checked_at?'ok':'unknown')]:[wallRow('Home Connect','UNAVAILABLE','bad'),wallRow('Samsung fridge','NOT YET LINKED','off')]);
+ wallDraw('car',[
+ wallRow('NissanConnect',c.connected?'CONNECTED':'UNAVAILABLE',wallState(c.connected)),
+ wallRow('Battery',c.battery_percent==null?'—':c.battery_percent+'%',wallState(c.connected)),
+ wallRow('Range',wallNum(c.range_miles,' mi'),wallState(c.connected)),
+ wallRow('Cabin temp',wallNum(c.cabin_temperature_c,'°C'),wallState(c.connected)),
+ wallRow('Climate',c.climate_active===true?'ON · HEATING / COOLING':c.climate_active===false?'OFF':'—',c.climate_active===true?'active':'off'),
+ wallRow('Vehicle cable',c.plugged_in===true?'PLUGGED':c.plugged_in===false?'UNPLUGGED':'—',wallState(c.connected)),
+ wallRow('Zappi',z.connected?'CONNECTED':'UNAVAILABLE',wallState(z.connected)),
+ wallRow('Charge state',wallText(z.charging_state),isCharging(z.charging_state)?'active':wallState(z.connected)),
+ wallRow('Charge power',wallNum(z.charge_power_kw,' kW',2),typeof z.charge_power_kw==='number'&&z.charge_power_kw>0.05?'active':wallState(z.connected)),
+ wallRow('Charge mode',wallText(z.charge_mode),wallState(z.connected)),
+ wallRow('Session energy',wallNum(z.session_energy_kwh,' kWh',2),wallState(z.connected))
+ ]);
+ const pn=ps.psn||{},pl=ps.live||{};wallDraw('gaming',[wallRow('PS5 local',pl.online?'ON LAN':'NOT REACHABLE',wallState(pl.online)),wallRow('PSN status',wallText(pn.online_status),pn.connected?'ok':'unknown'),wallRow('Game',wallText(pn.game||pl.running_app_name),pn.game?'active':'unknown'),wallRow('Last update',wallStamp(pn.checked_at||ps.observed_at),'unknown')]);
+ const vcl=vel.climate||{},vws=Array.isArray(vel.windows)?vel.windows:[];
+ wallDraw('windows',[wallRow('VELUX HomeKit',vel.connected?'CONNECTED':'UNAVAILABLE',wallState(vel.connected)),wallRow('Temperature',wallNum(vcl.temperature,'°C'),wallState(vel.connected)),wallRow('Humidity',wallNum(vcl.humidity,'%'),wallState(vel.connected)),wallRow('CO₂',wallNum(vcl.co2,' ppm',0),wallState(vel.connected)),...vws.map((w,i)=>wallRow('Window '+(i+1),w.current_position==null?'—':w.current_position+'% open',w.current_position===0?'off':'ok')),wallRow('Automatic movement','OFF · native rain safety','off')]);
+ const pv=pio.live||{};wallDraw('audio',[wallRow('Pioneer network',(pv.state||pv.online===true)?'MONITORED':'NO LIVE STATUS',pv.state==='reachable'?'ok':'unknown'),wallRow('Last ping',wallStamp(pv.checked_at||pv.at),'unknown'),wallRow('Airlite fader-start','UNTESTED','unknown'),wallRow('Mac playout','INDEPENDENCE UNTESTED','unknown')]);
+ const ink=Array.isArray(printer.ink)?printer.ink:[];wallDraw('devices',[wallRow('Epson',printer.online?'CONNECTED':'UNAVAILABLE',wallState(printer.online)),...ink.map(x=>wallRow('Ink '+x.colour,x.percent==null?'—':x.percent+'%',x.percent<=15?'off':'ok')),wallRow('Samsung fridge','NOT YET ONBOARDED','off')]);
+ wallDraw('charging',[
+ wallRow('Controller',bulldog.health==='good'?'HEALTHY':wallText(bulldog.health),bulldog.health==='good'?'ok':'unknown'),
+ wallRow('CPU temperature',wallNum(bulldog.temperature_c,'°C'),wallState(bulldog.temperature_c!=null)),
+ wallRow('CPU utilisation',wallNum(bulldog.cpu_percent,'%'),wallState(bulldog.cpu_percent!=null)),
+ wallRow('Memory used',wallNum(bulldog.memory_percent,'%'),wallState(bulldog.memory_percent!=null)),
+ wallRow('Storage used',wallNum(bulldog.disk_percent,'%'),wallState(bulldog.disk_percent!=null)),
+ wallRow('Last sample',wallStamp(bulldog.checked_at),bulldog.checked_at?'ok':'unknown')
+ ]);
+ wallDraw('engine',[
+ wallRow('Home Connect',devices.filter(d=>d.connected).length+' / '+devices.length+' connected',devices.length?'ok':'unknown'),
+ wallRow('UniFi access points',aps.filter(d=>d.online).length+' / '+aps.length+' online',aps.length?'ok':'unknown'),
+ wallRow('House Hue',houseLights.length?houseLights.length+' lights':'—',houseLights.length?'ok':'unknown'),
+ wallRow('Utility Hue',utilLights.length?utilLights.length+' lights':'—',utilLights.length?'ok':'unknown'),
+ wallRow('Nissan',c.connected?'CONNECTED':'UNAVAILABLE',wallState(c.connected)),
+ wallRow('Zappi',z.connected?'CONNECTED':'UNAVAILABLE',wallState(z.connected)),
+ wallRow('VELUX',vel.connected?'CONNECTED':'UNAVAILABLE',wallState(vel.connected)),
+ wallRow('Epson',printer.online?'CONNECTED':'UNAVAILABLE',wallState(printer.online))
+ ]);
+ const sourceCount=Object.keys(engLatest).length+Object.keys(wallExtra).length;wallDraw('health',[wallRow('Telemetry sources',sourceCount+' responded','ok'),wallRow('Active alerts',alerts.size,alerts.size?'off':'ok'),wallRow('Nissan data',c.connected?'READY':'NO DATA',wallState(c.connected)),wallRow('Sky passive GET','SAFE · NO AUTO-POLL','off'),wallRow('Last wall scan',new Date().toLocaleTimeString('en-GB'), 'ok'),wallRow('All statuses','GREEN/AMBER/RED/UNKNOWN','unknown')]);
+}
+const wallExtraURLs=['/api/hue/group?bridge=utility&group=0','/api/velux/homekit','/api/lg/live','/api/lg/kitchen/status','/api/lg/room/bedroom/status','/api/lg/room/office/status','/api/pioneer/monitor','/api/bulldog/status'];
+async function updateWallExtra(){
+ if(document.hidden||Date.now()-lastWallFetch<100000)return;
+ lastWallFetch=Date.now();
+ await Promise.all(wallExtraURLs.map(async url=>{
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),17000);
+ try{const res=await fetch(url,{cache:'no-store',signal:ctrl.signal});if(!res.ok)throw Error('HTTP '+res.status);wallExtra[url]=await res.json();delete wallErrors[url]}
+ catch(e){delete wallExtra[url];wallErrors[url]=e.message}
+ finally{clearTimeout(timer)}
+ }));
+ wallRender();
+}
+let idleAt=Date.now();
+const markActivity=()=>{idleAt=Date.now()};
+['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,markActivity,{passive:true}));
+setInterval(()=>{if(pageMode==='family'&&Date.now()-idleAt>=60000){closeDrawer();switchPage('live');}},5000);
+
+const jobs=[
+{id:'energy',url:'/api/ariya/status',fn:p=>{energy.car=p;energyPaint()}},
+{id:'energy',url:'/api/zappi/status',fn:p=>{energy.zappi=p;energyPaint()}},
+{id:'ps5',url:'/api/playstation/activity',fn:p=>{const n=p.psn||{},c=p.live||{};paint('ps5',c.online?'ok':'unknown',n.game||c.running_app_name||(c.online?'PS5 online':'OFFLINE'),n.game?'Now playing · PSN':n.connected?'PSN: '+label(n.online_status):'GAME —',n.checked_at||p.observed_at)}},
+{id:'appliances',url:'/api/home-connect/status',fn:p=>{const a=Array.isArray(p.devices)?p.devices:[];const connected=a.filter(x=>x.connected).length;paint('appliances',connected?'ok':'unknown',connected+' / '+a.length+' linked',a.filter(x=>x.connected).slice(0,2).map(x=>x.name||'Connected appliance').join(' · ')||'Home Connect',p.checked_at);const found=[];for(const d of a){if(!d.connected)continue;for(const [k,v] of Object.entries(d.status||{})){if(/salt|rinseaid/i.test(k)&&(/empty|low|refill|replace|true/i.test(String(v))||v===1)){found.push({key:(d.name||'appliance')+k,text:(/salt/i.test(k)?'Low salt: ':'Rinse aid: ')+(d.name||'dishwasher'),href:'appliances.html'})}}}setAlerts('appliances',found);heroReading('status',connected+' appliance'+(connected===1?'':'s')+' online'+(found.length?' · '+found.length+' alert'+(found.length===1?'':'s'):''))}},
+{id:'velux',url:'/api/velux/status',fn:p=>{const temp=p.climate?.temperature;const ws=Array.isArray(p.windows)?p.windows:[];paint('velux',p.connected?'ok':'unknown',num(temp)?temp.toFixed(1)+'°C':'Temp —',ws.length?ws.length+' windows · '+ws.filter(w=>num(w.current_position)&&w.current_position>0).length+' open':'WINDOWS —',p.checked_at);heroReading('windows',(num(temp)?temp.toFixed(1)+'°C':'Temp —')+(ws.length?' · '+ws.length+' windows':''))}},
+{id:'network',url:'/api/unifi/status',fn:p=>{network.wifi=p;networkPaint()}},
+{id:'network',url:'/api/router/status',fn:p=>{network.router=p;networkPaint()}},
+{id:'printer',url:'/api/printer/status',fn:p=>{const ink=(p.ink||[]).filter(x=>num(x.percent));const low=ink.filter(x=>x.percent<=15);paint('printer',p.online?(low.length?'warning':'ok'):'unknown',p.online?'Printer online':'OFFLINE',ink.length?ink.map(x=>x.colour[0]+': '+x.percent+'%').join('  '):'INK —',p.checked_at);setAlerts('printer',[...low.map(x=>({key:'ink-'+x.colour,text:'Low '+x.colour.toLowerCase()+' ink ('+x.percent+'%)',href:'office.html#epson'})),...(Array.isArray(p.alerts)?p.alerts.filter(x=>typeof x==='string'&&x.length<120).slice(0,3).map((x,i)=>({key:'printer-'+i,text:x,href:'office.html#epson'})):[])])}},
+{id:'hue',url:'/api/hue/group?bridge=house&group=0',fn:p=>{const lights=Array.isArray(p.lights)?p.lights:[];paint('hue','ok',lights.length+' house lights','UTILITY · ROOMS · SCENES',new Date().toISOString());heroReading('lighting',lights.length+' house lights · scenes')}}
+];
+let busy=false;
+async function refresh(){if(busy||document.hidden)return;busy=true;$('refresh').disabled=true;let ok=0;await Promise.all(jobs.map(async j=>{const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch(j.url,{cache:'no-store',signal:controller.signal});if(!r.ok)throw Error('HTTP status');const data=await r.json();j.fn(data);engLatest[j.url]=data;ok++;}catch(_){delete engLatest[j.url];if(j.id==='energy'){if(j.url.includes('ariya'))energy.car=null;else energy.zappi=null;energyPaint();}else if(j.id==='network'){if(j.url.includes('router'))network.router=null;else network.wifi=null;networkPaint()}else paint(j.id,'unknown','—','NO DATA',null)}finally{clearTimeout(timer)}}));engTick();wallRender();updateWallExtra();$('health').textContent=ok+' / '+jobs.length+' HTTP responses · device data independently labelled';$('checked').textContent='Last dashboard check '+time(new Date().toISOString())+' · values may be cached';busy=false;$('refresh').disabled=false;}
+$('refresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});refresh();setInterval(refresh,120000);
+})();
+</script>
+</body></html>
