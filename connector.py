@@ -4397,7 +4397,7 @@ PIONEER_LOCK = threading.Lock()
 PIONEER_LAST_COMMAND = 0.0
 PIONEER_COMMANDS = {"volume_up":"VU", "volume_down":"VD", "mute_on":"MO",
                     "mute_off":"MF", "power_off":"PF", "power_on":"PO",
-                    "source_next":"FU"}
+                    "source_next":"FU", "source_tv_test":"59FN", "source_studio_test":"51FN"}
 
 def pioneer_exchange(command, timeout=1.5):
     with socket.create_connection((PIONEER_HOST,PIONEER_PORT), timeout=timeout) as sock:
@@ -4493,7 +4493,9 @@ def pioneer_control(action):
             return {"ok":False,"error":"Please wait before sending another command"}
         PIONEER_LAST_COMMAND=now
         reply=pioneer_exchange(PIONEER_COMMANDS[action])
-        return {"ok":True,"command":action,"reply":reply[:80],"host":PIONEER_HOST}
+        return {"ok":True,"command":action,"reply":reply[:80],"host":PIONEER_HOST,
+                "device_confirmed":False,
+                "note":"Sent to control socket; check actual receiver input manually."}
     except (OSError, ValueError) as exc:
         return {"ok":False,"error":"Receiver connection failed: "+type(exc).__name__}
     finally:
