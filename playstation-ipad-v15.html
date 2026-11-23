@@ -89,8 +89,8 @@ main{grid-template-rows:minmax(0,16fr) minmax(0,72fr) minmax(0,12fr)}
 function gameCover(title,psn,currentTitle){
  const t=String(title||'').trim();
  if(t===currentTitle && typeof psn.game_artwork==='string' && /^https:\/\//i.test(psn.game_artwork) && psn.game_artwork.length<2000)return psn.game_artwork;
- if(/^rocket league(?:®|\\u00ae)?(?:\\s|$)/i.test(t))return 'https://commons.wikimedia.org/wiki/Special:FilePath/Rocket_League_coverart.jpg';
- if(/^EA SPORTS(?:™|\\u2122)?\\s*FC(?:™|\\u2122)?\\s*27(?:\\s|$)/i.test(t))return 'https://store-images.s-microsoft.com/image/apps.47660.13743839398469485.db2131e0-e679-48e9-9a6a-8a24fa7716b1.c794348b-7cd8-4ff5-8d65-f3d37c533731';
+ if(/^rocket league(?:®|\u00ae)?(?:\s|$)/i.test(t))return 'https://commons.wikimedia.org/wiki/Special:FilePath/Rocket_League_coverart.jpg';
+ if(/^EA SPORTS(?:™|\u2122)?\s*FC(?:™|\u2122)?\s*27(?:\s|$)/i.test(t))return 'https://store-images.s-microsoft.com/image/apps.47660.13743839398469485.db2131e0-e679-48e9-9a6a-8a24fa7716b1.c794348b-7cd8-4ff5-8d65-f3d37c533731';
  return null;
 }
 function renderGameGallery(sessions,psn,currentTitle){
