@@ -4927,6 +4927,7 @@ class Handler(BaseHTTPRequestHandler):
             "/av.html": ("av.html", "text/html; charset=utf-8"),
             "/tvs.html": ("tvs.html", "text/html; charset=utf-8"),
             "/appliances.html": ("appliances.html", "text/html; charset=utf-8"),
+            "/fridge.html": ("fridge.html", "text/html; charset=utf-8"),
             "/office.html": ("office.html", "text/html; charset=utf-8"),
             "/radio.html": ("radio.html", "text/html; charset=utf-8"),
             "/sky-radio.html": ("sky-radio.html", "text/html; charset=utf-8"),
