@@ -4982,6 +4982,9 @@ class Handler(BaseHTTPRequestHandler):
             "/zappi.html": ("zappi.html", "text/html; charset=utf-8"),
             "/ariya-ipad.html": ("ariya-ipad.html", "text/html; charset=utf-8"),
             "/ariya-ipad-v11.html": ("ariya-ipad-v11.html", "text/html; charset=utf-8"),
+            "/ariya-ipad-v11-approved.html": ("ariya-ipad-v11-approved.html", "text/html; charset=utf-8"),
+            # Stable Ariya control URL; promote future revisions by updating only this mapping.
+            "/ariya-control.html": ("ariya-ipad-v11-approved.html", "text/html; charset=utf-8"),
             "/ariya-design-v11.json": ("ariya-design-v11.json", "application/json"),
             "/ipad2.html": ("ipad2.html", "text/html; charset=utf-8"),
             "/ipad3.html": ("ipad3.html", "text/html; charset=utf-8"),
