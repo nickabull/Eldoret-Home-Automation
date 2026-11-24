@@ -5123,6 +5123,7 @@ class Handler(BaseHTTPRequestHandler):
             "/bulldog.html": ("bulldog.html", "text/html; charset=utf-8"),
             "/heartbeats.html": ("heartbeats-v2.html", "text/html; charset=utf-8"),
             "/bulldog-monitor-v10.html": ("bulldog-nerd-monitor-v10.html", "text/html; charset=utf-8"),
+            "/bulldog-monitor-v11.html": ("bulldog-nerd-monitor-v11.html", "text/html; charset=utf-8"),
             "/bulldog-monitor.html": ("bulldog-nerd-monitor-v10.html", "text/html; charset=utf-8"),
             "/heartbeats-legacy.html": ("heartbeats-legacy.html", "text/html; charset=utf-8"),
             "/heartbeats-v2.html": ("heartbeats-v2.html", "text/html; charset=utf-8"),
