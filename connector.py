@@ -2629,7 +2629,7 @@ HOME_CONNECT_CACHE = {"expires":0,"data":None}
 HOME_CONNECT_SNAPSHOT_INTERVAL = 7200
 HOME_CONNECT_LAST_GOOD_FILE = os.path.expanduser("~/.config/eldoret/home-connect-last-good.json")
 HOME_CONNECT_COOLDOWN_FILE = os.path.expanduser("~/.config/eldoret/home-connect-cooldown.json")
-# On HTTP 429, pause new Home Connect cloud requests for one hour.
+# On HTTP 429, honour Retry-After, with a conservative one-hour fallback.
 HOME_CONNECT_RATE_LIMIT_UNTIL = 0
 HOME_CONNECT_CONFIG = os.path.expanduser("~/.config/home-connect.json")
 HOME_CONNECT_TOKENS = os.path.expanduser("~/.config/home-connect-tokens.json")
@@ -2677,8 +2677,15 @@ def _hc_token():
     req=urllib.request.Request(HOME_CONNECT_TOKEN_URL,data=payload,
         headers={"Content-Type":"application/x-www-form-urlencoded","Accept":"application/json"},
         method="POST")
-    with urllib.request.urlopen(req,timeout=15) as response:
-        new=json.load(response)
+    if _hc_cooldown_seconds()>0:
+        raise RuntimeError("Home Connect appliance list HTTP 429")
+    try:
+        with urllib.request.urlopen(req,timeout=15) as response:
+            new=json.load(response)
+    except urllib.error.HTTPError as exc:
+        if exc.code==429:
+            _hc_set_cooldown(_hc_retry_after(exc))
+        raise RuntimeError("Home Connect appliance list HTTP "+str(exc.code)) from None
     if not new.get("access_token"):
         raise RuntimeError("Home Connect did not return an access token")
     # Some refresh responses omit refresh_token; preserve the previous one.
@@ -2713,17 +2720,28 @@ def _hc_private_snapshot_read(path):
     except (OSError,ValueError,TypeError):
         return None
 
+def _hc_retry_after(exc):
+    from email.utils import parsedate_to_datetime
+    value=exc.headers.get("Retry-After","") if exc.headers else ""
+    try:
+        return max(60,int(value))
+    except (ValueError,TypeError):
+        try:
+            return max(60,int(parsedate_to_datetime(value).timestamp()-time.time()))
+        except (ValueError,TypeError,OverflowError):
+            return 3600
+
 def _hc_set_cooldown(seconds=3600):
     global HOME_CONNECT_RATE_LIMIT_UNTIL
     HOME_CONNECT_RATE_LIMIT_UNTIL=max(HOME_CONNECT_RATE_LIMIT_UNTIL,time.monotonic()+seconds)
     _hc_private_snapshot_write(HOME_CONNECT_COOLDOWN_FILE,
-        {"retry_after_epoch":time.time()+seconds})
+        {"retry_after_epoch":time.time()+max(0,HOME_CONNECT_RATE_LIMIT_UNTIL-time.monotonic())})
 
 def _hc_cooldown_seconds():
     global HOME_CONNECT_RATE_LIMIT_UNTIL
     saved=_hc_private_snapshot_read(HOME_CONNECT_COOLDOWN_FILE)
     if saved and isinstance(saved.get("retry_after_epoch"),(int,float)):
-        wait=max(0,min(86400,saved["retry_after_epoch"]-time.time()))
+        wait=max(0,saved["retry_after_epoch"]-time.time())
         if wait>0:
             HOME_CONNECT_RATE_LIMIT_UNTIL=max(HOME_CONNECT_RATE_LIMIT_UNTIL,time.monotonic()+wait)
     return max(0,int(HOME_CONNECT_RATE_LIMIT_UNTIL-time.monotonic()))
@@ -2751,7 +2769,7 @@ def _hc_get(token, endpoint):
             return json.load(response).get("data",{}),None
     except HTTPError as exc:
         if exc.code==429:
-            _hc_set_cooldown(3600)
+            _hc_set_cooldown(_hc_retry_after(exc))
         # 404 is normal when no active programme is available.
         return {},exc.code
 
@@ -2843,7 +2861,8 @@ def home_connect_status():
                     code=int(http_match.group(1))
                     result["error_code"]="cloud_http_"+str(code)
                     if code==429:
-                        _hc_set_cooldown(3600)
+                        if _hc_cooldown_seconds()<=0:
+                            _hc_set_cooldown(3600)
                         result["error"]="Home Connect API rate limit; showing last-known readings"
                     elif code in (401,403):
                         result["error"]="Home Connect rejected API access; verify authorisation"
@@ -3039,13 +3058,18 @@ def _hc_event_loop():
     failures=0
     while True:
         # The event stream shares the same cooldown as appliance polling.
-        remaining=HOME_CONNECT_RATE_LIMIT_UNTIL-time.monotonic()
+        remaining=_hc_cooldown_seconds()
         if remaining>0:
             HOME_CONNECT_SSE_CONNECTED=False
             time.sleep(min(remaining,60))
             continue
+        if not HOME_CONNECT_DEVICE_IDS:
+            time.sleep(60)
+            continue
         try:
             with HOME_CONNECT_LOCK:
+                if _hc_cooldown_seconds()>0:
+                    continue
                 token=_hc_token()
             req=urllib.request.Request(HOME_CONNECT_BASE+"/homeappliances/events",
                 headers={"Authorization":"Bearer "+token,"Accept":"text/event-stream",
@@ -3084,11 +3108,11 @@ def _hc_event_loop():
             HOME_CONNECT_SSE_CONNECTED=False
             failures+=1
             if exc.code==429:
-                _hc_set_cooldown(3600)
+                _hc_set_cooldown(_hc_retry_after(exc))
         except Exception:
             HOME_CONNECT_SSE_CONNECTED=False
             failures+=1
-        time.sleep(min(900,max(30,30*(2**min(5,failures-1)))))
+        time.sleep(min(3600,max(300,300*(2**min(4,failures-1)))))
 
 def unifi_status():
     if _unifi_snmp_enabled():
