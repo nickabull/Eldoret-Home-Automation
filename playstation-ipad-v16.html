@@ -153,9 +153,9 @@ function renderGameGallery(sessions,psn,currentTitle){
 }
 
 function render(p){const local=p.live||{},psn=p.psn||{},connected=local.online===true,psnOk=psn.connected===true;
-$('badge').textContent=connected?'CONSOLE ONLINE':psnOk?'PSN CONNECTED':'NOT RESPONDING';
-$('badge').className='pill'+(connected?'':psnOk?' warn':' bad');
-text('statusText',connected?'Console responding to local discovery':psnOk?'PSN responding · console may be sleeping':'No local console response · may be in rest mode');
+$('badge').textContent=connected?'CONSOLE ONLINE':psnOk?'PSN CONNECTED':local.online===false?'LIKELY OFF / REST MODE':'POWER UNKNOWN';
+$('badge').className='pill'+(connected?'':' warn');
+text('statusText',connected?'Console responding to local discovery':psnOk?'PSN responding · console may be sleeping':'Console power not confirmed · may be off or in rest mode');
 const game=psn.game||local.running_app_name||'No game currently reported';
 text('gameTitle',game);text('gameStatus',psn.game_status||(psn.game?'Live game reported by PSN':local.running_app_name?'Game reported by console':'No game reported — this does not establish that no game is being played.'));
 text('psn',psn.connected?psn.online_status||'Connected':psn.detail||'Not available');text('platform',psn.platform||local.host_type||'—');
@@ -176,7 +176,7 @@ const sequence=[sonyArt,fallback].filter(Boolean);let next=0;
 art.onload=()=>cover.classList.add('hasArt');
 art.onerror=()=>{if(next<sequence.length){art.src=sequence[next++];}else{cover.classList.remove('hasArt');art.removeAttribute('src');}};
 if(sequence.length)art.src=sequence[next++];
-text('console',connected?'Online':'No response');text('consoleName',local.host_name||'—');text('version',local.system_version||'—');text('ip',local.ip||'—');
+text('console',connected?'Online':local.online===false?'Likely off / rest mode':'Power unknown');text('consoleName',local.host_name||'—');text('version',local.system_version||'—');text('ip',local.ip||'—');
 text('discovery',connected?'UDP response':'Not available');
 const activity=$('activity');activity.replaceChildren();const events=Array.isArray(p.events)?p.events.slice(-3).reverse():[];
 if(events.length){for(const e of events){const line=document.createElement('div');line.className='activityItem';const name=document.createElement('span'),date=document.createElement('time');name.textContent=e.detail||e.kind||'Event';date.textContent=clock(e.at);line.append(name,date);activity.append(line);}}
