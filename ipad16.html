@@ -690,7 +690,27 @@ function wallNum(v,suffix='',dec=1){return typeof v==='number'&&Number.isFinite(
 function wallBool(v){return v===true?'YES':v===false?'NO':'—'}
 function wallEnum(v){return typeof v==='string'?(v.split('.').pop().replace(/([a-z])([A-Z])/g,'$1 $2')):'—'}
 function wallState(v){return v===true?'ok':v===false?'bad':'unknown'}
-function wallDraw(id,rows){const root=$('mod-'+id);if(!root)return;root.replaceChildren();for(const [name,value,state] of rows.slice(0,11)){const row=document.createElement('div');row.className='nerd-row'+(state==='active'?' running':'');const dot=document.createElement('span');dot.className='status-dot '+(state||'unknown');const label=document.createElement('span');label.textContent=name;label.title=name;const v=document.createElement('b');v.textContent=value;v.title=value;row.append(dot,label,v);root.append(row)}}
+// Preserve row nodes and update only changed fields. No network or control changes.
+function wallDraw(id,rows){
+ const root=$('mod-'+id);if(!root)return;
+ const desired=rows.slice(0,11), existing=[...root.children];
+ for(let i=0;i<desired.length;i++){
+  const [name,value,state]=desired[i];let row=existing[i];
+  if(!row||row.children.length!==3){
+   row=document.createElement('div');
+   row.append(document.createElement('span'),document.createElement('span'),document.createElement('b'));
+   if(existing[i])root.replaceChild(row,existing[i]);else root.append(row);
+  }
+  const [dot,label,v]=row.children;
+  const rc='nerd-row'+(state==='active'?' running':''),dc='status-dot '+(state||'unknown');
+  if(row.className!==rc)row.className=rc;if(dot.className!==dc)dot.className=dc;
+  const n=String(name??''),val=String(value??'');
+  if(label.textContent!==n)label.textContent=n;if(label.title!==n)label.title=n;
+  if(v.textContent!==val)v.textContent=val;if(v.title!==val)v.title=val;
+ }
+ while(root.children.length>desired.length)root.lastElementChild.remove();
+}
+
 function wallAppliance(d){
  const st=d.status||{};const options=Array.isArray(d.program_options)?d.program_options:[];
  const rem=options.find(o=>/remainingprogramtime|remainingtime/i.test(o.key||''))?.value;
