@@ -38,6 +38,78 @@ REMOTE_LOGIN_HASH = "ApNkYRNpbpuUh7efM3oHprHfLOi1MRO79RGQh4YUehE="
 AGENT_RESULT = {"status":"waiting","task":None,"task_id":None,"result":None,"error":None,"finished_at":None}
 SKY_Q_HOST = os.environ.get("SKY_Q_HOST", "10.0.0.18")
 
+# Studio telemetry: argument-free OSC reads only; shared bounded cache.
+STUDIO_LOCK = threading.Lock()
+STUDIO_CACHE = {"data":None,"next":0}
+def studio_status():
+    import struct
+    if not STUDIO_LOCK.acquire(blocking=False):
+        return STUDIO_CACHE["data"] or {"available":False,"sampling":True,"channels":[]}
+    try:
+        if time.monotonic()<STUDIO_CACHE["next"]:
+            return STUDIO_CACHE["data"] or {"available":False,"sampling":True,"channels":[]}
+        STUDIO_CACHE["next"]=time.monotonic()+120
+        host=_registry_ip("x32","10.0.0.42")
+        previous=STUDIO_CACHE["data"]
+        result={"available":False,"channels":[],"buses":[],"dcas":[],"main":{},"checked_at":datetime.now(timezone.utc).isoformat(),"xtouch":{"ip":_registry_ip("xtouch","10.0.0.26"),"protocol":"unverified"}}
+        def osc_string(value):
+            b=value.encode()+b"\0"
+            return b+b"\0"*((-len(b))%4)
+        def get_string(data,offset):
+            end=data.index(b"\0",offset)
+            return data[offset:end].decode(errors="replace"),(end+4)&~3
+        with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
+            sock.connect((host,10023))
+            sock.settimeout(.35)
+            deadline=time.monotonic()+8
+            failures=0
+            def query(path):
+                nonlocal failures
+                if failures>=3 or time.monotonic()>deadline:return None
+                # No arguments or write-capable OSC commands.
+                sock.send(osc_string(path)+osc_string(","))
+                try:
+                    data=sock.recv(4096)
+                    address,pos=get_string(data,0)
+                    if address!=path:return None
+                    tags,pos=get_string(data,pos)
+                    values=[]
+                    for tag in tags[1:]:
+                        if tag=="s":
+                            value,pos=get_string(data,pos)
+                        elif tag in ("i","f"):
+                            value=struct.unpack_from(">i" if tag=="i" else ">f",data,pos)[0]
+                            pos+=4
+                        else:return None
+                        values.append(value)
+                    failures=0
+                    return values[0] if len(values)==1 else values
+                except (OSError,ValueError,struct.error):
+                    failures+=1
+                    return None
+                finally:
+                    time.sleep(.025)
+            identity=query("/xinfo")
+            if isinstance(identity,list) and len(identity)>=4:
+                result.update(available=True,model=identity[2],firmware=identity[3],name=identity[1],ip=host)
+                for kind,count,collection in (("ch",32,"channels"),("bus",16,"buses"),("dca",8,"dcas")):
+                    for i in range(1,count+1):
+                        base="/"+kind+"/"+(str(i) if kind=="dca" else f"{i:02d}")
+                        item={"number":i,"name":query(base+"/config/name"),"fader":query(base+"/mix/fader"),"on":query(base+"/mix/on")}
+                        result[collection].append(item)
+                result["main"]={"fader":query("/main/st/mix/fader"),"on":query("/main/st/mix/on")}
+        if not result["available"] and previous and previous.get("available"):
+            result={**previous,"available":False,"stale":True,"attempted_at":result["checked_at"]}
+        try:
+            p=subprocess.run(["ping","-c","1","-W","1",result["xtouch"]["ip"]],capture_output=True,timeout=2)
+            result["xtouch"]["reachable"]=p.returncode==0
+        except (OSError,subprocess.TimeoutExpired):
+            result["xtouch"]["reachable"]=None
+        STUDIO_CACHE["data"]=result
+        return result
+    finally:
+        STUDIO_LOCK.release()
+
 def sky_q_host():
     return _registry_ip("sky_q", SKY_Q_HOST)
 SKY_Q_JSON_PORT = int(os.environ.get("SKY_Q_JSON_PORT", "9006"))
@@ -5050,6 +5122,14 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/pioneer/status":
             if _remote_request(self): self.send_error(403); return
             self.send_bytes(json.dumps(pioneer_status()).encode()); return
+        if path == "/api/studio/status":
+            if _remote_request(self) and not _remote_session_ok(self):
+                self.send_response(401); self.end_headers(); return
+            try:
+                self.send_bytes(json.dumps(studio_status()).encode())
+            except Exception:
+                self.send_bytes(json.dumps({"available":False,"channels":[],"detail":"Studio reading unavailable"}).encode())
+            return
         if path == "/api/sky/isolation":
             with SKY_PASSIVE_LOCK: blocked=dict(SKY_PASSIVE_BLOCKED)
             self.send_bytes(json.dumps({"enabled":SKY_PASSIVE_ISOLATION,
@@ -5148,6 +5228,7 @@ class Handler(BaseHTTPRequestHandler):
             "/ipad15.html": ("ipad15.html", "text/html; charset=utf-8"),
             "/ipad16.html": ("ipad16.html", "text/html; charset=utf-8"),
             # Permanent iPad bookmark/PWA address. Promote only by changing this mapping.
+            "/studio-control.html": ("studio-monitor-v10.html", "text/html; charset=utf-8"),
             "/nerd-control.html": ("ipad16.html", "text/html; charset=utf-8"),
             "/eldoret-artwork-v1.css": ("eldoret-artwork-v1.css", "text/css; charset=utf-8"),
             "/eldoret-network.jpg": ("eldoret-network.jpg", "image/jpeg"),
