@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071621"><title>Bulldog · Heartbeat 1.2</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071621"><title>Bulldog · Heartbeat 1.3</title><style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071621;color:#e9f5f9;font:12px system-ui,-apple-system,sans-serif}
 #app{width:100vw;height:100dvh;display:grid;grid-template-rows:34px 37px minmax(0,1fr) 15px;gap:5px;padding:7px 9px;background:radial-gradient(ellipse at 50% 0%,#143245,#071621 90%)}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px}header strong{font-size:16px;letter-spacing:.12em}header small{display:block;font-size:9px;color:#edcfa5;letter-spacing:.12em;font-weight:800}
@@ -7,19 +7,21 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}he
 #alertbar strong{font-size:10px;color:#f4d6ab;white-space:nowrap}#alerts{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:11px;color:#eaccc7}
 #shell{min-height:0;position:relative;overflow:hidden;border-radius:7px}#view{border:0;width:100%;height:100%;display:block;pointer-events:none;background:transparent}#loading{position:absolute;inset:0;display:grid;place-items:center;background:#0b2331;color:#bed3dc}#loading[hidden]{display:none}
 footer{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#a7c7cd;font-size:9px}#info{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pips{display:flex;gap:5px}.pip{height:4px;width:23px;border-radius:5px;background:#344f5d}.pip.on{background:#8cf0ca}
-</style></head><body><div id="app"><header><div><strong>ELDORET · BULLDOG</strong><small>HEARTBEAT · OPERATIONS MONITOR 1.2</small></div><div class="right"><span class="chapter" id="chapter">INFRASTRUCTURE</span><span id="clock">--:--</span></div></header>
+</style></head><body><div id="app"><header><div><strong>ELDORET · BULLDOG</strong><small>HEARTBEAT · OPERATIONS MONITOR 1.3</small></div><div class="right"><span class="chapter" id="chapter">INFRASTRUCTURE</span><span id="clock">--:--</span></div></header>
 <div id="alertbar"><strong>● HOME ALERTS</strong><span id="alerts">Connecting to Nerd Central…</span></div>
 <div id="shell"><iframe id="view" src="/nerd-control.html?bulldog-view=1" title="Live Nerd Central in display-only mode" tabindex="-1"></iframe><div id="loading">Loading the same live Nerd Central dashboard…</div></div>
 <footer><span id="info">Read-only · no touch required · updates automatically</span><div class="pips"><i class="pip on"></i><i class="pip"></i><i class="pip"></i></div></footer></div><script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),frame=$('view');
 const pages = [
-  {title: 'INFRASTRUCTURE', columns: [['INTERNET & WI-FI'], ['BULLDOG · LIVE HEALTH']]},
-  {title: 'HOUSE & COMFORT', columns: [
+  {title: 'INFRASTRUCTURE', artwork: '/eldoret-network.jpg', columns: [
+    ['INTERNET & WI-FI'], ['BULLDOG · LIVE HEALTH']
+  ]},
+  {title: 'HOUSE & COMFORT', artwork: '/eldoret-house-night.webp', columns: [
     ['TELEVISIONS', 'LIGHTING · HUE'],
     ['APPLIANCES · HOME CONNECT', 'VELUX · CLIMATE']
   ]},
-  {title: 'ENERGY & ENTERTAINMENT', columns: [
+  {title: 'ENERGY & ENTERTAINMENT', artwork: '/eldoret-ariya.jpg', columns: [
     ['NISSAN ARIYA', 'PRINTER · HOUSE DEVICES'],
     ['AUDIO · PIONEER', 'PLAYSTATION · MEDIA']
   ]}
@@ -40,13 +42,14 @@ body:before { display:none!important }
 .bulldog-slide {
   position:absolute; inset:0; display:none; padding:clamp(8px,1.5vmin,18px);
   grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(12px,4vw,64px);
-  background:linear-gradient(#07162138,#07162106),var(--art) center / cover no-repeat #071621;
+  isolation:isolate; background:#071621;
 }
 .bulldog-slide.show { display:grid }
-.slide-0 { --art:url('/eldoret-network.jpg') }
-.slide-1 { --art:url('/eldoret-house-night.webp') }
-.slide-2 { --art:url('/eldoret-ariya.jpg') }
-.bulldog-stack { display:flex; flex-direction:column; align-items:flex-start; gap:8px; min-width:0 }
+.bulldog-artwork {
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  z-index:0; pointer-events:none;
+}
+.bulldog-stack { position:relative; z-index:1; display:flex; flex-direction:column; align-items:flex-start; gap:8px; min-width:0 }
 .bulldog-stack + .bulldog-stack { align-items:flex-end }
 #nerdWall .bulldog-stack .nerd-module {
   width:max-content; max-width:100%; min-height:0; padding:5px 8px;
@@ -92,10 +95,15 @@ function install() {
 
     const cards = new Map([...wall.querySelectorAll(':scope > .nerd-module')]
       .map(card => [card.getAttribute('aria-label'), card]));
-    pages.forEach(({title, columns}, index) => {
+    pages.forEach(({title, artwork, columns}) => {
       const slide = doc.createElement('section');
-      slide.className = 'bulldog-slide slide-' + index;
+      slide.className = 'bulldog-slide';
       slide.setAttribute('aria-label', title);
+      const image = doc.createElement('img');
+      image.className = 'bulldog-artwork';
+      image.alt = '';
+      image.src = artwork;
+      slide.append(image);
       for (const names of columns) {
         const stack = doc.createElement('div');
         stack.className = 'bulldog-stack';
