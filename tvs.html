@@ -316,7 +316,7 @@ async function readLive(){
  const r=await fetch('/api/lg/live',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
  const p=await r.json();liveStatus=p;
  const val=v=>v===null||v===undefined||v===''?'Unknown':String(v);
- $('tvPower').textContent=p.online===true?val(p.power):p.online===false?'No response':'Checking…';
+ $('tvPower').textContent=p.online===true?val(p.power):p.online===false?'Likely off / standby':'Power unknown';
  $('tvApp').textContent=val(p.app);
  $('tvSource').textContent=val(p.input);
  $('tvVolume').textContent=p.volume===null||p.volume===undefined?'Unknown':p.volume+' / 100'+(p.muted===true?' · muted':'');
