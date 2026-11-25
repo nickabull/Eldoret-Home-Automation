@@ -47,6 +47,38 @@ SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
 SKY_PASSIVE_ISOLATION = True
 SKY_PASSIVE_BLOCKED = {}
 SKY_PASSIVE_LOCK = threading.Lock()
+# Limited readback pilot: one playback GET per five minutes across all clients.
+# Keep legacy discovery, guides and other passive routes isolated.
+SKY_GENTLE_LOCK = threading.Lock()
+SKY_GENTLE_CACHE = {"available":False,"live":False,"gentle":True,"detail":"Awaiting first playback sample"}
+SKY_GENTLE_NEXT = 0
+def sky_gentle_now():
+    global SKY_GENTLE_NEXT, SKY_GENTLE_CACHE
+    if not SKY_GENTLE_LOCK.acquire(blocking=False):
+        return dict(SKY_GENTLE_CACHE)
+    try:
+        now=time.monotonic()
+        if now < SKY_GENTLE_NEXT:
+            return dict(SKY_GENTLE_CACHE)
+        SKY_GENTLE_NEXT=now+300
+        try:
+            req=urllib.request.Request(f"http://{sky_q_host()}:{SKY_Q_JSON_PORT}/as/playback",headers={"User-Agent":"Mozilla/5.0"})
+            with urllib.request.urlopen(req,timeout=3) as response:
+                data=json.loads(response.read(262144))
+            if not isinstance(data,dict):
+                raise ValueError("Unexpected playback response")
+            root=next((data[k] for k in ("current","playback","media","programme","program") if isinstance(data.get(k),dict)),data)
+            channel=pick(root,["channelName","channel","serviceName","servicename"])
+            programme=pick(root,["title","programmeTitle","programTitle","name"])
+            number=pick(root,["channelNumber","channelNo","channelno","lcn"])
+            SKY_GENTLE_CACHE={"available":True,"live":bool(channel),"gentle":True,"channel":channel,"channelno":number,"programme":programme,"checked_at":time.time(),"detail":"Playback endpoint responded"}
+        except Exception:
+            SKY_GENTLE_NEXT=time.monotonic()+1800
+            SKY_GENTLE_CACHE={**SKY_GENTLE_CACHE,"available":False,"live":False,"stale":True,"detail":"Readback unavailable; retry paused for 30 minutes"}
+        return dict(SKY_GENTLE_CACHE)
+    finally:
+        SKY_GENTLE_LOCK.release()
+
 NETWORK_PROBES = [
  {"ip":"10.0.0.1","name":"Main Router","ports":[80,443]},
  {"ip":"10.0.0.2","name":"House Hue Bridge","ports":[80]},
@@ -4998,7 +5030,12 @@ class Handler(BaseHTTPRequestHandler):
             with SKY_PASSIVE_LOCK: blocked=dict(SKY_PASSIVE_BLOCKED)
             self.send_bytes(json.dumps({"enabled":SKY_PASSIVE_ISOLATION,
                 "detail":"Passive Sky Q reads suspended; manual remote and channel commands still available." if SKY_PASSIVE_ISOLATION else "Sky Q read endpoints active.",
-                "blocked_get_counts":blocked}).encode())
+                "gentle_readback":True,"blocked_get_counts":blocked}).encode())
+            return
+        if path == "/api/sky/now":
+            if _remote_request(self) and not _remote_session_ok(self):
+                self.send_response(401); self.end_headers(); return
+            self.send_bytes(json.dumps(sky_gentle_now()).encode())
             return
         if SKY_PASSIVE_ISOLATION and path.startswith("/api/sky/"):
             with SKY_PASSIVE_LOCK:
