@@ -745,13 +745,13 @@ function wallRender(){
  let tvrows=[
   wallRow('Sky Q','REMOTE CONTROL AVAILABLE','off'),
   wallRow('Sky Q readback',wallExtra['/api/sky/now']?.available?(wallExtra['/api/sky/now'].channel||wallExtra['/api/sky/now'].programme||'CONNECTED · NO CHANNEL DATA'):(wallExtra['/api/sky/now']?.stale?'UNAVAILABLE · BACKOFF':'AWAITING SAMPLE'),wallExtra['/api/sky/now']?.available?'ok':'unknown'),
-  wallRow('Lounge TV',lounge.online===true?'ON · '+wallText(lounge.input||lounge.app_name||lounge.app):lounge.online===false?'NO RESPONSE':'UNKNOWN',wallState(lounge.online)),
-  wallRow('Kitchen TV',kitchen.paired?'PAIRED · power unknown':kitchen.state==='waiting'?'PAIRING':'NOT PAIRED',kitchen.paired?'off':'unknown')
+  wallRow('Lounge TV',lounge.online===true?'ON · '+wallText(lounge.input||lounge.app_name||lounge.app):lounge.online===false?'LIKELY OFF / STANDBY':'POWER UNKNOWN',lounge.online===true?'ok':'unknown'),
+  wallRow('Kitchen TV',kitchen.paired?'PAIRED · POWER NOT CHECKED':kitchen.state==='waiting'?'PAIRING':'NOT PAIRED','unknown')
  ];
  const tvNames=[['pit','Pit TV'],['bedroom','Main bedroom TV'],['ella',"Ella's TV"],['thea',"Thea's TV"],['jesse',"Jesse's TV"]];
  for(const [id,name] of tvNames){
    const x=wallExtra['/api/lg/room/'+id+'/status'];
-   tvrows.push(wallRow(name,x?(x.paired?'PAIRED · power unknown':'NOT PAIRED'):'STATUS UNAVAILABLE',x?(x.paired?'off':'unknown'):'unknown'));
+   tvrows.push(wallRow(name,x?(x.paired?'PAIRED · POWER NOT CHECKED':'NOT PAIRED'):'STATUS UNAVAILABLE','unknown'));
  }
  wallDraw('televisions',tvrows);
  let houseLights=Array.isArray(hue.lights)?hue.lights:[],utilLights=Array.isArray(utility.lights)?utility.lights:[];
@@ -793,7 +793,7 @@ function wallRender(){
  wallRow('Charge mode',wallText(z.charge_mode),wallState(z.connected)),
  wallRow('Session energy',wallNum(z.session_energy_kwh,' kWh',2),wallState(z.connected))
  ]);
- const pn=ps.psn||{},pl=ps.live||{};wallDraw('gaming',[wallRow('PS5 local',pl.online?'ON LAN':'NOT REACHABLE',wallState(pl.online)),wallRow('PSN status',wallText(pn.online_status),/^(online|available)$/i.test(String(pn.online_status||''))?'ok':/^(offline|appear offline|appearing offline)$/i.test(String(pn.online_status||''))?'off':'unknown'),wallRow('Game',wallText(pn.game||pl.running_app_name),pn.game?'active':'unknown'),wallRow('Last update',wallStamp(pn.checked_at||ps.observed_at),'unknown')]);
+ const pn=ps.psn||{},pl=ps.live||{};wallDraw('gaming',[wallRow('PS5 local',pl.online===true?'ON LAN':pl.online===false?'LIKELY OFF / REST MODE':'POWER UNKNOWN',pl.online===true?'ok':'unknown'),wallRow('PSN status',wallText(pn.online_status),/^(online|available)$/i.test(String(pn.online_status||''))?'ok':/^(offline|appear offline|appearing offline)$/i.test(String(pn.online_status||''))?'off':'unknown'),wallRow('Game',wallText(pn.game||pl.running_app_name),pn.game?'active':'unknown'),wallRow('Last update',wallStamp(pn.checked_at||ps.observed_at),'unknown')]);
  const vcl=vel.climate||{},vws=Array.isArray(vel.windows)?vel.windows:[];
  wallDraw('windows',[wallRow('VELUX HomeKit',vel.connected?'CONNECTED':'UNAVAILABLE',wallState(vel.connected)),wallRow('Temperature',wallNum(vcl.temperature,'°C'),wallState(vel.connected)),wallRow('Humidity',wallNum(vcl.humidity,'%'),wallState(vel.connected)),wallRow('CO₂',wallNum(vcl.co2_ppm,' ppm',0),wallState(vel.connected)),...vws.map((w,i)=>{let names={};try{names=JSON.parse(localStorage.getItem('eldoret-velux-window-rooms')||'{}')||{}}catch(_){}return wallRow(names[w.aid]||'HomeKit window '+(w.aid||i+3),w.current_position==null?'—':w.current_position+'% open',w.current_position===0?'off':'ok')}),wallRow('Automatic movement','OFF · native rain safety','off')]);
  const pv=pio.live||{};wallDraw('audio',[
