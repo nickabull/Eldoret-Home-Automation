@@ -674,8 +674,8 @@ function engTick(){
  const devices=Array.isArray(hc.devices)?hc.devices:[];const ink=Array.isArray(printer.ink)?printer.ink:[];
  engSet(3,[['Home Connect',devices.filter(x=>x.connected).length+' / '+devices.length+' connected'],...devices.slice(0,5).map(d=>[(d.name||'Appliance').slice(0,27),d.connected?'CONNECTED':'UNAVAILABLE']),['Epson online',printer.online],...ink.slice(0,4).map(d=>['Ink '+d.colour,d.percent==null?'—':d.percent+'%'])]);
  const jobsDone=Object.entries(engLatest);engSet(4,[['Last scan',new Date().toLocaleTimeString('en-GB')],['Responded',jobsDone.length+' / 9'],...jobsDone.slice(0,8).map(([path,v])=>[path.replace('/api/','').slice(0,25),v?.checked_at||v?.observed_at||'Response received'])]);
- engSet(5,[['House Hue bulbs',Array.isArray(hue.lights)?hue.lights.length:'—'],['PS5 on LAN',ps.live?.online],['PSN game',ps.psn?.game],['PSN status',ps.psn?.online_status],['Sky passive reads','ISOLATED (DESIGN)'],['Airlite fader start','NOT VERIFIED'],['Mac audio independent','NOT VERIFIED']]);
- const alertsNow=[...alerts.values()];engSet(6,[['Active warnings',alertsNow.length],...alertsNow.slice(0,7).map((x,i)=>['Warning '+(i+1),x.text]),['VELUX movement','DISABLED'],['Sky passive polling','DO NOT ENABLE']]);
+ engSet(5,[['House Hue bulbs',Array.isArray(hue.lights)?hue.lights.length:'—'],['PS5 on LAN',ps.live?.online],['PSN game',ps.psn?.game],['PSN status',ps.psn?.online_status],['Sky passive reads','LIMITED · CACHED'],['Airlite fader start','NOT VERIFIED'],['Mac audio independent','NOT VERIFIED']]);
+ const alertsNow=[...alerts.values()];engSet(6,[['Active warnings',alertsNow.length],...alertsNow.slice(0,7).map((x,i)=>['Warning '+(i+1),x.text]),['VELUX movement','DISABLED'],['Sky passive polling','5 MIN CACHE']]);
  engSet(7,[['Live polling','120-second interval'],['Source errors','Displayed as NO DATA'],['Last-known readings','May be cached'],['Source: Nissan',car.connected],['Source: Zappi',zap.connected],['Source: UniFi',uni.checked_at?'RESPONDED':'—'],['Source: Router',router.checked_at?'RESPONDED':'—'],['Source: Appliances',hc.checked_at?'RESPONDED':'—']]);
 }
 
@@ -723,7 +723,7 @@ function wallRender(){
  ]);
  let tvrows=[
   wallRow('Sky Q','REMOTE CONTROL AVAILABLE','off'),
-  wallRow('Sky Q readback','PAUSED · NO AUTO-POLL','unknown'),
+  wallRow('Sky Q readback',wallExtra['/api/sky/now']?.available?(wallExtra['/api/sky/now'].channel||wallExtra['/api/sky/now'].programme||'CONNECTED · NO CHANNEL DATA'):(wallExtra['/api/sky/now']?.stale?'UNAVAILABLE · BACKOFF':'AWAITING SAMPLE'),wallExtra['/api/sky/now']?.available?'ok':'unknown'),
   wallRow('Lounge TV',lounge.online===true?'ON · '+wallText(lounge.input||lounge.app_name||lounge.app):lounge.online===false?'NO RESPONSE':'UNKNOWN',wallState(lounge.online)),
   wallRow('Kitchen TV',kitchen.paired?'PAIRED · power unknown':kitchen.state==='waiting'?'PAIRING':'NOT PAIRED',kitchen.paired?'off':'unknown')
  ];
@@ -803,9 +803,9 @@ function wallRender(){
  wallRow('VELUX',vel.connected?'CONNECTED':'UNAVAILABLE',wallState(vel.connected)),
  wallRow('Epson',printer.online?'CONNECTED':'UNAVAILABLE',wallState(printer.online))
  ]);
- const sourceCount=Object.keys(engLatest).length+Object.keys(wallExtra).length;wallDraw('health',[wallRow('Telemetry sources',sourceCount+' responded','ok'),wallRow('Active alerts',alerts.size,alerts.size?'off':'ok'),wallRow('Nissan data',c.connected?'READY':'NO DATA',wallState(c.connected)),wallRow('Sky passive GET','SAFE · NO AUTO-POLL','off'),wallRow('Last wall scan',new Date().toLocaleTimeString('en-GB'), 'ok'),wallRow('Data faults',failedSourcePaths.length?failedSourcePaths.join(' · '):'NONE',failedSourcePaths.length?'bad':'ok')]);
+ const sourceCount=Object.keys(engLatest).length+Object.keys(wallExtra).length;wallDraw('health',[wallRow('Telemetry sources',sourceCount+' responded','ok'),wallRow('Active alerts',alerts.size,alerts.size?'off':'ok'),wallRow('Nissan data',c.connected?'READY':'NO DATA',wallState(c.connected)),wallRow('Sky passive GET','LIMITED · 5 MIN CACHE','off'),wallRow('Last wall scan',new Date().toLocaleTimeString('en-GB'), 'ok'),wallRow('Data faults',failedSourcePaths.length?failedSourcePaths.join(' · '):'NONE',failedSourcePaths.length?'bad':'ok')]);
 }
-const wallExtraURLs=['/api/smartthings/fridge/status','/api/hue/group?bridge=utility&group=0','/api/velux/homekit','/api/lg/live','/api/lg/kitchen/status','/api/lg/room/pit/status','/api/lg/room/bedroom/status','/api/lg/room/jesse/status','/api/lg/room/ella/status','/api/lg/room/thea/status','/api/pioneer/monitor','/api/bulldog/status'];
+const wallExtraURLs=['/api/sky/now','/api/smartthings/fridge/status','/api/hue/group?bridge=utility&group=0','/api/velux/homekit','/api/lg/live','/api/lg/kitchen/status','/api/lg/room/pit/status','/api/lg/room/bedroom/status','/api/lg/room/jesse/status','/api/lg/room/ella/status','/api/lg/room/thea/status','/api/pioneer/monitor','/api/bulldog/status'];
 async function updateWallExtra(){
  if(document.hidden||Date.now()-lastWallFetch<100000)return;
  lastWallFetch=Date.now();
