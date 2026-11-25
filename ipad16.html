@@ -724,6 +724,7 @@ function wallAppliance(d){
  if(salt)detail.push('salt '+wallEnum(salt[1]));
  return wallRow(d.name||'Appliance',d.connected?detail.filter(Boolean).join(' · '):'OFFLINE',d.connected?(run?'active':'off'):'bad');
 }
+const wallNetworkCache={router:null,uni:null,routerAt:null,uniAt:null};
 function wallRender(){
  const c=engLatest['/api/ariya/status']||{},z=engLatest['/api/zappi/status']||{},ps=engLatest['/api/playstation/activity']||{};
  const router=engLatest['/api/router/status']||{},uni=engLatest['/api/unifi/status']||{};
@@ -732,15 +733,43 @@ function wallRender(){
  const vel=wallExtra['/api/velux/homekit']||{},lounge=wallExtra['/api/lg/live']||{},kitchen=wallExtra['/api/lg/kitchen/status']||{},pio=wallExtra['/api/pioneer/monitor']||{},bulldog=wallExtra['/api/bulldog/status']||{};
  const aps=Array.isArray(uni.devices)?uni.devices.filter(d=>['10.0.0.6','10.0.0.7','10.0.0.8','10.0.0.9'].includes(d.ip)):[];
 
- const apTraffic=d=>d.online?'↓'+(typeof d.rx_mbps==='number'?d.rx_mbps.toFixed(2):'—')+' ↑'+(typeof d.tx_mbps==='number'?d.tx_mbps.toFixed(2):'—')+' Mb/s · '+(typeof d.clients==='number'?d.clients+' devices':'? dev'):'OFFLINE';
+ // Retain independently last-good network readings, never label cached data live.
+ const routerSample=engLatest['/api/router/status'];
+ const uniSample=engLatest['/api/unifi/status'];
+ const netCache=wallNetworkCache;
+ const routerGood=routerSample?.online===true;
+ const uniGood=Array.isArray(uniSample?.devices)&&uniSample.devices.length>0;
+ if(routerGood){
+   const old=netCache.router||{};
+   netCache.router={...routerSample};
+   for(const key of ['download_mbps','upload_mbps'])if(typeof routerSample[key]!=='number'&&typeof old[key]==='number')netCache.router[key]=old[key];
+   if(typeof routerSample.download_mbps==='number'&&typeof routerSample.upload_mbps==='number')netCache.routerAt=routerSample.checked_at||new Date().toISOString();
+ }
+ if(uniGood){
+   const previous=new Map((netCache.uni?.devices||[]).map(d=>[d.ip,d]));
+   netCache.uni={...uniSample,devices:uniSample.devices.map(d=>{
+     const old=previous.get(d.ip)||{};
+     const next={...d};
+     for(const key of ['rx_mbps','tx_mbps'])if(typeof d[key]!=='number'&&typeof old[key]==='number')next[key]=old[key];
+     return next;
+   })};
+   netCache.uniAt=uniSample.checked_at||new Date().toISOString();
+ }
+ const rd=routerGood?(netCache.router||routerSample):(netCache.router||router);
+ const ud=uniGood?netCache.uni:(netCache.uni||uni);
+ const routerCached=!!netCache.router&&(!routerGood||typeof routerSample.download_mbps!=='number'||typeof routerSample.upload_mbps!=='number');
+ const currentAps=new Map((uniSample?.devices||[]).map(d=>[d.ip,d]));
+ const shownAps=(ud.devices||[]).filter(d=>['10.0.0.6','10.0.0.7','10.0.0.8','10.0.0.9'].includes(d.ip));
+ const apCached=d=>!uniGood||typeof currentAps.get(d.ip)?.rx_mbps!=='number'||typeof currentAps.get(d.ip)?.tx_mbps!=='number';
+ const apTraffic=d=>d.online?'↓'+(typeof d.rx_mbps==='number'?d.rx_mbps.toFixed(2):'—')+' ↑'+(typeof d.tx_mbps==='number'?d.tx_mbps.toFixed(2):'—')+' · '+(typeof d.clients==='number'?d.clients+' dev':'? dev')+(apCached(d)?' · cached':''):'NO AP REPLY';
  wallDraw('internet',[
-  wallRow('DrayTek 2865',router.online?'CONNECTED':'UNAVAILABLE',wallState(router.online)),
-  wallRow('WAN ↓',wallNum(router.download_mbps,' Mb/s',2),wallState(router.online)),
-  wallRow('WAN ↑',wallNum(router.upload_mbps,' Mb/s',2),wallState(router.online)),
-  ...aps.map(d=>wallRow(d.name||d.ip,apTraffic(d),wallState(d.online))),
-  wallRow('AP clients',aps.reduce((sum,d)=>sum+(typeof d.clients==='number'?d.clients:0),0),aps.length?'ok':'unknown'),
-  wallRow('AP traffic','↓ RX · ↑ TX / wired','unknown'),
-  wallRow('UniFi sampled',wallStamp(uni.checked_at),uni.checked_at?'ok':'unknown')
+  wallRow('DrayTek 2865',routerGood?'CONNECTED':netCache.router?'TELEMETRY CACHED':'READING UNAVAILABLE',routerGood?'ok':'unknown'),
+  wallRow('WAN ↓',wallNum(rd.download_mbps,' Mb/s',2)+(routerCached?' · cached':''),routerCached?'unknown':routerGood?'ok':'unknown'),
+  wallRow('WAN ↑',wallNum(rd.upload_mbps,' Mb/s',2)+(routerCached?' · cached':''),routerCached?'unknown':routerGood?'ok':'unknown'),
+  ...shownAps.map(d=>wallRow(d.name||d.ip,apTraffic(d),apCached(d)?'unknown':wallState(d.online))),
+  wallRow('AP clients',shownAps.length?shownAps.reduce((sum,d)=>sum+(typeof d.clients==='number'?d.clients:0),0)+(uniGood?'':' · cached'):'—',uniGood?'ok':'unknown'),
+  wallRow('WAN last good',wallStamp(netCache.routerAt),'unknown'),
+  wallRow('UniFi sampled',wallStamp(netCache.uniAt||ud.checked_at),uniGood?'ok':'unknown')
  ]);
  let tvrows=[
   wallRow('Sky Q','REMOTE CONTROL AVAILABLE','off'),
