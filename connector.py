@@ -5210,7 +5210,8 @@ class Handler(BaseHTTPRequestHandler):
             "/ariya-ipad-v11-approved.html": ("ariya-ipad-v11-approved.html", "text/html; charset=utf-8"),
             # Stable Ariya control URL; promote future revisions by updating only this mapping.
             "/ariya-ipad-v12.html": ("ariya-ipad-v12.html", "text/html; charset=utf-8"),
-            "/ariya-control.html": ("ariya-ipad-v12.html", "text/html; charset=utf-8"),
+            "/ariya-ipad-v13.html": ("ariya-ipad-v13.html", "text/html; charset=utf-8"),
+            "/ariya-control.html": ("ariya-ipad-v13.html", "text/html; charset=utf-8"),
             "/ariya-design-v11.json": ("ariya-design-v11.json", "application/json"),
             "/ipad2.html": ("ipad2.html", "text/html; charset=utf-8"),
             "/ipad3.html": ("ipad3.html", "text/html; charset=utf-8"),
