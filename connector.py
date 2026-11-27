@@ -5235,6 +5235,7 @@ class Handler(BaseHTTPRequestHandler):
             "/tv-menu.html": ("tv-menu-v10.html", "text/html; charset=utf-8"),
             "/tv-menu-v10.html": ("tv-menu-v10.html", "text/html; charset=utf-8"),
             "/tv-room-v10.html": ("tv-room-v10.html", "text/html; charset=utf-8"),
+            "/tv-room-v11.html": ("tv-room-v11.html", "text/html; charset=utf-8"),
             "/appliance-menu.html": ("appliance-menu-v10.html", "text/html; charset=utf-8"),
             "/appliance-menu-v10.html": ("appliance-menu-v10.html", "text/html; charset=utf-8"),
             "/appliance-detail-v10.html": ("appliance-detail-v10.html", "text/html; charset=utf-8"),
