@@ -6,13 +6,9 @@ function clearEldoretPending(){
   const box=document.querySelector("#eldoretConfirm"); if(box)box.remove();
 }
 function stageEldoretAction(label,run,el){
-  clearEldoretPending(); if(el)el.classList.add("eldoret-pending");
-  eldoretPending={run,el};
-  const box=document.createElement("div"); box.id="eldoretConfirm"; box.className="eldoret-confirm";
-  box.innerHTML='<span>'+label+'</span><button type="button">CONFIRM</button>';
-  box.querySelector("button").onclick=async()=>{const p=eldoretPending;clearEldoretPending();if(p)await p.run();};
-  document.body.appendChild(box);
-  eldoretPendingTimer=setTimeout(clearEldoretPending,10000);
+  clearEldoretPending();
+  if(!isLive)return;
+  return run();
 }
 const isLive=location.protocol==="http:" || location.hostname.endsWith(".ts.net");
 function skyClock(v){if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
