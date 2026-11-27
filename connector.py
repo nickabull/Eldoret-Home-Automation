@@ -119,7 +119,7 @@ SKY_Q_REMOTE_PORT = int(os.environ.get("SKY_Q_REMOTE_PORT", "49160"))
 SKY_PASSIVE_ISOLATION = True
 SKY_PASSIVE_BLOCKED = {}
 SKY_PASSIVE_LOCK = threading.Lock()
-# Limited readback pilot: one playback GET per five minutes across all clients.
+# Shared original media readback: one sample per five minutes across all clients.
 # Keep legacy discovery, guides and other passive routes isolated.
 SKY_GENTLE_LOCK = threading.Lock()
 SKY_GENTLE_CACHE = {"available":False,"live":False,"gentle":True,"detail":"Awaiting first playback sample"}
@@ -134,16 +134,10 @@ def sky_gentle_now():
             return dict(SKY_GENTLE_CACHE)
         SKY_GENTLE_NEXT=now+300
         try:
-            req=urllib.request.Request(f"http://{sky_q_host()}:{SKY_Q_JSON_PORT}/as/playback",headers={"User-Agent":"Mozilla/5.0"})
-            with urllib.request.urlopen(req,timeout=3) as response:
-                data=json.loads(response.read(262144))
-            if not isinstance(data,dict):
-                raise ValueError("Unexpected playback response")
-            root=next((data[k] for k in ("current","playback","media","programme","program") if isinstance(data.get(k),dict)),data)
-            channel=pick(root,["channelName","channel","serviceName","servicename"])
-            programme=pick(root,["title","programmeTitle","programTitle","name"])
-            number=pick(root,["channelNumber","channelNo","channelno","lcn"])
-            SKY_GENTLE_CACHE={"available":True,"live":bool(channel),"gentle":True,"channel":channel,"channelno":number,"programme":programme,"checked_at":time.time(),"detail":"Playback endpoint responded"}
+            result=sky_now_playing_v2()
+            if not result.get("available") and result.get("uri") != "":
+                raise RuntimeError("Sky media readback unavailable")
+            SKY_GENTLE_CACHE={**result,"gentle":True,"checked_at":time.time(),"stale":False}
         except Exception:
             SKY_GENTLE_NEXT=time.monotonic()+1800
             SKY_GENTLE_CACHE={**SKY_GENTLE_CACHE,"available":False,"live":False,"stale":True,"detail":"Readback unavailable; retry paused for 30 minutes"}
@@ -3421,7 +3415,7 @@ def sky_soap_control_url():
         if now < SKY_SOAP_DISCOVERY["retry_at"]:
             return None
         # One bounded discovery per three-minute failure window, shared by all clients.
-        SKY_SOAP_DISCOVERY["retry_at"]=now+180
+        SKY_SOAP_DISCOVERY["retry_at"]=now+1800
     headers={"User-Agent":"SKYPLUS_skyplus"}
     # Stop early if the device is not providing valid XML; do not hammer it 50 times.
     valid_xml=0
@@ -3737,11 +3731,29 @@ def sky_sport_guide():
         channels.append(item)
     return {"channels": channels}
 
+SKY_SERVICES_LOCK=threading.Lock()
+SKY_SERVICES_CACHE=[]
+SKY_SERVICES_NEXT=0
 def sky_channel_list():
+    global SKY_SERVICES_CACHE, SKY_SERVICES_NEXT
+    if not SKY_SERVICES_LOCK.acquire(blocking=False):
+        return list(SKY_SERVICES_CACHE)
+    try:
+        if time.monotonic() >= SKY_SERVICES_NEXT:
+            SKY_SERVICES_NEXT=time.monotonic()+1800
+            fresh=_sky_channel_list_uncached()
+            if fresh:
+                SKY_SERVICES_CACHE=fresh
+                SKY_SERVICES_NEXT=time.monotonic()+21600
+        return list(SKY_SERVICES_CACHE)
+    finally:
+        SKY_SERVICES_LOCK.release()
+
+def _sky_channel_list_uncached():
     candidates = ["/as/services/4/1", "/as/services/1/1", "/as/services/5/1"]
     for path in candidates:
         try:
-            url = f"http://{SKY_Q_HOST}:{SKY_Q_JSON_PORT}{path}"
+            url = f"http://{sky_q_host()}:{SKY_Q_JSON_PORT}{path}"
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=3) as response:
                 data = json.loads(response.read().decode("utf-8", errors="replace"))
@@ -3782,7 +3794,22 @@ def sky_epg_now(sid):
         pass
     return {}
 
+SKY_EPG_CACHE={}
+SKY_EPG_LOCK=threading.Lock()
 def sky_epg_now_next(sid):
+    key=str(sid)
+    now=time.monotonic()
+    with SKY_EPG_LOCK:
+        cached=SKY_EPG_CACHE.get(key)
+        if cached and now<cached[0]:
+            return dict(cached[1])
+        SKY_EPG_CACHE[key]=(now+60,{})
+    result=_sky_epg_now_next_uncached(sid)
+    with SKY_EPG_LOCK:
+        SKY_EPG_CACHE[key]=(time.monotonic()+(120 if result else 60),result)
+    return result
+
+def _sky_epg_now_next_uncached(sid):
     now = datetime.now(timezone.utc)
     date = now.strftime("%Y%m%d")
     url = f"http://atlantis.epgsky.com/as/schedule/{date}/{sid}"
@@ -3844,7 +3871,7 @@ def sky_now_playing_v2():
                 result["channelno"] = service.get("c")
                 result["logo"] = sky_channel_logo_url(service)
                 result["is_radio"] = str(service.get("sf", "")).lower() == "au"
-            result.update(sky_epg_now(sid))
+            result.update(sky_epg_now_next(sid))
             return result
         if "pvr" in uri.lower():
             result.update({"available": True, "live": False, "playback": "recording"})
@@ -4023,7 +4050,7 @@ def build_remote_state():
             except Exception:
                 pass
     try:
-        sky=sky_now_playing_v2()
+        sky=sky_gentle_now()
         snapshot["sky_now"]={k:sky.get(k) for k in ("available","live","channel","channelno","logo",
             "is_radio","programme","start","end","synopsis","programmeuuid","playback") if k in sky}
     except Exception:
@@ -5141,7 +5168,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(401); self.end_headers(); return
             self.send_bytes(json.dumps(sky_gentle_now()).encode())
             return
-        if SKY_PASSIVE_ISOLATION and path.startswith("/api/sky/"):
+        if SKY_PASSIVE_ISOLATION and path.startswith("/api/sky/") and path not in ("/api/sky/search","/api/sky/guide","/api/sky/guide-range","/api/sky/top-picks","/api/sky/sport-guide"):
             with SKY_PASSIVE_LOCK:
                 SKY_PASSIVE_BLOCKED[path]=SKY_PASSIVE_BLOCKED.get(path,0)+1
             # Return safe offline states without touching Sky Q at all.
