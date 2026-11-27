@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071520"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="/eldoret.webmanifest"><title>Eldoret · PlayStation 1.7</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071520"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="/eldoret.webmanifest"><title>Eldoret · PlayStation 1.8</title><style>
 :root{color-scheme:dark;--line:#afc4d342;--teal:#1c4a54;--border:#5a8991;--gold:#f3d09c}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06121e;color:#eff9ff;font:14px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,a{font:inherit}
 .stage{position:relative;isolation:isolate;width:100vw;height:100dvh;display:grid;grid-template-rows:54px minmax(0,1fr)}
 .stage:before{content:"";z-index:-2;position:absolute;inset:0;background:url('/eldoret-playstation.jpg') center/cover no-repeat;opacity:.88}
@@ -77,7 +77,7 @@ main{grid-template-rows:minmax(0,16fr) minmax(0,72fr) minmax(0,12fr)}
 @media(max-width:1000px){.hero:after{font-size:21px}.now{grid-template-columns:30fr 70fr}.gameCard{height:65px}.galleryHeading{font-size:8px}}
 @media(max-width:700px){.hero{width:80%}.hero:after{display:none}.gameGallery{gap:3px}.gameCard{padding:3px;height:52px}.gameCard strong{font-size:8px}.gameCard small{font-size:7px}.nowInfo .info{padding:3px 0}}
 
-/* PlayStation 1.7: Epson-approved photo-first composition.
+/* PlayStation 1.8: Epson-approved photo-first composition.
    Keep all live readouts, cards, links, activity, and JS unchanged. */
 :root{--line:#8dbacc53;--teal:#1c4a54;--border:#5a8991;--gold:#f3d09c}
 .stage:before{opacity:1;background-position:76% center}
@@ -138,7 +138,31 @@ main{--column:58%;grid-template-rows:auto minmax(0,1fr) auto;gap:8px;padding:9px
 @media(max-width:1100px){main{--column:65%}}
 @media(max-width:850px){main{--column:70%}.now{gap:6px}.hero{min-height:54px}.statusPanel,.activity{padding:5px 7px}}
 @media(display-mode:standalone){header{padding-top:max(26px,env(safe-area-inset-top,0px))}}
-</style></head><body><div class="stage"><header><div class="brand"><strong>ELDORET · PLAYSTATION 1.7</strong><small>JESSE'S PS5 · PLAYING NOW</small></div><div class="tools"><span class="stamp" id="checked">Checking…</span><button type="button" id="refresh">↻ REFRESH</button><a href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+/* 1.8 artwork first: image never cropped, compact content-height cards. */
+.stage:before{inset:48px 0 0 47%;background-size:contain;background-position:center center;opacity:1}
+.stage:after{background:linear-gradient(90deg,#031524 0%,#071c2d 36%,#071c2d90 48%,transparent 70%)}
+main{--column:49%;display:grid!important;grid-template-columns:1fr!important;grid-template-rows:auto auto 1fr auto!important;align-content:start;gap:8px;padding:10px 14px}
+.hero,.bodyGrid{width:var(--column)!important;max-width:820px}
+.hero{grid-row:1;min-height:0;padding:9px 12px}
+.hero:after{display:none}
+.bodyGrid{grid-row:2;display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:start!important;align-content:start!important;min-height:0;gap:8px}
+.now{display:grid!important;grid-template-columns:minmax(95px,28%) minmax(0,1fr)!important;align-items:start!important;min-height:0;height:auto!important;padding:9px;gap:10px}
+.cover{height:auto!important;aspect-ratio:1/1;align-self:start;min-height:0}
+.cover img{object-fit:contain}
+.nowInfo{padding:0;gap:4px}
+.nowInfo h2{font-size:clamp(18px,2.1vw,30px)}
+.nowInfo .info{padding:3px 0}
+.sessionGallery{margin-top:4px}
+.galleryEmpty{padding:6px;font-size:10px}
+.aside{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:auto!important;align-items:start!important;gap:8px}
+.statusPanel,.activity{height:auto!important;min-height:0;align-self:start;padding:8px 10px}
+.statRow,.activityItem{font-size:11px}
+.footer{grid-row:4;width:100%;min-height:42px}
+@media(max-width:1100px){main{--column:56%}.stage:before{left:51%}.statRow,.activityItem{font-size:10px}}
+@media(max-height:650px) and (orientation:landscape){main{gap:5px;padding:5px 8px}.hero{padding:5px 8px}.now{padding:6px}.nowInfo .info{padding:2px 0}.statusPanel,.activity{padding:5px 7px;gap:2px}.gameCard{height:45px}.footer{min-height:35px;padding:4px 8px}}
+@media(max-width:650px) and (orientation:portrait){main{--column:100%;grid-template-rows:auto auto 1fr auto!important}.stage:before{inset:48px 0 0;background-position:center bottom;background-size:contain;opacity:.38}.stage:after{background:#03152450}.hero,.bodyGrid{max-width:none}.statRow,.activityItem{font-size:9px}}
+@media(display-mode:standalone){header{padding-top:max(30px,calc(env(safe-area-inset-top,0px) + 8px))}.stage:before{top:78px}}
+</style></head><body><div class="stage"><header><div class="brand"><strong>ELDORET · PLAYSTATION 1.8</strong><small>JESSE'S PS5 · PLAYING NOW</small></div><div class="tools"><span class="stamp" id="checked">Checking…</span><button type="button" id="refresh">↻ REFRESH</button><a href="/nerd-control.html">⌂ NERD CENTRAL</a></div></header>
 <main><section class="panel hero"><div><div class="ey">PLAYSTATION 5 · LIVE PRESENCE</div><h1>Jesse's PlayStation</h1><div class="small" id="statusText">Connecting to console and PlayStation Network…</div></div><span class="pill warn" id="badge">CHECKING</span></section>
 <div class="bodyGrid"><section class="panel now"><div class="cover" id="cover"><img alt="Artwork for currently reported PlayStation game" id="gameArtwork" referrerpolicy="no-referrer"><div class="placeholder" id="placeholder"><span class="psSymbol">◈</span><strong>GAME ARTWORK</strong><span>Appears here when PlayStation reports a game and cover image</span></div></div>
 <div class="nowInfo"><div class="headline">PLAYING NOW · PLAYSTATION NETWORK</div><h2 id="gameTitle">Waiting for a game…</h2><p class="small" id="gameStatus">A game title appears when shared by local PS5 discovery or PSN presence.</p><div class="info"><span>PSN presence</span><strong id="psn">—</strong></div><div class="info"><span>Platform</span><strong id="platform">—</strong></div><div class="info"><span>Game source</span><strong id="source">—</strong></div><div class="source" id="gameNote">Availability depends on PlayStation account privacy settings.</div><div class="sessionGallery"><div class="galleryHeading">RECENTLY OBSERVED GAMES <span id="galleryCount">0 verified</span></div><div class="gameGallery" id="gameGallery"><div class="galleryEmpty">Waiting for real game activity · no games assumed</div></div></div></div></section>
