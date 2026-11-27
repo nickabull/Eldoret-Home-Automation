@@ -48,15 +48,7 @@
  }
  button.addEventListener('click',()=>{
   if(!live||button.disabled)return;
-  if(typeof stageEldoretAction==='function'){stageEldoretAction('Sky Q · On / Standby',sendPower,button);return;}
-  const old=document.querySelector('#eldoretPowerConfirm');if(old)old.remove();
-  const box=document.createElement('div');box.id='eldoretPowerConfirm';box.className='eldoret-confirm';
-  box.innerHTML='<span>Sky Q · On / Standby</span><button type="button">CONFIRM</button>';
-  button.classList.add('eldoret-pending');
-  const clear=()=>{box.remove();button.classList.remove('eldoret-pending');};
-  const timer=setTimeout(clear,10000);
-  box.querySelector('button').onclick=()=>{clearTimeout(timer);clear();sendPower();};
-  document.body.appendChild(box);
+  sendPower();
  });
 })();
 
