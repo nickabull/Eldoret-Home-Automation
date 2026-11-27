@@ -14,7 +14,7 @@ function render(result){
  latest=devices;events=Array.isArray(result.events)?result.events:[];
  const next=devices.find(d=>d.name===chosen);
  $('checked').textContent=result.checked_at?'Source checked '+new Date(result.checked_at).toLocaleTimeString('en-GB'):'Source time unavailable';
- if(!next){current=null; $('hcDialogSubtitle').textContent='No live data';$('hcDetailContent').textContent=result.error||'No current reading for this appliance.';return;}
+ if(!next){current=null;$('connection').textContent='DATA UNAVAILABLE';$('connection').dataset.state='unknown';$('operating').textContent='Unknown';$('operating').dataset.state=''; $('hcDialogSubtitle').textContent='No live data';$('hcDetailContent').textContent=result.error||'No current reading for this appliance.';return;}
  const initial=!current;current=next;drawDetail();if(initial&&['programmes','settings'].includes(currentTab))loadDetail();
 }
 function close(){location.href='appliance-menu.html';}
@@ -76,7 +76,7 @@ function drawDetail(){if(!current)return;const d=current,s=d.status||{},out=$('h
 }
 async function refresh(){if(busy)return;busy=true;$('pageRefresh').disabled=true;const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),20000);
  try{const r=await fetch('/api/home-connect/status',{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw Error();render(await r.json());}
- catch(_){$('connection').textContent='DATA UNAVAILABLE';$('connection').dataset.state='unknown';$('checked').textContent='Refresh failed';$('hcDialogSubtitle').textContent='Home Connect is temporarily unavailable';if(!current)$('hcDetailContent').textContent='Try Refresh.';}
+ catch(_){$('connection').textContent='DATA UNAVAILABLE';$('connection').dataset.state='unknown';$('operating').textContent='Last reading';$('operating').dataset.state='';$('checked').textContent='Refresh failed';$('hcDialogSubtitle').textContent='Home Connect is temporarily unavailable';if(!current)$('hcDetailContent').textContent='Try Refresh.';}
  finally{clearTimeout(timer);$('pageRefresh').disabled=false;busy=false;}}
 $('pageRefresh').addEventListener('click',refresh);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
