@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eldoret"><link rel="manifest" href="/eldoret.webmanifest"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ARIYA 1.3 · Eldoret Controls</title>
+<style>
+:root{color-scheme:dark;--ink:#f2fbff;--muted:#bed6e5;--gold:#f2d2a8;--line:#65c5e184}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030b13;color:var(--ink);font:14px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,a{font:inherit}button{cursor:pointer}.stage{position:relative;width:100%;height:100%;height:100dvh;isolation:isolate;display:grid;grid-template-rows:auto minmax(0,1fr);padding:8px 12px 10px;gap:8px}.stage:before{content:"";position:absolute;inset:0;z-index:-2;background:url('/eldoret-ariya.jpg') center 44%/cover no-repeat;transform:scaleX(-1);opacity:.96}.stage:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#03111f70,#04121c22 50%,#08132030),linear-gradient(0deg,#020b1455,transparent 65%)}header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:#061b2be8;min-width:0}.brand,.headRight{display:flex;align-items:center;gap:8px;min-width:0}.brand strong{font-size:clamp(13px,1.8vw,19px);letter-spacing:.07em;white-space:nowrap}.brand small{display:block;font-size:9px;letter-spacing:.16em;color:var(--gold);font-weight:700}.stamp{font-size:10px;color:var(--muted)}.nav,.refresh{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:7px 10px;border:1px solid #6dd6eb;border-radius:8px;background:#12647c;color:white;font-weight:800;text-decoration:none;white-space:nowrap}.refresh:disabled,.act:disabled{opacity:.48;cursor:not-allowed}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #ffd18b;outline-offset:2px}main{min-height:0;display:grid;grid-template-rows:auto minmax(14px,1fr) minmax(0,2.5fr);gap:0}.top{min-width:0}.panel{min-width:0;min-height:0;border:1px solid var(--line);border-radius:11px;background:linear-gradient(135deg,#051827dc,#0a2636c4);box-shadow:inset 0 1px 0 #e9f6ff14}.panelHead{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:6px 10px;border-bottom:1px solid #8ccfe33b}.ey{font-size:9px;font-weight:800;letter-spacing:.13em;color:var(--gold)}.title{font-size:clamp(14px,1.9vw,21px);line-height:1.15;margin:2px 0 0;font-weight:800}.sub{font-size:10px;color:var(--muted)}.climateBody{padding:7px 10px 9px;display:grid;gap:7px}.tempLine{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid #65c5e177;border-radius:8px;background:#0d2c3bc7;min-height:32px}.tempLine input{flex:1;min-width:0;accent-color:#f6d782}.tempLine b{font-size:20px;white-space:nowrap;color:#f6dfbd}.tempMinimum,.tempMaximum{font-size:10px;white-space:nowrap}.climateActions{display:grid;grid-template-columns:1fr 1fr 1.5fr;gap:8px;align-items:stretch}.act{border:1px solid #82e5df;border-radius:8px;min-height:40px;padding:6px 5px;background:#087e7c;color:#fff;font-weight:800;font-size:clamp(12px,1.5vw,17px)}.act.stop{background:#76536f;border-color:#d8b8d2}.climateHelp{display:flex;flex-direction:column;justify-content:center;min-width:0;gap:2px}.controlState{font-size:11px;line-height:1.2;overflow-wrap:anywhere}.climateHelp small{font-size:9px;color:var(--muted)}.artGap{pointer-events:none;min-height:0}.bottom{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,6vw,90px);width:100%;min-height:0}.details{display:grid;grid-template-rows:auto minmax(0,1fr) auto}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:6px;padding:7px;min-height:0}.stat{min-width:0;min-height:0;padding:6px 7px;display:flex;flex-direction:column;justify-content:space-between;gap:2px;background:#061c2cbb;border:1px solid #65c5e150;border-radius:8px}.stat span{font-size:9px;font-weight:700;color:#d0e5ee;line-height:1.1}.stat strong{font-size:clamp(12px,1.75vw,22px);line-height:1.12;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.stat small{font-size:9px;color:var(--muted);line-height:1.1;overflow-wrap:anywhere}.footer{display:flex;justify-content:space-between;gap:5px;padding:4px 7px;font-size:9px;line-height:1.15;color:var(--muted);border-top:1px solid #cce7ed22;overflow-wrap:anywhere}.pill{border-radius:20px;padding:4px 7px;background:#15545d;color:#e1ffff;border:1px solid #69c9d8;font-size:9px;font-weight:800;white-space:nowrap}.pill.warn{background:#573a25;color:#ffe1b8;border-color:#f3b97788}.pill.bad{background:#4b222d;color:#ffb8b7}.activeValue{color:#ffdf36!important}.notice{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,90vw);border:2px solid #f8cc94;border-radius:16px;padding:19px;background:#071725f7;box-shadow:0 0 0 100vmax #020608c4;z-index:9}.notice[hidden]{display:none}.notice h2{margin:0 0 8px}.notice .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.notice button{min-height:52px}@media(max-width:850px){.stamp{display:none}.stage{padding:5px 7px;gap:5px}.bottom{gap:3vw}.brand,.headRight{gap:4px}.pill{font-size:8px}.nav,.refresh{padding:5px 6px;font-size:11px}.stat{padding:4px}.stats{padding:5px;gap:4px}.stat small,.footer{font-size:8px}}@media(max-height:620px){.stage{padding:5px 8px;gap:5px}.panelHead{padding:4px 8px}.climateBody{padding:5px 8px;gap:5px}.act{min-height:33px}.tempLine{min-height:27px}.stats{padding:5px;gap:4px}.stat{padding:4px 5px}.footer{padding:3px 6px}.stat strong{font-size:clamp(12px,1.6vw,18px)}main{grid-template-rows:auto minmax(10px,1fr) minmax(0,3fr)}}
+</style></head>
+<body><div class="stage">
+<header><div class="brand"><div><strong>ELDORET · ARIYA 1.3</strong><small>VEHICLE & HOME CHARGING</small></div><span id="nBadge" class="pill warn">NISSAN CHECKING</span><span id="zBadge" class="pill warn">ZAPPI CHECKING</span></div>
+<div class="headRight"><span id="checked" class="stamp">No update yet</span><button class="refresh" id="refresh" type="button">↻ REFRESH</button><a class="nav" href="nerd-control.html">⌂ NERD CENTRAL</a></div></header>
+<main>
+<div class="top">
+<section class="panel climate" aria-label="Nissan climate commands">
+ <div class="panelHead"><div><div class="ey">NISSANCONNECT · COMMANDS</div><h2 class="title">Cabin climate · 25°C default</h2></div><span id="climateBadge" class="pill warn">CHECKING</span></div>
+ <div class="climateBody">
+  <div class="tempLine"><label class="sub" for="temp">TARGET</label><span class="tempMinimum">16°C</span><input id="temp" type="range" min="16" max="30" value="25" step="1"><span class="tempMaximum">30°C</span><b id="tempShow">25°C</b></div>
+  <div class="climateActions"><button id="start" class="act" disabled>▶ START CLIMATE</button><button id="stop" class="act stop" disabled>■ STOP CLIMATE</button>
+  <div class="climateHelp"><div id="message" role="status" class="controlState">Checking whether remote climate is available…</div><small>Tap action, then CONFIRM within 10 seconds.</small></div></div>
+ </div>
+</section>
+</div>
+<div class="artGap" aria-hidden="true"></div>
+<div class="bottom">
+<section class="panel details"><div class="panelHead"><div><div class="ey">NISSAN API · LAST REPORTED</div><h2 class="title">Vehicle telemetry</h2></div><span class="pill" id="nFresh">AWAITING</span></div>
+<div class="stats">
+<div class="stat"><span>BATTERY LEVEL</span><strong id="battery">—</strong><small>Nissan</small></div>
+<div class="stat"><span>ESTIMATED RANGE</span><strong id="range">—</strong><small>miles</small></div>
+<div class="stat"><span>PLUG STATUS</span><strong id="plug">—</strong><small>Vehicle report</small></div>
+<div class="stat"><span>CABIN TEMPERATURE</span><strong id="cabin">—</strong><small>°C</small></div>
+<div class="stat"><span>CLIMATE SYSTEM</span><strong id="climState">—</strong><small>Last reported</small></div>
+<div class="stat"><span>LOCATION FIX</span><strong id="location">—</strong><small>No coordinates displayed</small></div>
+</div><div class="footer"><span id="vehicleTime">Last vehicle update unknown</span><span id="nDetail">Private Nissan connection</span></div></section>
+<section class="panel details"><div class="panelHead"><div><div class="ey">MYENERGI API · READ ONLY</div><h2 class="title">Zappi home charger</h2></div><span class="pill" id="zFresh">AWAITING</span></div>
+<div class="stats">
+<div class="stat"><span>CHARGING STATE</span><strong id="zState">—</strong><small>Zappi</small></div>
+<div class="stat"><span>LIVE POWER</span><strong id="zPower">—</strong><small>kW</small></div>
+<div class="stat"><span>REPORTED ENERGY</span><strong id="zEnergy">—</strong><small>kWh</small></div>
+<div class="stat"><span>CHARGE MODE</span><strong id="zMode">—</strong><small>Fast · Eco · Eco+ · Stop</small></div>
+<div class="stat"><span>CABLE / PLUG</span><strong id="zPlug">—</strong><small>Last gateway report</small></div>
+<div class="stat"><span>GATEWAY TIME</span><strong id="zTime">—</strong><small>Charger clock</small></div>
+</div><div class="footer"><span id="zChecked">Last charger update unknown</span><span id="zDetail">No charger commands sent</span></div></section>
+</div></main>
+<section id="confirm" class="notice" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle"><div class="ey">PHYSICAL COMMAND CONFIRMATION</div><h2 id="confirmTitle">Confirm climate</h2><p id="confirmText"></p><div class="actions"><button id="approve" class="act" type="button">CONFIRM</button><button id="cancel" class="act stop" type="button">CANCEL</button></div><p class="sub">Selection expires after 10 seconds.</p></section>
+</div><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),n=(v,s='')=>typeof v==='number'&&Number.isFinite(v)?(Math.round(v*10)/10)+s:'—';
+let available=false,pending=null,expiry=null,loading=false,sending=false;
+const date=v=>{if(!v)return'Unknown';const d=new Date(v);return Number.isNaN(d.getTime())?'Unknown':d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});};
+const put=(id,v)=>{const el=$(id);if(el)el.textContent=v==null?'—':String(v)};
+const active=(id,on)=>{const el=$(id);if(el)el.classList.toggle('activeValue',!!on)};
+function stopPending(){pending=null;clearTimeout(expiry);$('confirm').hidden=true}
+function badge(id,ok,no){$(id).textContent=ok?'CONNECTED':no;$(id).className='pill '+(ok?'':'warn')}
+function applyN(a){
+ const good=!!a.connected;
+ badge('nBadge',good,a.configured?'NO LIVE DATA':'NOT LINKED');badge('nFresh',good,good?'NO LIVE DATA':'UNAVAILABLE');
+ put('battery',n(a.battery_percent,'%'));
+ put('range',typeof a.range_miles==='number'?Math.round(a.range_miles)+' mi':'—');
+ const plug=a.plugged_in===true?(a.charging?'CHARGING':'PLUGGED IN'):a.plugged_in===false?'UNPLUGGED':'—';
+ put('plug',plug);
+ put('cabin',n(a.cabin_temperature_c,'°C'));
+ put('climState',a.climate_active===true?'ON':a.climate_active===false?'OFF':'—');active('climState',a.climate_active===true);active('plug',a.plugged_in===true||a.charging===true);
+ put('location',a.location_available===true?'AVAILABLE':'UNKNOWN');
+ put('vehicleTime','Vehicle last updated: '+date(a.last_vehicle_update));put('nDetail',a.detail||'Nissan cloud');
+ available=good&&a.climate_command_enabled===true;
+ $('start').disabled=!available||sending;$('stop').disabled=!available||sending;
+ badge('climateBadge',available,good?'NO COMMAND ACCESS':'NOT CONNECTED');
+ if(!pending&&!sending)put('message',available?'Remote climate is available. Select an action to confirm.':'Climate commands currently unavailable.');
+}
+function applyZ(z){
+ badge('zBadge',!!z.connected,z.configured?'NO LIVE DATA':'NOT LINKED');badge('zFresh',!!z.connected,'UNAVAILABLE');
+ put('zState',z.charging_state==='Vehicle unplugged'?'Unplugged':z.charging_state||'—');put('zPower',n(z.charge_power_kw,' kW'));put('zEnergy',n(z.session_energy_kwh,' kWh'));
+ put('zMode',z.charge_mode||'—');put('zPlug',z.plug_status==='Vehicle unplugged'?'Unplugged':z.plug_status||'—');put('zTime',date(z.checked_at));active('zState',z.raw_plug_code==='C2'||/charging/i.test(z.charging_state||''));active('zPlug',z.raw_plug_code!=='A'&&z.raw_plug_code!=null);active('zPower',typeof z.charge_power_kw==='number'&&z.charge_power_kw>0);
+ put('zChecked','Charger checked: '+date(z.checked_at));put('zDetail','Read-only Zappi');
+}
+async function read(url,fn,badgeId){try{const c=new AbortController(),tid=setTimeout(()=>c.abort(),15000);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});if(!r.ok)throw Error('HTTP '+r.status);fn(await r.json())}finally{clearTimeout(tid)}}catch(e){$(badgeId).textContent='NO RESPONSE';$(badgeId).className='pill warn';if(badgeId==='nBadge'){available=false;$('start').disabled=true;$('stop').disabled=true;put('message','Nissan connection unavailable. No command can be sent.')}}}
+async function refresh(){if(loading||sending||document.hidden)return;loading=true;$('refresh').disabled=true;stopPending();await Promise.all([read('/api/ariya/status',applyN,'nBadge'),read('/api/zappi/status',applyZ,'zBadge')]);put('checked','Dashboard checked '+new Date().toLocaleTimeString('en-GB'));$('refresh').disabled=false;loading=false}
+function select(action){if(!available||sending)return;stopPending();pending={action,temperature_c:Number($('temp').value)};put('confirmTitle',action==='start'?'START CLIMATE':'STOP CLIMATE');put('confirmText',action==='start'?'Start Nissan cabin climate at '+pending.temperature_c+'°C?':'Stop Nissan cabin climate?');$('confirm').hidden=false;expiry=setTimeout(stopPending,10000)}
+$('temp').addEventListener('input',()=>{put('tempShow',$('temp').value+'°C');stopPending()});
+$('start').addEventListener('click',()=>select('start'));$('stop').addEventListener('click',()=>select('stop'));
+$('cancel').addEventListener('click',stopPending);
+$('approve').addEventListener('click',async()=>{if(!pending||!available||sending)return;const p=pending;stopPending();sending=true;$('start').disabled=true;$('stop').disabled=true;put('message','Sending request to Nissan…');try{const r=await fetch('/api/ariya/climate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();put('message',j.ok?'Request accepted by Nissan; verify at the vehicle.':(j.detail||'Command was not confirmed.'))}catch(e){put('message','Request failed or timed out. Verify at the vehicle before retrying.')}finally{sending=false;$('start').disabled=!available;$('stop').disabled=!available}});
+$('refresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});document.addEventListener('keydown',e=>{if(e.key==='Escape')stopPending()});refresh();setInterval(refresh,120000);
+})();
+</script></body></html>
