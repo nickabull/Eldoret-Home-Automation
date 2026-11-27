@@ -5259,6 +5259,8 @@ class Handler(BaseHTTPRequestHandler):
             "/house.html": ("house.html", "text/html; charset=utf-8"),
             "/utility.html": ("utility.html", "text/html; charset=utf-8"),
             "/sky.html": ("sky.html", "text/html; charset=utf-8"),
+            "/sky-control.html": ("sky-control-v10.html", "text/html; charset=utf-8"),
+            "/sky-control-v10.html": ("sky-control-v10.html", "text/html; charset=utf-8"),
             "/sport.html": ("sport.html", "text/html; charset=utf-8"),
             "/sport.js": ("sport.js", "application/javascript; charset=utf-8"),
             "/devices.js": ("devices.js", "application/javascript; charset=utf-8"),
