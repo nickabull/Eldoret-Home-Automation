@@ -1,7 +1,7 @@
 // Return detailed views to Home after two minutes without interaction.
 (()=>{
- const HOME=new URL('index.html',location.href).href,TIMEOUT=120000;
- if(location.pathname==='/'||location.pathname.endsWith('/index.html'))return;
+ const HOME=new URL('nerd-control.html',location.href).href,TIMEOUT=120000;
+ if(location.pathname==='/'||location.pathname.endsWith('/nerd-control.html')||location.pathname.endsWith('/ipad16.html')||location.pathname.endsWith('/index.html'))return;
  let last=Date.now();
  const active=()=>{last=Date.now();};
  ['pointerdown','pointermove','keydown','touchstart','wheel','input'].forEach(name=>addEventListener(name,active,{passive:true}));
