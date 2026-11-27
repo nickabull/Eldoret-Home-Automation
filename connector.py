@@ -1140,32 +1140,52 @@ def _lg_ssap_request(ws, request_id, uri, payload=None):
         return data, True
     return None, False
 
+def _lg_open_kitchen_paired():
+    saved=_lg_kitchen_saved()
+    if not saved or not saved.get("client_key") or saved.get("ip")!=LG_KITCHEN_IP:
+        raise RuntimeError("Kitchen LG not paired")
+    ws=_LGWebSocket(LG_KITCHEN_IP)
+    try:
+        ws.connect()
+        if saved.get("fingerprint")!=ws.fingerprint:
+            raise RuntimeError("Kitchen LG identity mismatch")
+        ws.send(json.dumps(_lg_register_message(saved["client_key"])))
+        deadline=time.monotonic()+10
+        while time.monotonic()<deadline:
+            ws.sock.settimeout(2)
+            try:reply=ws.recv_json()
+            except socket.timeout:continue
+            if reply.get("type")=="registered":break
+            if reply.get("type")=="error":raise RuntimeError("Kitchen LG rejected pairing")
+        else:raise RuntimeError("Kitchen LG did not confirm pairing")
+    except Exception:
+        ws.close()
+        raise
+    return ws
+
+def lg_kitchen_control(action):
+    actions={"volume_up":("ssap://audio/volumeUp",None),
+             "volume_down":("ssap://audio/volumeDown",None),
+             "mute":("ssap://audio/setMute",{"mute":True}),
+             "unmute":("ssap://audio/setMute",{"mute":False}),
+             "channel_up":("ssap://tv/channelUp",None),
+             "channel_down":("ssap://tv/channelDown",None)}
+    if action not in actions:raise ValueError("Unsupported kitchen TV control")
+    ws=_lg_open_kitchen_paired()
+    try:
+        uri,payload=actions[action]
+        _,ok=_lg_ssap_request(ws,"eldoret-kitchen-control",uri,payload)
+        if not ok:raise RuntimeError("Kitchen LG did not acknowledge command")
+        return {"ok":True,"detail":"Kitchen LG acknowledged "+action.replace("_"," ")}
+    finally:ws.close()
+
 def lg_switch_sky_hdmi1(room):
     """Select verified HDMI 1 on one paired LG; does not control/power on Sky Q."""
     import re
     if room=="lounge":
         ws=_lg_open_paired()
     elif room=="kitchen":
-        saved=_lg_kitchen_saved()
-        if not saved or not saved.get("client_key") or saved.get("ip")!=LG_KITCHEN_IP:
-            raise RuntimeError("Kitchen LG not paired")
-        ws=_LGWebSocket(LG_KITCHEN_IP)
-        try:
-            ws.connect()
-            if saved.get("fingerprint")!=ws.fingerprint:
-                raise RuntimeError("Kitchen LG identity mismatch")
-            ws.send(json.dumps(_lg_register_message(saved["client_key"])))
-            deadline=time.monotonic()+10
-            while time.monotonic()<deadline:
-                ws.sock.settimeout(2)
-                try:reply=ws.recv_json()
-                except socket.timeout:continue
-                if reply.get("type")=="registered":break
-                if reply.get("type")=="error":raise RuntimeError("Kitchen LG rejected pairing")
-            else:raise RuntimeError("Kitchen LG did not confirm pairing")
-        except Exception:
-            ws.close()
-            raise
+        ws=_lg_open_kitchen_paired()
     else:raise ValueError("Unknown TV room")
     try:
         data,ok=_lg_ssap_request(ws,"eldoret-hdmi-list",
@@ -5694,7 +5714,7 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError, TypeError):
                 self.send_error(400); return
         payload = json.loads(raw_body or b"{}")
-        if self.path.startswith("/api/lg/room/") or self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy","/api/lg/kitchen/learn-mac","/api/lg/kitchen/wake","/api/lg/kitchen/hdmi1","/api/lg/hdmi1"):
+        if self.path.startswith("/api/lg/room/") or self.path in ("/api/lg/pair","/api/lg/open-tivvy","/api/lg/control","/api/lg/learn-mac","/api/lg/wake","/api/lg/kitchen/pair","/api/lg/kitchen/open-tivvy","/api/lg/kitchen/learn-mac","/api/lg/kitchen/wake","/api/lg/kitchen/hdmi1","/api/lg/kitchen/control","/api/lg/hdmi1"):
             # Same-origin LAN UI only; never expose TV actions via the remote tunnel.
             origin=self.headers.get("Origin","")
             host=self.headers.get("Host","")
@@ -5703,9 +5723,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_error(403); return
             if self.headers.get("Content-Type","").split(";")[0].strip()!="application/json" or len(raw_body)>128:
                 self.send_error(400); return
-            if self.path!="/api/lg/control" and payload:
+            if self.path not in ("/api/lg/control","/api/lg/kitchen/control") and payload:
                 self.send_error(400); return
             if self.path=="/api/lg/control" and (not isinstance(payload,dict) or set(payload)-{"action","input_id"}):
+                self.send_error(400); return
+            if self.path=="/api/lg/kitchen/control" and (not isinstance(payload,dict) or set(payload)!={"action"} or not isinstance(payload["action"],str)):
                 self.send_error(400); return
             try:
                 if self.path.startswith("/api/lg/room/"):
@@ -5726,6 +5748,8 @@ class Handler(BaseHTTPRequestHandler):
                     elif cfg["media"] and action=="wake":
                         result=lg_extra_wake(room)
                     else:raise ValueError("This TV does not permit that action")
+                elif self.path=="/api/lg/kitchen/control":
+                    result=lg_kitchen_control(payload["action"])
                 elif self.path=="/api/lg/kitchen/hdmi1":
                     result=lg_switch_sky_hdmi1("kitchen")
                 elif self.path=="/api/lg/hdmi1":
