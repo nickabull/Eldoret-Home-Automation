@@ -543,7 +543,7 @@ def lg_bulldog_launch():
         ws.send(json.dumps({"type":"request","id":"eldoret-browser",
                            "uri":"ssap://system.launcher/launch",
                            "payload":{"id":"com.webos.app.browser",
-                                      "params":{"target":"https://is.gd/TivvyTV26"}}}))
+                                      "params":{"target":"https://www.tivertontownfc.uk/tv"}}}))
         ws.sock.settimeout(6)
         try:
             while True:
@@ -1001,7 +1001,7 @@ def lg_extra_media(room,action):
         if action=="tivvy":
             _,ok=_lg_ssap_request(ws,"eldoret-"+room+"-tivvy",
                       "ssap://system.launcher/launch",
-                      {"id":"com.webos.app.browser","params":{"target":"https://is.gd/TivvyTV26"}})
+                      {"id":"com.webos.app.browser","params":{"target":"https://www.tivertontownfc.uk/tv"}})
             if not ok:raise RuntimeError("TV did not acknowledge Tivvy browser launch")
             return {"ok":True,"detail":"TV accepted Tivvy TV launch; check the picture."}
         if action=="hdmi1":
