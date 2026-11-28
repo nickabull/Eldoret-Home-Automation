@@ -714,7 +714,7 @@ def lg_kitchen_launch():
         ws.send(json.dumps({"type":"request","id":"eldoret-kitchen-browser",
                            "uri":"ssap://system.launcher/launch",
                            "payload":{"id":"com.webos.app.browser",
-                                      "params":{"target":"https://is.gd/TivvyTV26"}}}))
+                                      "params":{"target":"https://www.tivertontownfc.uk/tv"}}}))
         deadline=time.monotonic()+6
         while time.monotonic()<deadline:
             ws.sock.settimeout(max(.3,deadline-time.monotonic()))
