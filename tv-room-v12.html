@@ -87,8 +87,8 @@ body.eldoret-shell .eldoret-header{padding-top:calc(10px + env(safe-area-inset-t
 @media(max-width:650px){.tv-panel .tv-actions{grid-template-columns:1fr}}
 body.eldoret-shell .eldoret-header{padding-top:max(12px,env(safe-area-inset-top,0px))!important}@media(display-mode:standalone){body.eldoret-shell .eldoret-header{padding-top:max(34px,calc(env(safe-area-inset-top,0px) + 10px))!important}}.tv-panel .tv-basic{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px!important}.tv-panel .tv-basic button{min-width:0}.tv-panel .tv-basic:has(select){display:flex!important}
 /* Restore only the three requested wake-and-load buttons; preserve existing handlers. */
-.tv-panel #wakeAndTivvy,.tv-panel #kitchenWakeTivvy,#panel-pit [data-extra-action="wake-tivvy"]{display:block!important;grid-column:1/-1;order:-9;background:linear-gradient(110deg,#206454,#16483f)!important;border:1px solid #71bba6!important;min-height:44px!important;color:#eafff5!important;font-weight:800!important}
-.tv-panel #wakeAndTivvy:disabled,.tv-panel #kitchenWakeTivvy:disabled,#panel-pit [data-extra-action="wake-tivvy"]:disabled{opacity:.5!important}
+.tv-panel #wakeAndTivvy,.tv-panel #kitchenWakeTivvy,#panel-pit [data-extra-action="wake-tivvy"],#panel-bedroom [data-extra-action="wake-tivvy"]{display:block!important;grid-column:1/-1;order:-9;background:linear-gradient(110deg,#206454,#16483f)!important;border:1px solid #71bba6!important;min-height:44px!important;color:#eafff5!important;font-weight:800!important}
+.tv-panel #wakeAndTivvy:disabled,.tv-panel #kitchenWakeTivvy:disabled,#panel-pit [data-extra-action="wake-tivvy"],#panel-bedroom [data-extra-action="wake-tivvy"]:disabled{opacity:.5!important}
 </style></head>
 <body class="eldoret-dashboard eldoret-shell">
 <header class="eldoret-header"><a href="nerd-control.html" class="eldoret-brand"><span aria-hidden="true">⌂</span><span>ELDORET<small>TELEVISION · 2.2</small></span></a><div class="eldoret-clock"><time id="shellTime">—</time><span id="shellDate"></span></div><div class="new-tools"><button id="pageRefresh">↻ REFRESH</button><a href="tv-menu.html">ROOMS</a><a href="nerd-control.html">⌂ NERD CENTRAL</a></div><div class="shell-legacy-status" hidden></div></header>
@@ -224,7 +224,7 @@ body.eldoret-shell .eldoret-header{padding-top:max(12px,env(safe-area-inset-top,
 <button type="button" data-extra-action="hdmi1" disabled>Select SKY Q (HDMI 1)</button>
 <button type="button" data-extra-action="learn-mac" disabled>Remember TV for wake</button>
 <button type="button" data-extra-action="wake" disabled>Wake Main bedroom TV</button>
-<button type="button" data-extra-action="wake-tivvy" disabled>Wake and load Tivvy TV</button>
+<button type="button" data-extra-action="wake-tivvy" disabled>Wake Bedroom TV and Load Tivvy Live</button>
 <button type="button" data-extra-action="wake-hdmi1" disabled>⏻ WAKE &amp; WATCH SKY Q · HDMI 1</button>
 </div>
 <h3>Basic LG remote</h3>
